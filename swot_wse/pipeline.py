@@ -1,38 +1,32 @@
-from swot_wse.cache.polygon_cache import polygon_exists
+from swot_wse.cache.polygon_cache import (
+    polygon_exists,
+    load_polygon,
+    save_polygon,
+)
 
-def get_wse(lat, lon):
-    """
-    Main workflow for extracting a reservoir WSE time series.
-
-    Parameters
-    ----------
-    lat : float
-        Latitude of the user's point.
-
-    lon : float
-        Longitude of the user's point.
-    """
+from swot_wse.geometry.reservoir_extractor import (
+    extract_reservoir_polygon,
+)
 
 
-def get_wse(lat, lon):
+def get_wse(lat: float, lon: float):
 
     if polygon_exists(lat, lon):
-        print("✓ Polygon found in cache")
+
+        print("✓ Polygon found in cache.")
+
+        polygon = load_polygon(lat, lon)
+
     else:
-        print("✗ Polygon not found")
 
-    print("Step 2 : Generate polygon if required")
+        print("Generating reservoir polygon from Pekel...")
 
-    print("Step 3 : Search LakeSP")
+        polygon = extract_reservoir_polygon(lat, lon)
 
-    print("Step 4 : Fallback to PIXC if necessary")
+        save_polygon(lat, lon, polygon)
 
-    print("Step 5 : Return WSE time series")
+        print("✓ Polygon saved to cache.")
 
-    print("Step 2 : Generate polygon if required")
+    print()
 
-    print("Step 3 : Search LakeSP")
-
-    print("Step 4 : Fallback to PIXC if necessary")
-
-    print("Step 5 : Return WSE time series")
+    print(polygon)
