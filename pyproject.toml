@@ -1,0 +1,8 @@
+[project]
+name = "swot-wse"
+version = "0.1.0"
+description = "Reservoir WSE extraction from SWOT"
+requires-python = ">=3.10"
+
+[project.scripts]
+swot-wse = "swot_wse.cli:main"
