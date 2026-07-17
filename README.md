@@ -33,8 +33,8 @@ Before running the package, ensure that you have:
 Clone the repository.
 
 ```bash
-git clone https://github.com/Celestialglitch/Reservoir-WSE-finder.git
-cd Reservoir-WSE-finder
+git clone https://github.com/Celestialglitch/swot-reservoir-wse.git
+cd swot-reservoir-wse
 ```
 
 Install the package.
