@@ -1,6 +1,5 @@
 import argparse
 from datetime import datetime
-from swot_wse.cache.polygon_cache import initialize_cache
 from swot_wse.earth_engine import initialize_earth_engine
 from swot_wse.pipeline import get_wse
 from swot_wse.config import initialize_directories
@@ -10,7 +9,6 @@ from swot_wse.config import initialize_directories
 def main():
   
     initialize_directories()
-    initialize_earth_engine()
 
     parser = argparse.ArgumentParser(
         prog="swot-wse",
@@ -54,13 +52,22 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.command is None:
+        parser.print_help()
+        return
    
     if args.command == "polygon":
+         
          try:
-            datetime.strptime(args.start_date, "%Y-%m-%d")
-            datetime.strptime(args.end_date, "%Y-%m-%d")
+            start = datetime.strptime(args.start_date, "%Y-%m-%d")
+            end = datetime.strptime(args.end_date, "%Y-%m-%d")
+            if start > end:
+                parser.error("Start date must be before end date.")
+
          except ValueError:
             parser.error("Dates must be in YYYY-MM-DD format.")
+         initialize_earth_engine()
 
          get_wse(
     args.lat,

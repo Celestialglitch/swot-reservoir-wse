@@ -10,10 +10,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 
-authors = [
-    { name = "Ongkar Dasgupta", email = "ongkardasgupta@gmail.com" }
-]
-
+author = [
+    { name = "Ongkar Dasgupta"}]
 keywords = [
     "Reservoir",
     "Water Surface Elevation",

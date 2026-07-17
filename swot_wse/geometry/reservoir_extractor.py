@@ -6,8 +6,7 @@ import geopandas as gpd
 SEARCH_RADIUS_M = 50_000
 PEKEL_THRESHOLD = 20
 
-# Raster-to-Vector conversion commonly produces small minor fragments. Following common practice, we ignore any polygons smaller than 0.1 km² (100,000 m²) when selecting the reservoir footprint."
-MIN_PLAUSIBLE_AREA_M2 = 100_000
+
 
 
 def extract_reservoir_polygon(lat: float, lon: float) -> gpd.GeoDataFrame:
@@ -85,16 +84,18 @@ def extract_reservoir_polygon(lat: float, lon: float) -> gpd.GeoDataFrame:
     # ---------------------------------------------------------
     # Second condition: Nearest plausible polygon
     # ---------------------------------------------------------
-    candidates = gdf[gdf["area_m2"] >= MIN_PLAUSIBLE_AREA_M2].copy()
-    if candidates.empty:
-        raise RuntimeError("Only tiny water fragments were found near the supplied point.")
+    gdf["distance_m"] = gdf.geometry.distance(dam_point)
 
-    candidates["distance_m"] = candidates.geometry.distance(dam_point)
-    selected = candidates.sort_values("distance_m").head(1).copy()
+    selected = (
+    gdf.sort_values("distance_m")
+       .head(1)
+       .copy()
+    )
+
     selected["selection_method"] = "NEAREST_POLYGON"
 
     print(
-        f"Nearest polygon selected "
+        f"Nearest polygon from the given dam point is selected "
         f"(distance = {selected.distance_m.iloc[0]:.1f} m, "
         f"area = {selected.area_m2.iloc[0]:,.0f} m²)"
     )

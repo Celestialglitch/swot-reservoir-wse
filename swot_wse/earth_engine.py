@@ -17,22 +17,21 @@ def initialize_earth_engine(project_id: str | None = None) -> None:
 
     project_id = project_id or os.getenv("EE_PROJECT_ID")
     if not project_id:
-        project_id = input("Enter your Earth Engine project ID: ").strip()
+        project_id = input("Enter your Google Earth Engine project ID: ").strip()
         if not project_id:
             print("No project ID provided. Exiting.")
             return
 
     try:
         ee.Initialize(project=project_id)
-        print(f"Earth Engine initialized successfully !")
 
     except ee.EEException:
-        print(f"Failed to initialize Earth Engine with project '{project_id}'.")
-        print("Please check validity of your project ID ")
+        print(f"Unable to initialize Google Earth Engine using project '{project_id}'.")
+        print("Verify that the project exists and that your account has access.")
         return
 
     except Exception:
-        print("Authenticating Earth Engine...")
+        print("Authenticating Google Earth Engine...")
         ee.Authenticate()
         try:
             ee.Initialize(project=project_id)
