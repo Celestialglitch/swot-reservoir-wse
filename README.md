@@ -1,30 +1,44 @@
 # swot-wse
 
-A Python package for extracting reservoir **Water Surface Elevation (WSE)** time series from the **Surface Water and Ocean Topography (SWOT)** Level-2 Lake Single Pass (LakeSP) Vector Data Product.
+A Python package for extracting reservoir **Water Surface Elevation (WSE)** time series from the **Surface Water and Ocean Topography (SWOT)** Level-2 Lake Single Pass (LakeSP) Vector Data Product (Version D).
 
-Given the latitude and longitude of a reservoir together with a user-specified date range, the package automatically identifies the reservoir footprint, retrieves relevant SWOT observations, extracts Water Surface Elevation measurements, and generates a filtered time series.
+Given the latitude and longitude of a reservoir together with a user-specified date range, the package automatically identifies the reservoir footprint, retrieves relevant SWOT observations, extracts Water Surface Elevation measurements, performs quality filtering and generates a final time series .
 
 ---
 
 ## Features
 
-* Automatic reservoir footprint extraction from the **JRC Global Surface Water** dataset using Google Earth Engine.
-* Automatic retrieval of SWOT Level-2 LakeSP observations through NASA Earthdata.
-* Spatial filtering of SWOT granules intersecting the extracted reservoir footprint.
-* Automatic extraction of Water Surface Elevation (WSE) observations.
-* Generation of filtered WSE time-series CSV files and plots.
+* Reservoir WSE time-series extraction from SWOT LakeSP observations using only reservoir coordinates and a date range.
+* Automated processing pipeline that performs footprint generation, granule discovery, observation extraction, quality filtering, and time-series generation with a single command.
+* Integrated Earth observation workflow combining Google Earth Engine for reservoir footprint generation and NASA Earthdata for SWOT LakeSP discovery and retrieval.
+* Command-line interface (CLI) designed for reproducible and scriptable workflows.
+* Built-in caching of reservoir footprints and downloaded LakeSP products to reduce repeated processing and improve execution speed.
 * Automatic caching of extracted reservoir footprints and downloaded LakeSP granules to avoid redundant processing.
+* Parallel data processing to accelerate extraction from multiple SWOT LakeSP granules.
 
 ---
 
+## Why Use swot-reservoir-wse
+
+Extraction of reservoir Water Surface Elevation (WSE) time series from SWOT LakeSP observations , for given dam coordinates typically requires multiple independent processing steps, including reservoir footprint generation with Google Earth Engine, SWOT LakeSP granule discovery through NASA Earthdata, spatial intersection between the reservoir footprint and LakeSP polygons, Water Surface Elevation extraction, quality filtering, and time-series generation.
+
+swot-wse combines these steps into a single reproducible workflow to generate reservoir WSE time series from a single command instead of manually processing multiple datasets and software tools.
+
 ## Requirements
 
-Before running the package, ensure that you have:
+Before running the package, ensure you have:
 
-* Python 3.10 or newer
-* A NASA Earthdata account
-* Access to Google Earth Engine
-* A Google Earth Engine Cloud Project
+- Python 3.10 or newer
+- A NASA Earthdata user account
+- Access to Google Earth Engine
+- A Google Cloud project with the Earth Engine API enabled
+---
+
+### Creating the required accounts
+
+- NASA Earthdata: https://urs.earthdata.nasa.gov
+- Google Earth Engine: https://code.earthengine.google.com/
+- Google Cloud Console: https://console.cloud.google.com/
 
 ---
 
