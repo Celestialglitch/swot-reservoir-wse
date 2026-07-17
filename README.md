@@ -82,21 +82,13 @@ During execution, you will be prompted for your NASA Earthdata credentials if au
 Run the command below.
 
 ```bash
-swot-wse polygon \
-    --lat <latitude> \
-    --lon <longitude> \
-    --start-date YYYY-MM-DD \
-    --end-date YYYY-MM-DD
+swot-wse polygon --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --end-date YYYY-MM-DD
 ```
 
 Example
 
 ```bash
-swot-wse polygon \
-    --lat 19.690 \
-    --lon 73.340 \
-    --start-date 2026-01-20 \
-    --end-date 2026-07-16
+swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16
 ```
 
 Dates must be provided in the `YYYY-MM-DD` format.
