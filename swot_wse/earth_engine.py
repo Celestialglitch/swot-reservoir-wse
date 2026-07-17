@@ -1,9 +1,7 @@
 import os
 import ee
 
-# -------------------------------------------------
-# Earth Engine configuration
-# -------------------------------------------------
+
 _initialized = False
 
 

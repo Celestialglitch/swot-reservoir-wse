@@ -5,8 +5,6 @@ from swot_wse.config import OUTPUT_DIR
 
 
 
-
-
 def save_outputs(df: pd.DataFrame, lat: float, lon: float) -> tuple[Path, Path]:
     
     if df is None or df.empty:

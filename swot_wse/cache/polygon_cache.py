@@ -3,10 +3,6 @@ import geopandas as gpd
 from swot_wse.config import POLYGON_CACHE_DIR
 
 
-
-
-
-
 def initialize_cache() -> None:
     """
     Ensure that the polygon cache directory exists.

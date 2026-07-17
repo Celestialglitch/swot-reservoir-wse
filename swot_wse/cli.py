@@ -7,8 +7,6 @@ from swot_wse.config import initialize_directories
 
 
 
-
-
 def main():
   
     initialize_directories()
@@ -16,7 +14,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         prog="swot-wse",
-        description="Extract Water Surface Elevation (WSE) from SWOT."
+        description="Extract reservoir Water Surface Elevation (WSE) for a given dam location."
     )
 
     subparsers = parser.add_subparsers(dest="command")
