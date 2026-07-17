@@ -142,19 +142,26 @@ Cached files are stored under
 
 ## Project Structure
 
-```
+```text
 swot_wse/
 ├── cache/
+│   └── polygon_cache.py
 ├── filtering/
+│   └── stages.py
 ├── geometry/
+│   └── reservoir_extractor.py
 ├── lakesp/
+│   ├── search.py
+│   ├── discovery.py
+│   └── extract.py
 ├── cli.py
 ├── config.py
 ├── earth_engine.py
 ├── outputs.py
 ├── pipeline.py
-└── ...
+└── __init__.py
 ```
+
 
 ---
 
