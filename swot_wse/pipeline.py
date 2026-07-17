@@ -16,7 +16,7 @@ from swot_wse.filtering.stages import filter_timeseries
 from swot_wse.outputs import save_outputs
 
 
-MAX_WORKERS = max(1, os.cpu_count() - 1)
+MAX_WORKERS = max(1, os.cpu_count() - 4)
 
 
 # -------------------------------------------------
