@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from swot_wse.config import OUTPUT_DIR
 
-
-
 def save_outputs(df: pd.DataFrame, lat: float, lon: float) -> tuple[Path, Path]:
     
     if df is None or df.empty:
@@ -23,9 +21,7 @@ def save_outputs(df: pd.DataFrame, lat: float, lon: float) -> tuple[Path, Path]:
   
     df.to_csv(csv_path, index=False)
 
-    # -------------------------------------------------
-    # Plot
-    # -------------------------------------------------
+   
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df["date"], df["wse_median"], linewidth=2, marker="o", markersize=4)
 
@@ -40,7 +36,7 @@ def save_outputs(df: pd.DataFrame, lat: float, lon: float) -> tuple[Path, Path]:
     plt.close(fig)
 
     print("\n===================================")
-    print("Outputs successfully written")
+    print("Outputs successfully written in below locations:")
     print("-----------------------------------")
     print(f"CSV : {csv_path}")
     print(f"Plot: {plot_path}")

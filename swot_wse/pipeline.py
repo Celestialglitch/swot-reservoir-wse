@@ -46,7 +46,6 @@ def get_wse(lat: float, lon: float, start_date: str, end_date: str):
             return None
 
         save_polygon(lat, lon, polygon)
-        print("Reservoir polygon extracted and cached.")
 
 
     # -------------------------------------------------
