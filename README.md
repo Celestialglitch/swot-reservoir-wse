@@ -1,8 +1,6 @@
-# swot-wse
+# swot-reservoir-wse
 
-A Python package for extracting reservoir **Water Surface Elevation (WSE)** time series from the **Surface Water and Ocean Topography (SWOT)** Level-2 Lake Single Pass (LakeSP) Vector Data Product (Version D).
-
-Given the latitude and longitude of a reservoir together with a user-specified date range, the package automatically identifies the reservoir footprint, retrieves relevant SWOT observations, extracts Water Surface Elevation measurements, performs quality filtering and generates a final time series .
+swot-reservoir-wse is a Python package for generating reservoir-specific Water Surface Elevation (WSE) time series from the Surface Water and Ocean Topography (SWOT) Level-2 Lake Single Pass (LakeSP) Vector Data Product (Version D) using user-supplied dam coordinates along with a user-defined date range.
 
 ---
 
