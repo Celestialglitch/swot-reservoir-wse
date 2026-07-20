@@ -57,9 +57,7 @@ Keep your Earthdata username and password available, as they will be requested d
 
 ### 3. Create a Google Cloud Project
 
-1. Open
-
-https://console.cloud.google.com/
+1. Open  https://console.cloud.google.com/
 
 2. Create a new Google Cloud project, or select an existing project that you own.
 
@@ -130,7 +128,7 @@ If the installation was successful, the command above will display the available
 
 During the first execution, the package will ask for your Google Cloud Project ID.
 
-Example
+Example -
 
 ```
 Enter your Google Earth Engine project ID:
@@ -140,7 +138,13 @@ If Earth Engine has not been authenticated previously, a browser window will ope
 
 The package will also request your NASA Earthdata login before downloading SWOT LakeSP products.
 
-These authentication steps usually need to be completed only once.
+Example -
+
+```
+Enter your Earthdata Login username :
+Enter your Earthdata password :
+```
+
 
 ---
 
