@@ -46,7 +46,7 @@ The users are requested to follow the steps mentioned bwlow . These steps only n
 ### 1. Create a NASA Earthdata Account
 
 1. Create a NASA Earthdata account at https://urs.earthdata.nasa.gov/
-2. After creating your account, sign in once through the Earthdata website to activate the account and accept any required terms of use.
+2. After creating your account, sign-in once through the Earthdata website to activate the account and accept any required terms of use.
 
 This account is required to search for and download SWOT LakeSP products from NASA Earthdata.
 
@@ -61,8 +61,6 @@ Register for Google Earth Engine using your Google account at https://code.earth
 1. Click on Start Free to get free credits to continue (for new users).
 2. Fill in your contact details (you can choose either of organisation/individual ).
 3. Add a suitable payment method for payment verification.
-
-New registrations may require approval before Earth Engine API access becomes available.
 
 If your registration is still pending, the package will not be able to extract reservoir footprints.
 
@@ -104,10 +102,12 @@ The package cannot communicate with Google Earth Engine unless this API is enabl
 
 1. Open the Google Earth Engine Code Editor at https://code.earthengine.google.com/
 2. Sign in using the same Google account used to create the Google Cloud project.
-3. Click on "Select an existing cloud project" and then choose your existing project.
+3. Click on "Select an existing cloud project" and then choose your existing project (Step 3).
 4. In the configuration, click on 'See if you are eligible for non-commercial use' and click on Get Started.
-5. Register with appropriate details. Choose Community quota tier (for non-billing account).
-6. Finish all the checkboxes and click on Register.
+5. Register with appropriate details. New registrations may require approval.
+6. Choose Community quota tier (for non-billing account).
+7. Finish all the checkboxes and click on Register.
+
 
 This authorizes Earth Engine to use your Google Cloud project for API requests.
 
