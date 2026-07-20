@@ -45,11 +45,10 @@ The users are requested to follow the steps mentioned bwlow . These steps only n
 
 ### 1. Create a NASA Earthdata Account
 
-Create a free NASA Earthdata account at https://urs.earthdata.nasa.gov/
+1. Create a NASA Earthdata account at https://urs.earthdata.nasa.gov/
+2. After creating your account, sign in once through the Earthdata website to activate the account and accept any required terms of use.
 
 This account is required to search for and download SWOT LakeSP products from NASA Earthdata.
-
-After creating your account, sign in once through the Earthdata website to activate the account and accept any required terms of use.
 
 Keep your Earthdata username and password available, as they will be requested during the first execution of the package.
 
@@ -58,6 +57,10 @@ Keep your Earthdata username and password available, as they will be requested d
 ### 2. Register for Google Earth Engine
 
 Register for Google Earth Engine using your Google account at https://code.earthengine.google.com/
+
+1. Click on Start Free to get free credits to continue (for new users).
+2. Fill in your contact details (you can choose either of organisation/individual ).
+3. Add a suitable payment method for payment verification.
 
 New registrations may require approval before Earth Engine API access becomes available.
 
@@ -73,17 +76,11 @@ If your registration is still pending, the package will not be able to extract r
 
 Open the Google Cloud Console at https://console.cloud.google.com/
 
-1. Create a new Google Cloud project, or select an existing project that you own.
-2. After the project has been created, open the project dashboard.
-3. Copy the **Project ID** displayed on the dashboard.
+1. Click on My First Project and then click on Select project.
+2. Create your project and then open the project dashboard.
+3. Select your project dispaly name and copy the **Project ID** displayed on the dashboard.
 
-The Project ID is usually similar to
-
-```
-my-earthengine-project-123456
-```
-
-Do **not** copy the project display name.
+Do **not** copy the project display name or the project number.
 
 The package will request this Project ID during the first execution.
 
@@ -93,9 +90,9 @@ The package will request this Project ID during the first execution.
 
 Within the Google Cloud project created in the previous step:
 
-1. Open **APIs & Services**.
-2. Select **Library**.
-3. Search for **Earth Engine API**.
+1. Open **APIs & Services** under Quick Access section.
+2. Select **API Library**.
+3. Search for **Google Earth Engine API**.
 4. Open the Earth Engine API page.
 5. Click **Enable**.
 
@@ -105,11 +102,12 @@ The package cannot communicate with Google Earth Engine unless this API is enabl
 
 ### 5. Associate the Google Cloud Project with Earth Engine
 
-Open the Google Earth Engine Code Editor at https://code.earthengine.google.com/
-
-Sign in using the same Google account used to create the Google Cloud project.
-
-If prompted, select the Google Cloud project created in the previous steps as your Earth Engine project.
+1. Open the Google Earth Engine Code Editor at https://code.earthengine.google.com/
+2. Sign in using the same Google account used to create the Google Cloud project.
+3. Click on "Select an existing cloud project" and then choose your existing project.
+4. In the configuration, click on 'See if you are eligible for non-commercial use' and click on Get Started.
+5. Register with appropriate details. Choose Community quota tier (for non-billing account).
+6. Finish all the checkboxes and click on Register.
 
 This authorizes Earth Engine to use your Google Cloud project for API requests.
 
