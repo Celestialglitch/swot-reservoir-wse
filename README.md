@@ -15,32 +15,72 @@ swot-reservoir-wse is a Python package for generating reservoir-specific Water S
 * Parallel data processing to accelerate extraction from multiple SWOT LakeSP granules.
 
 ---
+# Requirements
 
-## Why Use swot-reservoir-wse
-
-Extraction of reservoir Water Surface Elevation (WSE) time series from SWOT LakeSP observations , for given dam coordinates typically requires multiple independent processing steps, including reservoir footprint generation with Google Earth Engine, SWOT LakeSP granule discovery through NASA Earthdata, spatial intersection between the reservoir footprint and LakeSP polygons, Water Surface Elevation extraction, quality filtering, and time-series generation.
-
-swot-wse combines these steps into a single reproducible workflow to generate reservoir WSE time series from a single command instead of manually processing multiple datasets and software tools.
-
-## Requirements
-
-Before running the package, ensure you have:
+Before using the package, you will need
 
 - Python 3.10 or newer
-- A NASA Earthdata user account
+- A NASA Earthdata account
 - Access to Google Earth Engine
-- A Google Cloud project with the Earth Engine API enabled
----
-
-### Creating the required accounts
-
-- NASA Earthdata: https://urs.earthdata.nasa.gov
-- Google Earth Engine: https://code.earthengine.google.com/
-- Google Cloud Console: https://console.cloud.google.com/
+- A Google Cloud Project with the Earth Engine API enabled
 
 ---
 
-## Installation
+# Initial Setup
+
+The package uses two external services.
+
+## 1. Create a NASA Earthdata account
+
+Create a free NASA Earthdata account.
+
+https://urs.earthdata.nasa.gov
+
+This account is used to search and download SWOT LakeSP products.
+
+---
+
+## 2. Register for Google Earth Engine
+
+Sign in using your Google account.
+
+https://code.earthengine.google.com/
+
+Your account must be approved before you can use the Earth Engine API.
+
+---
+
+## 3. Create a Google Cloud Project
+
+Open Google Cloud Console.
+
+https://console.cloud.google.com/
+
+Create a new project (or use an existing one).
+
+Copy the **Project ID**. The package will ask for this value during the first run.
+
+---
+
+## 4. Enable the Earth Engine API
+
+Inside Google Cloud Console
+
+APIs & Services
+
+→ Library
+
+→ Search for
+
+```
+Earth Engine API
+```
+
+Enable the API for your Cloud Project.
+
+---
+
+# Installation
 
 Clone the repository.
 
@@ -49,101 +89,123 @@ git clone https://github.com/Celestialglitch/swot-reservoir-wse.git
 cd swot-reservoir-wse
 ```
 
-Create a Python virtual environment.
+Create a virtual environment.
 
-**Windows**
+### Windows
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 ```
 
-**Linux / macOS**
+### Linux / macOS
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Upgrade `pip` and install the package.
+Upgrade pip.
 
 ```bash
 python -m pip install --upgrade pip
+```
+
+Install the package.
+
+```bash
 python -m pip install .
 ```
 
-Verify that the installation was successful.
+Verify the installation.
 
 ```bash
 swot-wse --help
 ```
 
-If the installation completed successfully, the command above will display the available command-line interface options.
+If the installation was successful, the command above will display the available command-line options.
 
 ---
 
-## Authentication
+# First Run
 
-The package uses two independent services.
+During the first execution, the package will ask for your Google Cloud Project ID.
 
-### Google Earth Engine
+Example
 
-Google Earth Engine is used to generate the reservoir footprint from the JRC Global Surface Water dataset.
+```
+Enter your Google Earth Engine project ID:
+```
 
-During execution, you will be prompted to provide your Google Earth Engine Cloud Project ID if it has not already been configured.
+If Earth Engine has not been authenticated previously, a browser window will open asking you to authorize Earth Engine.
 
-### NASA Earthdata
+The package will also request your NASA Earthdata login before downloading SWOT LakeSP products.
 
-NASA Earthdata authentication is required to search and download SWOT LakeSP products.
-
-During execution, you will be prompted for your NASA Earthdata credentials if authentication has not already been established.
+These authentication steps usually need to be completed only once.
 
 ---
 
-## Quick Start
+# Usage
 
-Run the command below.
+Run
 
 ```bash
-swot-wse polygon --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --end-date YYYY-MM-DD
+swot-wse polygon \
+    --lat <latitude> \
+    --lon <longitude> \
+    --start-date YYYY-MM-DD \
+    --end-date YYYY-MM-DD
 ```
 
 Example
 
 ```bash
-swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16
+swot-wse polygon \
+    --lat 19.690 \
+    --lon 73.340 \
+    --start-date 2026-01-20 \
+    --end-date 2026-07-16
 ```
 
-Dates must be provided in the `YYYY-MM-DD` format.
+Dates must be supplied in the format
+
+```
+YYYY-MM-DD
+```
 
 ---
 
-## Workflow
+# Command Line Arguments
 
-The package performs the following operations automatically:
-
-1. Generate (or load from cache) the reservoir footprint using the JRC Global Surface Water dataset.
-2. Search NASA Earthdata for SWOT Level-2 LakeSP granules within the specified date range.
-3. Identify SWOT observations intersecting the extracted reservoir footprint.
-4. Extract Water Surface Elevation observations.
-5. Apply the built-in filtering workflow.
-6. Generate a Water Surface Elevation time series.
-7. Save the results as a CSV file and a plot.
+| Argument | Description |
+|-----------|-------------|
+| `--lat` | Reservoir latitude |
+| `--lon` | Reservoir longitude |
+| `--start-date` | Beginning of the search period |
+| `--end-date` | End of the search period |
 
 ---
 
-## Output
+# Processing Workflow
 
-The package produces:
+For every execution, the package performs the following steps.
 
-* Water Surface Elevation time-series (CSV)
-* Water Surface Elevation plot (PNG)
+1. Generate (or load) the reservoir footprint.
+2. Search NASA Earthdata for SWOT LakeSP granules.
+3. Identify granules intersecting the reservoir.
+4. Download missing LakeSP products.
+5. Extract Water Surface Elevation observations.
+6. Apply the built-in filtering workflow.
+7. Save the final Water Surface Elevation time series.
 
-Outputs are stored under
+---
 
-```
-~/Documents/swot_wse/data/outputs/
-```
+# Output
+
+The package generates
+
+- Water Surface Elevation time series (`CSV`)
+- Water Surface Elevation plot (`PNG`)
 
 Example
 
@@ -152,16 +214,22 @@ Example
 19.69000_73.34000_wse.png
 ```
 
+Outputs are written to
+
+```
+~/Documents/swot_wse/data/outputs/
+```
+
 ---
 
-## Cache
+# Cache
 
-To improve performance, the package automatically caches intermediate products, including:
+To reduce repeated processing, the package automatically stores
 
-* Extracted reservoir footprints
-* Downloaded SWOT LakeSP granules
+- reservoir footprints
+- downloaded SWOT LakeSP products
 
-Cached files are stored under
+Cache location
 
 ```
 ~/Documents/swot_wse/cache/
@@ -169,20 +237,46 @@ Cached files are stored under
 
 ---
 
-## Project Structure
+# Possible Messages
+
+Some messages indicate that no valid observations were found rather than an installation problem.
+
+For example
+
+```
+No reservoir polygon could be extracted.
+```
+
+The supplied coordinates do not intersect a detectable reservoir footprint.
+
+```
+No LakeSP granules found.
+```
+
+No SWOT observations were available within the requested date range.
+
+```
+No LakeSP intersections found.
+```
+
+The available SWOT granules did not intersect the extracted reservoir footprint.
+
+```
+No observations remained after filtering.
+```
+
+Observations were found but did not satisfy the filtering criteria.
+
+---
+
+# Project Structure
 
 ```text
 swot_wse/
 ├── cache/
-│   └── polygon_cache.py
 ├── filtering/
-│   └── stages.py
 ├── geometry/
-│   └── reservoir_extractor.py
 ├── lakesp/
-│   ├── search.py
-│   ├── discovery.py
-│   └── extract.py
 ├── cli.py
 ├── config.py
 ├── earth_engine.py
@@ -191,9 +285,8 @@ swot_wse/
 └── __init__.py
 ```
 
-
 ---
 
-## License
+# License
 
 This project is licensed under the MIT License.
