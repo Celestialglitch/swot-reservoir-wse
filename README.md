@@ -3,19 +3,11 @@
 swot-reservoir-wse is a Python package for generating reservoir-specific Water Surface Elevation (WSE) time series from the Surface Water and Ocean Topography (SWOT) Level-2 Lake Single Pass (LakeSP) Vector Data Product (Version D) using user-supplied dam coordinates along with a user-defined date range.
 
 ---
-## Introduction
+## Background
 
-Freshwater reservoirs play a critical role in drinking water supply, irrigation, hydropower generation, flood control, and water resource management. Monitoring changes in reservoir water levels is essential for estimating water storage, supporting reservoir operations, improving flood and drought preparedness, and understanding long-term hydrological and climate variability. One of the fundamental variables used for these applications is **Water Surface Elevation (WSE)**, which describes the height of the water surface relative to a reference surface. Changes in WSE directly reflect changes in reservoir storage and provide a fundamental indicator of the hydrological state of a reservoir over time.
+Please check out the complete project introduction in [intro to swot-reservoir-wse](docs/introduction.md).
 
-The **Surface Water and Ocean Topography (SWOT)** mission, jointly developed by the **National Aeronautics and Space Administration (NASA)** and the **Centre National d'Études Spatiales (CNES)**  is a major advancement in the remote sensing of global water bodies. This satellite mission, launched on 16th December, 2022 is designed to provide the first global inventory of Earth's freshwater storage and its changes over time. Using the **Ka-band Radar Interferometer (KaRIn)**, SWOT satellite measures WSE over lakes, rivers, reservoirs, and wetlands with two-dimensional swath observations, providing capabilities that were not available from past conventional satellite altimeters. SWOT observations are distributed through NASA Earthdata as a collection of High Rate (HR) and Low Rate (LR) science products, providing a major opportunity for large-scale inland water monitoring. 
-
-The SWOT Level-2 High Rate Lake Single Pass (LakeSP) Vector Data Product provides data for inland lakes and reservoirs from each continent pass of high rate stream of KaRIn instrument. It is available in the form of continent wise, pass-wise granules. Within each granule, there exist geolocated observations for attributes like WSE, corresponding to multiple vectorized lake polygons observed within that pass.
-
-Although the SWOT LakeSP product is publicly available through NASA Earthdata, generating a continuous reservoir-specific Water Surface Elevation (WSE) time series from user-supplied dam coordinates is not straightforward. For a specific reservoir of interest, the first challenge is to identify the correct LakeSP granules, within which the polygons might exist. The second challenge is in associating the correct lake polygon inside each granule that spatially maps to our reservoir. The third challenge is the inconsistent quality of WSE observations which introduces uneven outliers and biases.
-
-**swot-reservoir-wse** automates a complete workflow to tackle all these challenges. Starting only from the geographic coordinates of a reservoir and a user-defined observation period, the package automatically extracts the reservoir polygon footprint from JRC Global Surface Water dataset, identifies appropriate LakeSp granules from NASA CMR search, discovers intersecting SWOT lake polygons, retrieves the required observations, performs observation quality filtering, and generates a reservoir-specific Water Surface Elevation time series through a single reproducible command.
-
-
+---
 ## Features
 
 * Reservoir WSE time-series extraction from SWOT LakeSP observations using only reservoir coordinates and a date range.
@@ -37,45 +29,61 @@ Before installing the package, please ensure that the following requirements are
 - A Google Cloud project with the Earth Engine API enabled
 ---
 
+
 ## Initial Setup
 
-Before running the package for the first time, configure the external services used during SWOT LakeSP data discovery and reservoir polygon extraction.
+Before running **swot-reservoir-wse** for the first time, the users must configure the external services used by the package.
 
-The package uses
+The package requires consistent access to two external platforms:
 
-- Google Earth Engine to extract the reservoir polygon footprint from the JRC Global Surface Water dataset.
-- NASA Earthdata to search for and download SWOT LakeSP products.
+- **Google Earth Engine** to extract the reservoir footprint from the JRC Global Surface Water dataset.
+- **NASA Earthdata** to discover and download SWOT LakeSP products.
 
-
-### 1. Register for Google Earth Engine
-
-Register for Google Earth Engine using your Google account at https://code.earthengine.google.com/
-
-Your account must be approved before the package can access the Earth Engine API.
-
-If your registration is still pending, the package will not be able to extract reservoir footprints.
+The users are requested to follow the steps mentioned bwlow . These steps only need to be completed once.
 
 ---
 
-### 2. Create a NASA Earthdata Account
+### 1. Create a NASA Earthdata Account
 
-Create a free NASA Earthdata account at https://urs.earthdata.nasa.gov
+Create a free NASA Earthdata account at https://urs.earthdata.nasa.gov/
 
 This account is required to search for and download SWOT LakeSP products from NASA Earthdata.
+
+After creating your account, sign in once through the Earthdata website to activate the account and accept any required terms of use.
 
 Keep your Earthdata username and password available, as they will be requested during the first execution of the package.
 
 ---
 
+### 2. Register for Google Earth Engine
+
+Register for Google Earth Engine using your Google account at https://code.earthengine.google.com/
+
+New registrations may require approval before Earth Engine API access becomes available.
+
+If your registration is still pending, the package will not be able to extract reservoir footprints.
+
+> **Important**
+>
+> Use the same Google account throughout the remaining setup steps, including Google Cloud.
+
+---
+
 ### 3. Create a Google Cloud Project
 
-1. Open  https://console.cloud.google.com/
+Open the Google Cloud Console at https://console.cloud.google.com/
 
-2. Create a new Google Cloud project, or select an existing project that you own.
+1. Create a new Google Cloud project, or select an existing project that you own.
+2. After the project has been created, open the project dashboard.
+3. Copy the **Project ID** displayed on the dashboard.
 
-3. After the project has been created, open the project dashboard.
+The Project ID is usually similar to
 
-4. Copy the **Project ID** shown on the dashboard.
+```
+my-earthengine-project-123456
+```
+
+Do **not** copy the project display name.
 
 The package will request this Project ID during the first execution.
 
@@ -83,11 +91,30 @@ The package will request this Project ID during the first execution.
 
 ### 4. Enable the Earth Engine API
 
-Open the Google Cloud Console for the project created in the previous step.
+Within the Google Cloud project created in the previous step:
 
-Navigate to **APIs & Services**, open the **Library**, search for **Earth Engine API**, and enable the API for the selected project.
+1. Open **APIs & Services**.
+2. Select **Library**.
+3. Search for **Earth Engine API**.
+4. Open the Earth Engine API page.
+5. Click **Enable**.
 
 The package cannot communicate with Google Earth Engine unless this API is enabled.
+
+---
+
+### 5. Associate the Google Cloud Project with Earth Engine
+
+Open the Google Earth Engine Code Editor at https://code.earthengine.google.com/
+
+Sign in using the same Google account used to create the Google Cloud project.
+
+If prompted, select the Google Cloud project created in the previous steps as your Earth Engine project.
+
+This authorizes Earth Engine to use your Google Cloud project for API requests.
+
+---
+
 
 ## Installation
 
@@ -136,31 +163,42 @@ If the installation was successful, the command above will display the available
 
 ---
 
-## First Run
+## Initialisation
 
-During the first execution, the package will ask for your Google Cloud Project ID.
+During the first execution of **swot-reservoir-wse**, the package will automatically request authentication for the required services.
 
-Example -
-
-```
-Enter your Google Earth Engine project ID:
-```
+### Google Earth Engine
 
 If Earth Engine has not been authenticated previously, a browser window will open asking you to authorize Earth Engine.
 
-The package will also request your NASA Earthdata login before downloading SWOT LakeSP products.
+After successful authentication, the credentials are stored locally and future executions will not require re-authentication unless the credentials are removed or expire.
 
-Example -
+The package will also request your Google Cloud **Project ID**.
+
+Example
 
 ```
-Enter your Earthdata Login username :
-Enter your Earthdata password :
+Enter your Google Earth Engine Project ID:
 ```
-
 
 ---
 
+### NASA Earthdata
+
+Before downloading SWOT LakeSP products, the package will request your NASA Earthdata credentials.
+
+Example
+
+```
+Enter your Earthdata username:
+Enter your Earthdata password:
+```
+
+After successful authentication, the package will begin searching and downloading the required SWOT products automatically.
+
 ## Usage
+
+The software package currently supports one major CLI command only.
 
 Run
 
@@ -209,7 +247,7 @@ For every execution, the package performs the following steps.
 
 ## Output
 
-The package generates
+The package generates output in 2 formats
 
 - Water Surface Elevation time series (`CSV`)
 - Water Surface Elevation plot (`PNG`)
