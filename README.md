@@ -1,4 +1,4 @@
-# swot-reservoir-wse
+## Overview
 
 swot-reservoir-wse is a Python package for generating reservoir-specific Water Surface Elevation (WSE) time series from the Surface Water and Ocean Topography (SWOT) Level-2 Lake Single Pass (LakeSP) Vector Data Product (Version D) using user-supplied dam coordinates along with a user-defined date range.
 
@@ -15,72 +15,71 @@ swot-reservoir-wse is a Python package for generating reservoir-specific Water S
 * Parallel data processing to accelerate extraction from multiple SWOT LakeSP granules.
 
 ---
-# Requirements
+## Requirements
 
-Before using the package, you will need
+Before installing the package, please ensure that the following requirements are met.
 
-- Python 3.10 or newer
+- Python version 3.10 or later
 - A NASA Earthdata account
-- Access to Google Earth Engine
-- A Google Cloud Project with the Earth Engine API enabled
+- A Google Earth Engine account
+- A Google Cloud project with the Earth Engine API enabled
+---
+
+## Initial Setup
+
+Before running the package for the first time, configure the external services used during SWOT LakeSP data discovery and reservoir polygon extraction.
+
+The package uses
+
+- Google Earth Engine to extract the reservoir polygon footprint from the JRC Global Surface Water dataset.
+- NASA Earthdata to search for and download SWOT LakeSP products.
+
+
+# 1. Register for Google Earth Engine
+
+Register for Google Earth Engine using your Google account at https://code.earthengine.google.com/
+
+Your account must be approved before the package can access the Earth Engine API.
+
+If your registration is still pending, the package will not be able to extract reservoir footprints.
 
 ---
 
-# Initial Setup
+# 2. Create a NASA Earthdata Account
 
-The package uses two external services.
+Create a free NASA Earthdata account at https://urs.earthdata.nasa.gov
 
-## 1. Create a NASA Earthdata account
+This account is required to search for and download SWOT LakeSP products from NASA Earthdata.
 
-Create a free NASA Earthdata account.
-
-https://urs.earthdata.nasa.gov
-
-This account is used to search and download SWOT LakeSP products.
+Keep your Earthdata username and password available, as they will be requested during the first execution of the package.
 
 ---
 
-## 2. Register for Google Earth Engine
+# 3. Create a Google Cloud Project
 
-Sign in using your Google account.
-
-https://code.earthengine.google.com/
-
-Your account must be approved before you can use the Earth Engine API.
-
----
-
-## 3. Create a Google Cloud Project
-
-Open Google Cloud Console.
+1. Open
 
 https://console.cloud.google.com/
 
-Create a new project (or use an existing one).
+2. Create a new Google Cloud project, or select an existing project that you own.
 
-Copy the **Project ID**. The package will ask for this value during the first run.
+3. After the project has been created, open the project dashboard.
 
----
+4. Copy the **Project ID** shown on the dashboard.
 
-## 4. Enable the Earth Engine API
-
-Inside Google Cloud Console
-
-APIs & Services
-
-→ Library
-
-→ Search for
-
-```
-Earth Engine API
-```
-
-Enable the API for your Cloud Project.
+The package will request this Project ID during the first execution.
 
 ---
 
-# Installation
+# 4. Enable the Earth Engine API
+
+Open the Google Cloud Console for the project created in the previous step.
+
+Navigate to **APIs & Services**, open the **Library**, search for **Earth Engine API**, and enable the API for the selected project.
+
+The package cannot communicate with Google Earth Engine unless this API is enabled.
+
+## Installation
 
 Clone the repository.
 
@@ -91,14 +90,14 @@ cd swot-reservoir-wse
 
 Create a virtual environment.
 
-### Windows
+# Windows
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 ```
 
-### Linux / macOS
+# Linux / macOS
 
 ```bash
 python3 -m venv .venv
@@ -127,7 +126,7 @@ If the installation was successful, the command above will display the available
 
 ---
 
-# First Run
+## First Run
 
 During the first execution, the package will ask for your Google Cloud Project ID.
 
@@ -145,26 +144,18 @@ These authentication steps usually need to be completed only once.
 
 ---
 
-# Usage
+## Usage
 
 Run
 
 ```bash
-swot-wse polygon \
-    --lat <latitude> \
-    --lon <longitude> \
-    --start-date YYYY-MM-DD \
-    --end-date YYYY-MM-DD
+swot-wse polygon --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --end-date YYYY-MM-DD
 ```
 
 Example
 
 ```bash
-swot-wse polygon \
-    --lat 19.690 \
-    --lon 73.340 \
-    --start-date 2026-01-20 \
-    --end-date 2026-07-16
+swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16
 ```
 
 Dates must be supplied in the format
@@ -175,7 +166,7 @@ YYYY-MM-DD
 
 ---
 
-# Command Line Arguments
+## Command Line Arguments
 
 | Argument | Description |
 |-----------|-------------|
@@ -186,7 +177,7 @@ YYYY-MM-DD
 
 ---
 
-# Processing Workflow
+## Processing Workflow
 
 For every execution, the package performs the following steps.
 
@@ -200,7 +191,7 @@ For every execution, the package performs the following steps.
 
 ---
 
-# Output
+## Output
 
 The package generates
 
@@ -222,7 +213,7 @@ Outputs are written to
 
 ---
 
-# Cache
+## Cache
 
 To reduce repeated processing, the package automatically stores
 
@@ -237,7 +228,7 @@ Cache location
 
 ---
 
-# Possible Messages
+## Possible Messages
 
 Some messages indicate that no valid observations were found rather than an installation problem.
 
@@ -269,24 +260,6 @@ Observations were found but did not satisfy the filtering criteria.
 
 ---
 
-# Project Structure
-
-```text
-swot_wse/
-├── cache/
-├── filtering/
-├── geometry/
-├── lakesp/
-├── cli.py
-├── config.py
-├── earth_engine.py
-├── outputs.py
-├── pipeline.py
-└── __init__.py
-```
-
----
-
-# License
+## License
 
 This project is licensed under the MIT License.
