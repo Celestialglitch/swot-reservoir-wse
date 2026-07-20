@@ -49,11 +49,36 @@ git clone https://github.com/Celestialglitch/swot-reservoir-wse.git
 cd swot-reservoir-wse
 ```
 
-Install the package.
+Create a Python virtual environment.
+
+**Windows**
 
 ```bash
-pip install -e .
+python -m venv .venv
+.venv\Scripts\activate
 ```
+
+**Linux / macOS**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Upgrade `pip` and install the package.
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install .
+```
+
+Verify that the installation was successful.
+
+```bash
+swot-wse --help
+```
+
+If the installation completed successfully, the command above will display the available command-line interface options.
 
 ---
 
