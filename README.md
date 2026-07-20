@@ -35,7 +35,7 @@ The package uses
 - NASA Earthdata to search for and download SWOT LakeSP products.
 
 
-# 1. Register for Google Earth Engine
+### 1. Register for Google Earth Engine
 
 Register for Google Earth Engine using your Google account at https://code.earthengine.google.com/
 
@@ -45,7 +45,7 @@ If your registration is still pending, the package will not be able to extract r
 
 ---
 
-# 2. Create a NASA Earthdata Account
+### 2. Create a NASA Earthdata Account
 
 Create a free NASA Earthdata account at https://urs.earthdata.nasa.gov
 
@@ -55,7 +55,7 @@ Keep your Earthdata username and password available, as they will be requested d
 
 ---
 
-# 3. Create a Google Cloud Project
+### 3. Create a Google Cloud Project
 
 1. Open
 
@@ -71,7 +71,7 @@ The package will request this Project ID during the first execution.
 
 ---
 
-# 4. Enable the Earth Engine API
+### 4. Enable the Earth Engine API
 
 Open the Google Cloud Console for the project created in the previous step.
 
@@ -90,14 +90,14 @@ cd swot-reservoir-wse
 
 Create a virtual environment.
 
-# Windows
+### Windows
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 ```
 
-# Linux / macOS
+### Linux / macOS
 
 ```bash
 python3 -m venv .venv
