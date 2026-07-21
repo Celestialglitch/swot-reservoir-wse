@@ -40,6 +40,9 @@ The package requires consistent access to two external platforms:
 - **NASA Earthdata** to discover and download SWOT LakeSP products.
 
 The users are requested to follow the steps mentioned bwlow . These steps only need to be completed once.
+> **Note**
+>
+> For your convenience, please copy the links and open them in different windows of your web browser.
 
 ---
 
@@ -111,6 +114,14 @@ The package cannot communicate with Google Earth Engine unless this API is enabl
 
 This authorizes Earth Engine to use your Google Cloud project for API requests.
 
+### 6. Grant yourself permission to use Google Cloud project
+For the final step, your Google account must be granted permission to consume Google APIs from that project.
+1. Open your Google Cloud project at https://console.cloud.google.com/ (make sure you are logged in with your project).
+2. Open IAM & Admin under Quick access and select IAM option. Then click on Grant Access option.
+3. Type your gmail in New Principals section and select your account in gmail:user_name mapped with a tick.
+4. Click on 'Select a role' under Assign Roles section and select Access Approval followed by Access Approval Editor.
+After changing permissions, please wait a few minutes for Google Cloud IAM permissions to update the policy.
+
 ---
 
 
@@ -164,19 +175,28 @@ If the installation was successful, the command above will display the available
 ## Initialisation
 
 During the first execution of **swot-reservoir-wse**, the package will automatically request authentication for the required services.
-
-### Google Earth Engine
-
-If Earth Engine has not been authenticated previously, a browser window will open asking you to authorize Earth Engine.
-
-After successful authentication, the credentials are stored locally and future executions will not require re-authentication unless the credentials are removed or expire.
-
-The package will also request your Google Cloud **Project ID**.
+The package will request your Google Cloud **Project ID** .
 
 Example
 
 ```
 Enter your Google Earth Engine Project ID:
+```
+
+
+### Google Earth Engine
+
+If Earth Engine has not been authenticated previously, a browser window will open asking you to authorize Earth Engine.
+
+After successful authentication, you will see :
+```
+Google Earth Engine authorization successful!
+
+Credentials have been retrieved. Please close this window.
+```
+Afterwards, the credentials are stored locally and future executions will not require re-authentication unless the credentials are removed or expire.
+```
+Successfully saved authorization token.
 ```
 
 ---
