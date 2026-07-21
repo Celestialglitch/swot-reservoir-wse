@@ -326,7 +326,7 @@ The available SWOT granules did not intersect the extracted reservoir footprint.
 No observations remained after filtering.
 ```
 
-Observations were found but did not satisfy the filtering criteria.
+Observations were found but did not survive after the filtering criteria is applied.
 
 ---
 
