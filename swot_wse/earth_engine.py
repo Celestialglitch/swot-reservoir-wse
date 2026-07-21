@@ -1,9 +1,7 @@
 import os
 import ee
 
-
 _initialized = False
-
 
 def initialize_earth_engine(project_id: str | None = None) -> None:
     """
@@ -11,7 +9,6 @@ def initialize_earth_engine(project_id: str | None = None) -> None:
     Prompts interactively if no project ID is provided.
     """
     global _initialized
-
     if _initialized:
         return
 
@@ -24,14 +21,9 @@ def initialize_earth_engine(project_id: str | None = None) -> None:
 
     try:
         ee.Initialize(project=project_id)
-
-    except Exception:
+    except ee.EEException:
         print("Authenticating Google Earth Engine...")
         ee.Authenticate()
-        try:
-            ee.Initialize(project=project_id)
-        except ee.EEException:
-            print(f"Project '{project_id}' is invalid or inaccessible.")
-            return
+        ee.Initialize(project=project_id)
 
     _initialized = True
