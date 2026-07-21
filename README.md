@@ -182,7 +182,7 @@ Example
 ```
 Enter your Google Earth Engine Project ID:
 ```
-
+This request will be for the first authentication and will be required only for the first time.
 
 ### Google Earth Engine
 
@@ -268,14 +268,13 @@ For every execution, the package performs the following steps.
 The package generates output in 2 formats
 
 - Water Surface Elevation time series (`CSV`)
+  <img width="337" height="370" alt="image" src="https://github.com/user-attachments/assets/dd5395a9-faa9-49ca-b173-da9613e780dd" />
+
+
 - Water Surface Elevation plot (`PNG`)
+  <img width="3000" height="1500" alt="19 69000_73 34000_wse" src="https://github.com/user-attachments/assets/dc4afe5d-c953-4d67-a82f-1abc4d150d31" />
 
-Example
 
-```
-19.69000_73.34000_wse.csv
-19.69000_73.34000_wse.png
-```
 
 Outputs are written to
 
