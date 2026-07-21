@@ -39,7 +39,7 @@ The package requires consistent access to two external platforms:
 - **Google Earth Engine** to extract the reservoir footprint from the JRC Global Surface Water dataset.
 - **NASA Earthdata** to discover and download SWOT LakeSP products.
 
-The users are requested to follow the steps mentioned bwlow . These steps only need to be completed once.
+The users are requested to follow the steps mentioned below . These steps only need to be completed once.
 > **Note**
 >
 > For your convenience, please copy the links and open them in different windows of your web browser.
@@ -62,7 +62,7 @@ Keep your Earthdata username and password available, as they will be requested d
 Register for Google Earth Engine using your Google account at https://code.earthengine.google.com/
 
 1. Click on Start Free to get free credits to continue (for new users).
-2. Fill in your contact details (you can choose either of organisation/individual ).
+2. Fill in your contact details (you can choose organisation/individual based on your convenience ).
 3. Add a suitable payment method for payment verification.
 
 If your registration is still pending, the package will not be able to extract reservoir footprints.
@@ -120,6 +120,7 @@ For the final step, your Google account must be granted permission to consume Go
 2. Open IAM & Admin under Quick access and select IAM option. Then click on Grant Access option.
 3. Type your gmail in New Principals section and select your account in gmail:user_name option as autochoice with a tick.
 4. Click on 'Select a role' under Assign Roles section and select Access Approval followed by Access Approval Editor.
+
 After changing permissions, please wait a few minutes for Google Cloud IAM permissions to update the policy.
 
 ---
@@ -174,21 +175,19 @@ If the installation was successful, the command above will display the available
 
 ## Initialisation
 
-During the first execution of **swot-reservoir-wse**, the package will automatically request authentication for the required services.
-The package will request your Google Cloud **Project ID** .
-
+During the first execution of **swot-reservoir-wse**, the package will request your Google Cloud **Project ID**  
 Example
 
 ```
 Enter your Google Earth Engine Project ID:
 ```
-This request will be for the first authentication and will be required only for the first time.
+Once you fill in your **Project ID**  you will be authenticated for the required services as below.
 
 ### Google Earth Engine
 
 If Earth Engine has not been authenticated previously, a browser window will open asking you to authorize Earth Engine.
 
-After successful authentication, you will see in that window:
+After successful authentication, you will see the following in that window:
 ```
 Google Earth Engine authorization successful!
 
