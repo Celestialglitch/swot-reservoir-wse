@@ -319,6 +319,31 @@ Observations were found but did not survive after the filtering criteria is appl
 
 ---
 
+## Troubleshooting
+
+### 1. Google Earth Engine permission error
+
+If you receive an error similar to 
+```
+Caller does not have required permission to use project <PROJECT_ID>.
+Grant the caller the roles/serviceusage.serviceUsageConsumer role...
+```
+your Google account does not have permission to use the selected Google Cloud project for Earth Engine API requests.
+To resolve this, follow the below steps :
+1. Open your Google Cloud project at https://console.cloud.google.com/ (make sure you are logged in with your project).
+2. Open IAM & Admin under Quick access and select IAM option. Then click on Grant Access option.
+3. Type your gmail in New Principals section and select your account in gmail:user_name option as autochoice with a tick.
+4. Click on 'Select a role' under Assign Roles section and assign the Service Usage Consumer role to your Google account..
+
+After changing permissions, please wait a few minutes for Google Cloud IAM permissions to update the policy.
+
+### 2. Google Earth Engine authentication window issue
+
+If authentication does not start automatically, run the following command :
+```
+earthengine authenticate --force
+```
+
 ## License
 
 This project is licensed under the MIT License.
