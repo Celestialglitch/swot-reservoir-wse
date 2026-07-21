@@ -15,7 +15,6 @@ Please check out the complete project introduction in [intro to swot-reservoir-w
 * Integrated Earth observation workflow combining Google Earth Engine for reservoir footprint generation and NASA Earthdata for SWOT LakeSP discovery and retrieval.
 * Command-line interface (CLI) designed for reproducible and scriptable workflows.
 * Built-in caching of reservoir footprints and downloaded LakeSP products to reduce repeated processing and improve execution speed.
-* Automatic caching of extracted reservoir footprints and downloaded LakeSP granules to avoid redundant processing.
 * Parallel data processing to accelerate extraction from multiple SWOT LakeSP granules.
 
 ---
@@ -61,7 +60,7 @@ Keep your Earthdata username and password available, as they will be requested d
 
 Register for Google Earth Engine using your Google account at https://code.earthengine.google.com/
 
-1. Click on Start Free to get free credits to continue (for new users).
+1. Follow the registration process and complete the required account verification (click on Start Free for free credits).
 2. Fill in your contact details (you can choose organisation/individual based on your convenience ).
 3. Add a suitable payment method for payment verification.
 
@@ -79,7 +78,7 @@ Open the Google Cloud Console at https://console.cloud.google.com/
 
 1. Click on My First Project and then click on Select project.
 2. Create your project and then open the project dashboard.
-3. Select your project dispaly name and copy the **Project ID** displayed on the dashboard.
+3. Select your project display name and copy the **Project ID** displayed on the dashboard.
 
 Do **not** copy the project display name or the project number.
 
@@ -119,7 +118,7 @@ For the final step, your Google account must be granted permission to consume Go
 1. Open your Google Cloud project at https://console.cloud.google.com/ (make sure you are logged in with your project).
 2. Open IAM & Admin under Quick access and select IAM option. Then click on Grant Access option.
 3. Type your gmail in New Principals section and select your account in gmail:user_name option as autochoice with a tick.
-4. Click on 'Select a role' under Assign Roles section and select Access Approval followed by Access Approval Editor.
+4. Click on 'Select a role' under Assign Roles section and assign the Service Usage Consumer role to your Google account..
 
 After changing permissions, please wait a few minutes for Google Cloud IAM permissions to update the policy.
 
@@ -181,7 +180,6 @@ Example
 ```
 Enter your Google Earth Engine Project ID:
 ```
-Once you fill in your **Project ID**  you will be authenticated for the required services as below.
 
 ### Google Earth Engine
 
@@ -278,7 +276,7 @@ The package generates output in 2 formats
 Outputs are written to
 
 ```
-~/Documents/swot_wse/data/outputs/
+/Documents/swot_wse/data/outputs/
 ```
 
 ---
@@ -293,7 +291,7 @@ To reduce repeated processing, the package automatically stores
 Cache location
 
 ```
-~/Documents/swot_wse/cache/
+/Documents/swot_wse/cache/
 ```
 
 ---
