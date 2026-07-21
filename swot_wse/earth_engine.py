@@ -25,11 +25,6 @@ def initialize_earth_engine(project_id: str | None = None) -> None:
     try:
         ee.Initialize(project=project_id)
 
-    except ee.EEException:
-        print(f"Unable to initialize Google Earth Engine using project '{project_id}'.")
-        print("Verify that the project exists and that your account has access.")
-        return
-
     except Exception:
         print("Authenticating Google Earth Engine...")
         ee.Authenticate()
