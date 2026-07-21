@@ -113,15 +113,6 @@ The package cannot communicate with Google Earth Engine unless this API is enabl
 
 This authorizes Earth Engine to use your Google Cloud project for API requests.
 
-### 6. Grant yourself permission to use Google Cloud project
-For the final step, your Google account must be granted permission to consume Google APIs from that project.
-1. Open your Google Cloud project at https://console.cloud.google.com/ (make sure you are logged in with your project).
-2. Open IAM & Admin under Quick access and select IAM option. Then click on Grant Access option.
-3. Type your gmail in New Principals section and select your account in gmail:user_name option as autochoice with a tick.
-4. Click on 'Select a role' under Assign Roles section and assign the Service Usage Consumer role to your Google account..
-
-After changing permissions, please wait a few minutes for Google Cloud IAM permissions to update the policy.
-
 ---
 
 
