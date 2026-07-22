@@ -5,7 +5,7 @@ swot-reservoir-wse is a Python package for generating reservoir-specific Water S
 ---
 ## Background
 
-For background and motivation. check out the project introduction in [intro to swot-reservoir-wse](docs/introduction.md).
+Check out the background and motivation for this project in [intro to swot-reservoir-wse](docs/introduction.md).
 
 ---
 ## Features
