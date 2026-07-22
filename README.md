@@ -276,19 +276,14 @@ Outputs are written to
 
 ## Cache
 
-To reduce repeated processing, the package uses disk cache to automatically store
-
-- reservoir footprints
-- downloaded SWOT LakeSP products
-
-These cached files are reused in subsequent executions, avoiding repeated downloads and repeated reservoir footprint extraction.
+The package stores reservoir footprints and downloaded SWOT LakeSP granules on disk , in the form of cache , to avoid repeated downloads and reduce execution time.
 
 The cache location in current setup is :
 
 ```
 /Documents/swot_wse/cache/
 ```
-> **Note**
+> **Important**
 >
 > The cache is stored on disk and does not increase RAM usage during execution.
 
@@ -299,6 +294,11 @@ Downloaded SWOT LakeSP granules require more storage and remain in the cache for
 The package does not automatically delete cached files. 
 
 Users may delete the cache directory at any time to clear disk space as any missing files will simply be downloaded or regenerated again when required.
+
+> **Note**
+>
+> The future versions of this package will be more optimized in this regard.
+
 
 
 ---
