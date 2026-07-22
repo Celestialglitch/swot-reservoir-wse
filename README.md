@@ -174,9 +174,9 @@ Enter your Google Earth Engine Project ID:
 
 ### Google Earth Engine
 
-If Earth Engine has not been authenticated previously, a browser window will open asking you to authorize Earth Engine.
+If Google Earth Engine has not been authenticated previously, a browser window will open asking you to authorize it.
 
-After successful authentication, you will see the following in that window:
+After successful authentication, following text will be visible in that window:
 ```
 Google Earth Engine authorization successful!
 
@@ -274,12 +274,12 @@ Outputs are written to
 
 ## Cache
 
-To reduce repeated processing, the package automatically stores
+To reduce repeated processing, the package uses cache memory to automatically stores
 
 - reservoir footprints
 - downloaded SWOT LakeSP products
 
-Cache location
+The cache location in current setup is :
 
 ```
 /Documents/swot_wse/cache/
@@ -343,6 +343,7 @@ If authentication does not start automatically, run the following command :
 ```
 earthengine authenticate --force
 ```
+This will force open the authentication window.
 
 ## License
 
