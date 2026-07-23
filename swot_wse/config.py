@@ -36,7 +36,7 @@ def initialize_directories() -> None:
     Creates them if they do not already exist.
     """
     for directory in (
-        APP_DIR,
+        PACKAGE_ROOT,
         CACHE_DIR,
         POLYGON_CACHE_DIR,
         LAKESP_CACHE_DIR,
