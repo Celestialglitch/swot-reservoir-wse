@@ -2,17 +2,17 @@ from pathlib import Path
 import json
 
 
-APP_DIR = Path.home() / "Documents" / "swot_wse"
+PACKAGE_ROOT = Path(__file__).resolve().parent.parent
 
-CACHE_DIR = APP_DIR / "cache"
-POLYGON_CACHE_DIR = CACHE_DIR / "polygons"
-LAKESP_CACHE_DIR = CACHE_DIR / "lakesp"
+CACHE_DIR = PACKAGE_ROOT / "cache"
+POLYGON_CACHE_DIR = PACKAGE_ROOT / "polygons"
+LAKESP_CACHE_DIR = PACKAGE_ROOT / "lakesp"
 
-DATA_DIR = APP_DIR / "data"
-OUTPUT_DIR = DATA_DIR / "outputs"
+DATA_DIR = PACKAGE_ROOT / "data"
+OUTPUT_DIR = PACKAGE_ROOT / "outputs"
 
-DOWNLOAD_DIR = APP_DIR / "downloads"
-CONFIG_FILE = APP_DIR / "config.json"
+DOWNLOAD_DIR = PACKAGE_ROOT / "downloads"
+CONFIG_FILE = PACKAGE_ROOT / "config.json"
 
 
 def load_config() -> dict:
