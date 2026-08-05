@@ -182,20 +182,9 @@ swot-wse --help
 
 ---
 
+## Architecture
 
-## Project Layout
-
-During execution, the package automatically creates the following directories in the project root unless configured otherwise.
-
-```text
-cache/
-downloads/
-outputs/
-```
-
-These directories are used to store cached data, temporary downloads, and generated outputs respectively. Their locations can be changed through the package configuration options.
-
----
+For an overview of the package design and internal processing architecture, see [Package Architecture](docs/architecture.md).
 
 ## Initialisation
 
