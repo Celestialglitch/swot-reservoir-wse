@@ -1,3 +1,4 @@
+
 import ee
 
 from swot_wse.config import load_config, save_config
@@ -10,6 +11,23 @@ def register_auth_command(subparsers):
         help="Authenticate Google Earth Engine.",
     )
 
+    parser.add_argument(
+        "--project-id",
+        help=(
+            "Google Earth Engine project ID. "
+            "If omitted, the package prompts for it."
+        ),
+    )
+
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help=(
+            "Force a new Google Earth Engine authentication "
+            "flow instead of reusing existing credentials."
+        ),
+    )
+
     parser.set_defaults(func=run_auth)
 
 
@@ -17,9 +35,17 @@ def run_auth(args):
 
     config = load_config()
 
-    project = input(
-        "Google Earth Engine project ID: "
-    ).strip()
+    project = args.project_id
+
+    if project is None:
+
+        project = input(
+            "Google Earth Engine project ID: "
+        ).strip()
+
+    else:
+
+        project = project.strip()
 
     if not project:
         print("Project ID cannot be empty.")
@@ -27,23 +53,66 @@ def run_auth(args):
 
     try:
 
-        # Already authenticated?
-        ee.Initialize(project=project)
+        if args.force:
 
-        print("\n Existing Google Earth Engine credentials found.")
+            print(
+                "\nStarting a new Google Earth Engine "
+                "authentication flow...\n"
+            )
 
-    except Exception:
+            ee.Authenticate(
+                force=True
+            )
 
-        print("\nNo valid Google Earth Engine credentials found.")
-        print("Starting authentication...\n")
+        else:
 
-        ee.Authenticate()
+            try:
 
-        ee.Initialize(project=project)
+                ee.Initialize(
+                    project=project
+                )
 
-        print("\n !!! Authentication is successful and credentials are saved !!!")
+                print(
+                    "\nExisting Google Earth Engine "
+                    "credentials found."
+                )
 
-    config["earth_engine_project"] = project
-    save_config(config)
+            except Exception:
 
-    print(f"✓ Saved project: {project}")
+                print(
+                    "\nNo valid Google Earth Engine "
+                    "credentials found."
+                )
+
+                print(
+                    "Starting authentication...\n"
+                )
+
+                ee.Authenticate()
+
+        ee.Initialize(
+            project=project
+        )
+
+    except Exception as exc:
+
+        raise RuntimeError(
+            "Google Earth Engine authentication "
+            "or initialization failed."
+        ) from exc
+
+    config[
+        "earth_engine_project"
+    ] = project
+
+    save_config(
+        config
+    )
+
+    print(
+        "\nAuthentication successful."
+    )
+
+    print(
+        f"Saved Earth Engine project: {project}"
+    )
