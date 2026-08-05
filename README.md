@@ -265,11 +265,7 @@ The package also provides commands for:
 
 ## Command Reference
 
-A complete reference for every supported command, command-line option, configurable parameter, and usage example is available in:
-
-```
-docs/command_reference.md
-```
+A complete reference for every supported command, command-line option, configurable parameter, and usage example is available in [full_command_reference] (docs/command_reference.md)
 
 
 ---
@@ -304,11 +300,8 @@ By default, outputs are written to the package's configured output directory.
 
 The output location can be viewed or modified using the configuration system.
 
-For more details check out:
+For more details check out [full_command_reference] (docs/command_reference.md)
 
-```
-docs/command_reference.md
-```
 
 ---
 
@@ -329,11 +322,8 @@ By default, cached files are retained between executions and are reused whenever
 
 Cached data may be removed at any time using the built-in cache management commands or by deleting the configured cache directory. Missing files are regenerated or downloaded automatically when required.
 
-For cache management commands and cache configuration options, see
+For cache management commands and cache configuration options, see  (docs/command_reference.md)
 
-```
-docs/command_reference.md
-```
 
 ---
 
