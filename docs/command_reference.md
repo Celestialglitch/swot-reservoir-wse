@@ -49,7 +49,7 @@ swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 20
 
 ## 2. Google Earth Engine Authentication
 
-### A. Standard authentication
+### Standard authentication
 
 ```
 swot-wse auth
@@ -57,7 +57,7 @@ swot-wse auth
 
 Prompts for the Google Earth Engine Project ID, checks for existing credentials, starts authentication when required, and saves the selected Project ID.
 
-### B. Supply the Project ID directly
+### Supply the Project ID directly
 
 ```
 swot-wse auth --project-id <project-id>
@@ -71,7 +71,7 @@ swot-wse auth --project-id my-earth-engine-project
 
 This avoids the interactive Project ID prompt.
 
-### C. Force a new authentication flow
+### Force a new authentication flow
 
 ```
 swot-wse auth --force
@@ -85,7 +85,7 @@ Use this command when:
 * replacing expired or invalid credentials;
 * reauthorizing Earth Engine access.
 
-### D. Change both account and Project ID
+### Change both account and Project ID
 
 ```
 swot-wse auth --force --project-id <project-id>
@@ -122,7 +122,7 @@ Displays the complete active configuration.
 swot-wse config set <key> <value>
 ```
 
-### A. Reservoir extraction parameters
+### Reservoir extraction parameters
 
 Change the search radius:
 
@@ -148,7 +148,7 @@ Use a specific CRS:
 swot-wse config set working_crs EPSG:32643
 ```
 
-### B. Processing parameters
+### Processing parameters
 
 Change the number of worker threads:
 
@@ -163,7 +163,7 @@ swot-wse config set generate_plot true
 swot-wse config set generate_plot false
 ```
 
-### C. Cache parameters
+### Cache parameters
 
 Enable or disable reservoir polygon caching:
 
@@ -191,7 +191,7 @@ Change the temporary download directory:
 swot-wse config set temp_download_dir downloads/temp
 ```
 
-### D. Output parameters
+### Output parameters
 
 Change the output directory:
 
@@ -199,7 +199,7 @@ Change the output directory:
 swot-wse config set output_dir outputs
 ```
 
-### E. Earth Engine project
+### Earth Engine project
 
 Set the Earth Engine Project ID directly:
 
@@ -215,7 +215,7 @@ swot-wse config set earth_engine_project none
 
 Changing this value alone does not perform authentication. Use `swot-wse auth` when credentials must also be verified or renewed.
 
-### F. LakeSP source parameters
+### LakeSP source parameters
 
 Change the LakeSP collection:
 
