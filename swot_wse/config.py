@@ -5,7 +5,7 @@ import json
 import os
 
 
-PACKAGE_ROOT = Path(__file__).resolve().parent.parent
+PACKAGE_ROOT = Path.cwd().resolve()
 
 CONFIG_FILE = PACKAGE_ROOT / "config.json"
 
@@ -98,9 +98,11 @@ def _merge_config(default, user):
 
     for key, value in user.items():
 
+        if key not in merged:
+            continue
+
         if (
-            key in merged
-            and isinstance(merged[key], dict)
+            isinstance(merged[key], dict)
             and isinstance(value, dict)
         ):
 
@@ -114,6 +116,7 @@ def _merge_config(default, user):
             merged[key] = value
 
     return merged
+
 
 
 def load_config():
