@@ -1,33 +1,40 @@
-import os
 import ee
 
-from swot_wse.config import load_config, save_config
+from swot_wse.config import load_config
+
 
 _initialized = False
 
-def initialize_earth_engine(project_id: str | None = None) -> None:
+
+def initialize_earth_engine():
     """
-    Initialize Google Earth Engine for the given project.
-    Prompts interactively if no project ID is provided.
+    Initialize Google Earth Engine once.
     """
+
     global _initialized
     if _initialized:
         return
-    config = load_config()
-    project_id = project_id or os.getenv("EE_PROJECT_ID") or config.get("earth_engine_project")
-    if not project_id:
-        project_id = input("Enter your Google Earth Engine project ID: ").strip()
-        if not project_id:
-            print("No project ID provided. Exiting.")
-            return
-        config["earth_engine_project"] = project_id
-        save_config(config)
+
+    project = load_config()["earth_engine_project"]
+
+    if not project:
+
+        raise RuntimeError(
+            "Earth Engine project is not configured.\n"
+            "Run:\n\n"
+            "    swot-wse auth\n"
+        )
 
     try:
-        ee.Initialize(project=project_id)
-    except ee.EEException:
-        print("Authenticating Google Earth Engine...")
-        ee.Authenticate()
-        ee.Initialize(project=project_id)
+
+        ee.Initialize(project=project)
+
+    except Exception as exc:
+
+        raise RuntimeError(
+            "Failed to initialize Google Earth Engine.\n"
+            "Please verify your authentication and project ID.\n"
+            "Run 'swot-wse auth' if necessary."
+        ) from exc
 
     _initialized = True

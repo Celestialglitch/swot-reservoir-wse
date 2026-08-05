@@ -1,15 +1,30 @@
+# Python generated files
 __pycache__/
 *.py[cod]
+*$py.class
 
+# Packaging
 *.egg-info/
+build/
+dist/
 
+# Virtual environments
 .venv/
+.venv-test/
 venv/
+env/
 
+# Runtime data
+cache/
+downloads/
+outputs/
+data/
+
+# Local configuration
+config.json
+
+# Editors and operating systems
 .vscode/
 .idea/
-
-.pytest_cache/
-
 .DS_Store
 Thumbs.db

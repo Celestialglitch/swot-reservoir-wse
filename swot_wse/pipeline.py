@@ -1,112 +1,122 @@
-import os
-import pandas as pd
-from concurrent.futures import ProcessPoolExecutor
-from tqdm import tqdm
 
 from swot_wse.cache.polygon_cache import (
     polygon_exists,
     load_polygon,
     save_polygon,
 )
+from swot_wse.config import load_config
+from swot_wse.earth_engine import initialize_earth_engine
 from swot_wse.geometry.reservoir_extractor import extract_reservoir_polygon
-from swot_wse.lakesp.search import search_lakesp_granules
-from swot_wse.lakesp.discovery import discover_granules
-from swot_wse.lakesp.extract import process_granule
-from swot_wse.filtering.stages import filter_timeseries
+from swot_wse.sources.manager import run_source
 from swot_wse.outputs import save_outputs
 
 
-MAX_WORKERS = max(1, os.cpu_count() - 1)
-
-
-# -------------------------------------------------
-# Main pipeline
-# -------------------------------------------------
-def get_wse(lat: float, lon: float, start_date: str, end_date: str):
+def get_or_create_polygon(lat, lon):
     """
-    Extract Water Surface Elevation (WSE) time series for a reservoir
-    at the given coordinates and date range.
+    Load the cached reservoir polygon or extract it.
     """
 
-    # -------------------------------------------------
-    # Stage 1: Reservoir polygon extraction
-    # -------------------------------------------------
-    if polygon_exists(lat, lon):
-        polygon = load_polygon(lat, lon)
+    config = load_config()
+
+    polygon_cache_enabled = config[
+        "polygon_cache_enabled"
+    ]
+
+    if (
+        polygon_cache_enabled
+        and polygon_exists(lat, lon)
+    ):
         print("Loaded cached reservoir polygon.")
-    else:
-        try:
-            polygon = extract_reservoir_polygon(lat, lon)
-        except Exception:
-            print(f"\nNo reservoir polygon could be extracted at lat={lat}, lon={lon}.")
-            return None
 
-        if polygon is None or polygon.empty:
-            print(f"\nNo reservoir polygon footprint found at lat={lat}, lon={lon}.")
-            return None
+        return load_polygon(
+            lat,
+            lon,
+        )
 
-        save_polygon(lat, lon, polygon)
+    initialize_earth_engine()
 
+    polygon = extract_reservoir_polygon(
+        lat,
+        lon,
+    )
 
-    # -------------------------------------------------
-    # Stage 2: NASA CMR Search for candidate LakeSP granules within reservoir polygon
-    # -------------------------------------------------
-    candidate_granules = search_lakesp_granules(polygon, start_date, end_date)
-    if not candidate_granules:
-        print("No LakeSP granules found.")
+    if polygon is None or polygon.empty:
+        print(
+            f"\nNo reservoir polygon found at "
+            f"lat={lat}, lon={lon}."
+        )
+
         return None
 
-    # -------------------------------------------------
-    # Stage 3: Discover LakeSP granules that intersect with the reservoir polygon
-    # -------------------------------------------------
-    verified = discover_granules(candidate_granules, polygon)
-    if not verified:
-        print("\nNo LakeSP intersections found.")
+    if polygon_cache_enabled:
+        save_polygon(
+            lat,
+            lon,
+            polygon,
+        )
+
+    return polygon
+
+
+def get_wse(
+    lat,
+    lon,
+    start_date,
+    end_date,
+    source="auto",
+):
+    """
+    Generate WSE time series for the given reservoir location and date range.
+    """
+
+    source = source.lower()
+
+    if source == "auto":
+        source = "lakesp"
+
+    polygon = get_or_create_polygon(
+        lat,
+        lon,
+    )
+
+    if polygon is None:
         return None
 
-    print(f"\nLakeSP intersections found : {len(verified)}")
+    print(
+        f"\nRunning {source.upper()} pipeline..."
+    )
 
-    # -------------------------------------------------
-    # Stage 4: WSE Extraction
-    # -------------------------------------------------
-    jobs = [(item["zip"], item["lake_ids"]) for item in verified]
-    observations = []
+    result = run_source(
+        source=source,
+        polygon=polygon,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
-    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        for result in tqdm(
-            executor.map(process_granule, jobs),
-            total=len(jobs),
-            desc="Extracting WSE",
-        ):
-            if result is not None:
-                observations.append(result)
+    if result is None:
+        print("\nNo usable observations found.")
 
-    if not observations:
-        print("\nNot enough observations (filtered by quality)")
         return None
 
+    save_outputs(
+        result["timeseries"],
+        lat,
+        lon,
+    )
 
-    raw_df = pd.concat(observations, ignore_index=True)
-    before = len(raw_df)
-
-    raw_df = raw_df.sort_values("time_str").reset_index(drop=True)
-
-    # -------------------------------------------------
-    # Stage 4: Filtering
-    # -------------------------------------------------
-    clean_df = filter_timeseries(raw_df)
-    if clean_df is None or clean_df.empty:
-        print("\nNo observations remained after filtering.")
-        return None
-
-   
-    save_outputs(clean_df, lat, lon)
+    summary = result["summary"]
 
     print("\n========== SUMMARY ==========")
-    print(f"Verified Granules     : {len(verified)}")
-    print(f"Raw Observations      : {before}")
-    print(f"Final Observations    : {len(clean_df)}")
+    print(f"Source              : {result['source']}")
+    print(f"Verified Granules   : {summary['verified_granules']}")
+    print(f"Raw Observations    : {summary['raw_observations']}")
+    print(f"Final Observations  : {summary['final_observations']}")
     print("=============================\n")
 
-    print(clean_df)
-    return clean_df
+    print(
+        result["timeseries"].to_string(
+            index=False,
+        )
+    )
+
+    return result["timeseries"]

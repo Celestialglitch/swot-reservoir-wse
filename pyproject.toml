@@ -1,17 +1,25 @@
+
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
+
 
 [project]
 name = "swot-wse"
 version = "0.1.0"
+
 description = "Python package for extracting reservoir Water Surface Elevation (WSE) time series from SWOT Level 2 LakeSP Vector Data Product."
+
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
+
+license = "MIT"
+license-files = ["LICENSE"]
 
 authors = [
-    { name = "Ongkar Dasgupta"}]
+    { name = "Ongkar Dasgupta" }
+]
+
 keywords = [
     "Reservoir",
     "Water Surface Elevation",
@@ -27,12 +35,10 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: GIS",
     "Topic :: Scientific/Engineering :: Hydrology"
 ]
-
 
 dependencies = [
     "earthaccess",
@@ -43,19 +49,27 @@ dependencies = [
     "numpy",
     "pandas",
     "tqdm",
-    "fiona",      
-    "pyproj",    
-    "shapely"   
+    "fiona",
+    "pyproj",
+    "shapely"
 ]
 
-
-[project.optional-dependencies]
-geo = ["geopandas", "geemap"]
 
 [project.scripts]
 swot-wse = "swot_wse.cli:main"
 
 
-
 [tool.setuptools]
 include-package-data = true
+
+
+[tool.setuptools.packages.find]
+include = ["swot_wse*"]
+exclude = [
+    "cache*",
+    "data*",
+    "build*",
+    "downloads*",
+    "outputs*",
+    "tests*"
+]
