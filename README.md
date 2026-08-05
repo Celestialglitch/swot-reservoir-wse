@@ -129,6 +129,12 @@ This associates your Google Cloud project with Google Earth Engine so it can be 
 
 ## Installation
 
+If an earlier version of **swot-reservoir-wse** has already been installed, remove the old installation before installing the latest release.
+
+```bash
+python -m pip uninstall swot-wse -y
+```
+
 Clone the repository.
 
 ```bash
@@ -175,6 +181,7 @@ swot-wse --help
 > If the installation was successful, the command above will display the available command-line options.
 
 ---
+
 
 ## Project Layout
 
