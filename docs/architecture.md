@@ -6,11 +6,10 @@ This document provides a high-level overview of the internal architecture of **s
 
 # Architecture Overview
 
-The package is organized around a modular observation-source architecture. Instead of coupling the processing pipeline to a single SWOT science product, all supported observation products implement a common processing interface. This design allows new SWOT products to be integrated without changing the command-line interface or the overall workflow.
+The package is organized around a modular SWOT-source architecture. Instead of coupling the processing pipeline to a single SWOT science product, all supported observation products implement a common processing interface. This design allows new SWOT products to be integrated without changing the command-line interface or the overall workflow.
 
 The current release supports the **SWOT Level-2 Lake Single Pass (LakeSP) Vector Data Product (Version D)**.
 
-Future releases may add additional SWOT observation products while preserving the same user-facing commands.
 
 ---
 
@@ -50,23 +49,21 @@ These settings can be viewed or modified without changing the source code.
 
 ## Reservoir Footprint Extraction
 
-The first processing stage identifies the spatial extent of the requested reservoir.
+The first processing stage identifies the reservoir footprint polygon of the requested dam location.
 
 This step uses **Google Earth Engine (GEE)** together with the **Joint Research Centre (JRC) Global Surface Water** dataset.
 
-The user supplies reservoir coordinates, while the package automatically extracts a representative reservoir polygon surrounding that location.
+The user supplies dam coordinates, while the package automatically extracts a representative reservoir polygon surrounding that location.
 
 If enabled, extracted polygons are cached locally to avoid repeated processing.
 
 ---
 
-## Observation Product Discovery
+## Observation Granule Discovery
 
-Once the reservoir footprint has been determined, the package searches for SWOT observation products covering both the requested time interval and the reservoir location.
+Once the reservoir footprint has been determined, the package searches for SWOT observation granules covering both the requested time interval and the reservoir location.
 
 Product discovery is performed through **NASA Earthdata**, which provides access to publicly available SWOT science products.
-
-Only products that satisfy both the temporal and spatial search criteria are considered for further processing.
 
 ---
 
@@ -76,7 +73,7 @@ Each supported SWOT observation product is processed by its own dedicated source
 
 Although different products may contain different variables or internal structures, each source module follows the same general responsibilities:
 
-* identify observations intersecting the reservoir;
+* identify observations intersecting the reservoir polygon;
 * extract Water Surface Elevation measurements;
 * perform product-specific quality control;
 * generate a standardized time series.
@@ -85,13 +82,13 @@ This abstraction allows multiple SWOT products to share a common downstream work
 
 ---
 
-## Quality Filtering
+## Quality Filtering and Outlier removal
 
 Raw observations frequently contain measurements that should not be included in the final time series.
 
 Each observation source therefore applies its own filtering procedure before producing the final output.
 
-For the current LakeSP implementation, filtering includes quality screening together with robust statistical outlier removal.
+For the current LakeSP implementation, filtering includes quality screening with both good and suspect options followed by statistical outlier removal.
 
 ---
 
@@ -129,8 +126,7 @@ The package relies on several external platforms throughout the processing workf
 | ------------------------------------ | --------------------------------------------------------------------------------------- |
 | **Google Earth Engine (GEE)**        | Reservoir footprint extraction using satellite-derived surface-water data.              |
 | **JRC Global Surface Water Dataset** | Provides the global water-occurrence dataset used for identifying reservoir boundaries. |
-| **NASA Earthdata**                   | Discovery and download of SWOT observation products.                                    |
-| **SWOT Mission**                     | Source of Water Surface Elevation observations.                                         |
+| **NASA Earthdata**                   | Discovery and download of SWOT observation product granules.                            |
 
 ---
 
@@ -180,7 +176,7 @@ Adding support for a new observation product generally requires implementing a n
 
 * granule search;
 * observation discovery;
-* data extraction and calculation;
+* wse extraction and calculation;
 * quality filtering; and
 * conversion to the package's standardized Water Surface Elevation time-series format.
 
