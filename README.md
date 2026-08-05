@@ -265,7 +265,7 @@ The package also provides commands for:
 
 ## Command Reference
 
-A complete reference for every supported command, command-line option, configurable parameter, and usage example is available in [full_command_reference] (docs/command_reference.md)
+A complete reference for every supported command, command-line option, configurable parameter, and usage example is available in [Command Reference](docs/command_reference.md).
 
 
 ---
@@ -300,7 +300,7 @@ By default, outputs are written to the package's configured output directory.
 
 The output location can be viewed or modified using the configuration system.
 
-For more details check out [full_command_reference] (docs/command_reference.md)
+For more details check out [Command Reference](docs/command_reference.md).
 
 
 ---
