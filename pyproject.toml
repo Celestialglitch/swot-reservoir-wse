@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swot-wse"
-version = "0.1.0"
+version = "0.2.0"
 
 description = "Python package for extracting reservoir Water Surface Elevation (WSE) time series from SWOT Level 2 LakeSP Vector Data Product."
 
