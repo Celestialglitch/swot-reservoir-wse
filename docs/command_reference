@@ -4,7 +4,7 @@ This document lists all commands currently supported by **swot-reservoir-wse**.
 
 ## General Help
 
-```bash
+```
 swot-wse --help
 ```
 
@@ -14,13 +14,13 @@ Displays all available command groups.
 
 ## 1. Reservoir WSE Extraction
 
-```bash
+```
 swot-wse polygon --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --end-date YYYY-MM-DD [--source <source>]
 ```
 
 Example:
 
-```bash
+```
 swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16
 ```
 
@@ -35,14 +35,13 @@ Arguments:
 | `--source`     |    No    | SWOT observation source. Default: `auto`. |
 
 The current release resolves:
-
-```text
+```
 auto → lakesp
 ```
 
 Explicit LakeSP selection:
 
-```bash
+```
 swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
 ```
 
@@ -50,31 +49,31 @@ swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 20
 
 ## 2. Google Earth Engine Authentication
 
-### Standard authentication
+### A. Standard authentication
 
-```bash
+```
 swot-wse auth
 ```
 
 Prompts for the Google Earth Engine Project ID, checks for existing credentials, starts authentication when required, and saves the selected Project ID.
 
-### Supply the Project ID directly
+### B. Supply the Project ID directly
 
-```bash
+```
 swot-wse auth --project-id <project-id>
 ```
 
 Example:
 
-```bash
+```
 swot-wse auth --project-id my-earth-engine-project
 ```
 
 This avoids the interactive Project ID prompt.
 
-### Force a new authentication flow
+### C. Force a new authentication flow
 
-```bash
+```
 swot-wse auth --force
 ```
 
@@ -86,15 +85,15 @@ Use this command when:
 * replacing expired or invalid credentials;
 * reauthorizing Earth Engine access.
 
-### Change both account and Project ID
+### D. Change both account and Project ID
 
-```bash
+```
 swot-wse auth --force --project-id <project-id>
 ```
 
 Example:
 
-```bash
+```
 swot-wse auth --force --project-id another-earth-engine-project
 ```
 
@@ -109,7 +108,7 @@ Authentication arguments:
 
 ## 3. Display Configuration
 
-```bash
+```
 swot-wse config show
 ```
 
@@ -119,70 +118,70 @@ Displays the complete active configuration.
 
 ## 4. Modify Configuration
 
-```bash
+```
 swot-wse config set <key> <value>
 ```
 
-### Reservoir extraction parameters
+### A. Reservoir extraction parameters
 
 Change the search radius:
 
-```bash
+```
 swot-wse config set search_radius_m 100000
 ```
 
 Change the JRC water-occurrence threshold:
 
-```bash
+```
 swot-wse config set pekel_threshold 30
 ```
 
 Use automatic projected CRS selection:
 
-```bash
+```
 swot-wse config set working_crs auto
 ```
 
 Use a specific CRS:
 
-```bash
+```
 swot-wse config set working_crs EPSG:32643
 ```
 
-### Processing parameters
+### B. Processing parameters
 
 Change the number of worker threads:
 
-```bash
+```
 swot-wse config set max_workers 4
 ```
 
 Enable or disable plot generation:
 
-```bash
+```
 swot-wse config set generate_plot true
 swot-wse config set generate_plot false
 ```
 
-### Cache parameters
+### C. Cache parameters
 
 Enable or disable reservoir polygon caching:
 
-```bash
+```
 swot-wse config set polygon_cache_enabled true
 swot-wse config set polygon_cache_enabled false
 ```
 
 Enable or disable LakeSP granule caching:
 
-```bash
+```
 swot-wse config set lakesp_cache_enabled true
 swot-wse config set lakesp_cache_enabled false
 ```
 
 Change the cache directory:
 
-```bash
+```
 swot-wse config set cache_dir cache
 ```
 
@@ -192,7 +191,7 @@ Change the temporary download directory:
 swot-wse config set temp_download_dir downloads/temp
 ```
 
-### Output parameters
+### D. Output parameters
 
 Change the output directory:
 
@@ -200,7 +199,7 @@ Change the output directory:
 swot-wse config set output_dir outputs
 ```
 
-### Earth Engine project
+### E. Earth Engine project
 
 Set the Earth Engine Project ID directly:
 
@@ -216,7 +215,7 @@ swot-wse config set earth_engine_project none
 
 Changing this value alone does not perform authentication. Use `swot-wse auth` when credentials must also be verified or renewed.
 
-### LakeSP source parameters
+### F. LakeSP source parameters
 
 Change the LakeSP collection:
 
