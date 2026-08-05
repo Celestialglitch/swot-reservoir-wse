@@ -1,4 +1,3 @@
-
 import json
 
 from swot_wse.config import (
@@ -106,6 +105,48 @@ def _resolve_key(dictionary, dotted_key):
     return current, keys[-1]
 
 
+def _parse_list_value(value):
+    """
+    Parse a list supplied as JSON or as comma-separated values.
+    """
+
+    value = value.strip()
+
+    try:
+
+        parsed = json.loads(value)
+
+        if not isinstance(parsed, list):
+            raise ValueError
+
+        if not all(
+            isinstance(item, str)
+            for item in parsed
+        ):
+            raise ValueError
+
+        return parsed
+
+    except json.JSONDecodeError:
+
+        if (
+            value.startswith("[")
+            and value.endswith("]")
+        ):
+            value = value[1:-1]
+
+        parsed = [
+            item.strip().strip('"').strip("'")
+            for item in value.split(",")
+            if item.strip()
+        ]
+
+        if not parsed:
+            raise ValueError
+
+        return parsed
+
+
 def set_config(args):
 
     config = load_config()
@@ -172,27 +213,24 @@ def set_config(args):
 
         elif isinstance(default_value, list):
 
-            value = json.loads(value)
-
-            if not isinstance(value, list):
-                raise ValueError
+            value = _parse_list_value(
+                value
+            )
 
         elif default_value is None:
 
             if value.lower() == "none":
                 value = None
 
-    except (
-        ValueError,
-        json.JSONDecodeError,
-    ):
+    except ValueError:
 
         print("\nInvalid value.")
 
         if isinstance(default_value, list):
             print(
-                "List values must use JSON format, "
-                'for example: ["001", "002", "003"]'
+                "List values must be comma-separated "
+                "or supplied as a JSON list, "
+                "for example: 001,002,003"
             )
 
         return
