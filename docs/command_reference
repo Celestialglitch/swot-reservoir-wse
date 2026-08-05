@@ -1,0 +1,287 @@
+# Developer Guide
+
+This document provides a complete reference for the command-line interface (CLI) of **swot-reservoir-wse**. It is intended for developers, contributors, and advanced users who need detailed information about the available commands, configurable parameters, and runtime behaviour.
+
+---
+
+# Command Overview
+
+The package currently provides four primary command groups.
+
+| Command   | Purpose                                                                |
+| --------- | ---------------------------------------------------------------------- |
+| `polygon` | Generate reservoir-specific Water Surface Elevation (WSE) time series. |
+| `auth`    | Configure and authenticate Google Earth Engine.                        |
+| `config`  | View and modify package configuration.                                 |
+| `cache`   | Inspect and manage cached files.                                       |
+
+Display all available commands using
+
+```bash
+swot-wse --help
+```
+
+---
+
+# 1. Polygon Command
+
+The `polygon` command is the primary entry point of the package. It extracts a Water Surface Elevation (WSE) time series for a reservoir using user-supplied coordinates and a date range.
+
+## Syntax
+
+```bash
+swot-wse polygon --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --end-date YYYY-MM-DD [--source <source>]
+```
+
+## Arguments
+
+| Argument       | Required | Description                                   |
+| -------------- | :------: | --------------------------------------------- |
+| `--lat`        |    Yes   | Latitude of the reservoir or dam location.    |
+| `--lon`        |    Yes   | Longitude of the reservoir or dam location.   |
+| `--start-date` |    Yes   | Beginning of the observation period.          |
+| `--end-date`   |    Yes   | End of the observation period.                |
+| `--source`     |    No    | Observation source to use. Default is `auto`. |
+
+## Example
+
+```bash
+swot-wse polygon \
+    --lat 19.690 \
+    --lon 73.340 \
+    --start-date 2026-01-20 \
+    --end-date 2026-07-16
+```
+
+## Source Selection
+
+The package is designed around a source abstraction layer.
+
+Current implementation:
+
+| Source   | Status                                   |
+| -------- | ---------------------------------------- |
+| `auto`   | Supported (currently resolves to LakeSP) |
+| `lakesp` | Supported                                |
+
+Future releases may extend `auto` to select from multiple supported SWOT observation products.
+
+---
+
+# 2. Authentication Command
+
+The `auth` command configures Google Earth Engine access for the package.
+
+## Syntax
+
+```bash
+swot-wse auth
+```
+
+## Behaviour
+
+Running this command performs the following steps.
+
+1. Requests the Google Earth Engine Project ID.
+2. Stores the Project ID in the package configuration.
+3. Launches Google Earth Engine authentication if required.
+4. Saves authentication credentials locally.
+
+Authentication normally needs to be completed only once.
+
+---
+
+# 3. Configuration Commands
+
+Package behaviour is controlled through the configuration system.
+
+## Display Current Configuration
+
+```bash
+swot-wse config show
+```
+
+Displays the complete runtime configuration currently used by the package.
+
+---
+
+## Modify a Configuration Parameter
+
+```bash
+swot-wse config set <parameter> <value>
+```
+
+Examples
+
+```bash
+swot-wse config set generate_plot false
+```
+
+```bash
+swot-wse config set search_radius_m 100000
+```
+
+```bash
+swot-wse config set working_crs EPSG:32721
+```
+
+```bash
+swot-wse config set polygon_cache_enabled false
+```
+
+```bash
+swot-wse config set lakesp_cache_enabled false
+```
+
+```bash
+swot-wse config set output_dir outputs
+```
+
+Nested configuration values are also supported.
+
+Example
+
+```bash
+swot-wse config set sources.lakesp.mad_threshold 2.5
+```
+
+List-valued parameters must be supplied as JSON lists.
+
+Example
+
+```bash
+swot-wse config set sources.lakesp.science_cycles '["045","046","047"]'
+```
+
+---
+
+## Reset Configuration
+
+```bash
+swot-wse config reset
+```
+
+Restores the package configuration to the default values defined by the current release.
+
+---
+
+# Configurable Parameters
+
+## General Parameters
+
+| Parameter               | Description                                    |
+| ----------------------- | ---------------------------------------------- |
+| `earth_engine_project`  | Google Earth Engine Project ID.                |
+| `search_radius_m`       | Search radius used for reservoir extraction.   |
+| `pekel_threshold`       | JRC Global Surface Water occurrence threshold. |
+| `working_crs`           | CRS used for area and distance calculations.   |
+| `max_workers`           | Maximum number of worker threads.              |
+| `generate_plot`         | Enable or disable PNG generation.              |
+| `polygon_cache_enabled` | Enable or disable reservoir polygon caching.   |
+| `lakesp_cache_enabled`  | Enable or disable LakeSP granule caching.      |
+| `cache_dir`             | Root cache directory.                          |
+| `output_dir`            | Output directory.                              |
+| `temp_download_dir`     | Temporary download workspace.                  |
+
+---
+
+## LakeSP Parameters
+
+| Parameter                              | Description                                       |
+| -------------------------------------- | ------------------------------------------------- |
+| `sources.lakesp.collection`            | NASA Earthdata LakeSP collection identifier.      |
+| `sources.lakesp.search_buffer_degrees` | Search buffer applied during product discovery.   |
+| `sources.lakesp.science_cycles`        | SWOT science cycles included during discovery.    |
+| `sources.lakesp.mad_threshold`         | Modified Z-score threshold used during filtering. |
+
+---
+
+# 4. Cache Commands
+
+The package maintains a local cache to reduce repeated downloads and processing.
+
+## Display Cache Information
+
+```bash
+swot-wse cache
+```
+
+Displays the current cache status.
+
+---
+
+## Clear Reservoir Polygon Cache
+
+```bash
+swot-wse cache --clear-polygons
+```
+
+Removes all cached reservoir footprints.
+
+---
+
+## Clear LakeSP Cache
+
+```bash
+swot-wse cache --clear-lakesp
+```
+
+Removes all cached LakeSP granules.
+
+---
+
+## Clear All Cached Data
+
+```bash
+swot-wse cache --clear-all
+```
+
+Deletes every cached file managed by the package.
+
+---
+
+# Typical Developer Workflow
+
+A typical development workflow consists of the following steps.
+
+1. Configure Google Earth Engine.
+
+```bash
+swot-wse auth
+```
+
+2. Verify the current configuration.
+
+```bash
+swot-wse config show
+```
+
+3. Adjust any required processing parameters.
+
+```bash
+swot-wse config set sources.lakesp.mad_threshold 2.5
+```
+
+4. Generate a reservoir WSE time series.
+
+```bash
+swot-wse polygon \
+    --lat <latitude> \
+    --lon <longitude> \
+    --start-date YYYY-MM-DD \
+    --end-date YYYY-MM-DD
+```
+
+5. Inspect or clear cached data if required.
+
+```bash
+swot-wse cache
+```
+
+---
+
+# Notes
+
+* Configuration changes take effect immediately and are stored locally.
+* Cache files can be removed safely; missing files will be regenerated or downloaded automatically during future executions.
+* The current release supports the SWOT Level-2 LakeSP Vector Data Product. The command-line interface has been designed to support additional SWOT observation sources in future releases without changing the user workflow.
