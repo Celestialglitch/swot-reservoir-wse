@@ -174,12 +174,6 @@ swot-wse --help
 >
 > If the installation was successful, the command above will display the available command-line options.
 
-```bash
-polygon    Extract reservoir Water Surface Elevation time series
-auth       Configure Google Earth Engine authentication
-config     View or modify package configuration
-cache      Inspect or manage cached files
-```
 ---
 
 ## Project Layout
