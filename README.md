@@ -2,7 +2,7 @@
 
 **swot-reservoir-wse** is a Python package for generating reservoir-specific Water Surface Elevation (WSE) time series from Surface Water and Ocean Topography (SWOT) observations using user-supplied reservoir coordinates and a user-defined date range.
 
-The package is built around a configurable observation-source architecture that enables different SWOT science products to be processed through a common workflow. The current release supports the SWOT Level-2 Lake Single Pass (LakeSP) Vector Data Product (Version D), while future releases will extend support to additional SWOT observation products without changing the user interface.
+The package is built around a configurable source architecture that enables different SWOT science products to be processed through a common workflow. The current release supports the SWOT Level-2 Lake Single Pass (LakeSP) Vector Data Product (Version D), while future releases will extend support to additional SWOT observation products without changing the user interface.
 
 ---
 ## Background
@@ -19,7 +19,7 @@ Check out the background and motivation for this project in [intro to swot-reser
 * Integrated workflow combining Google Earth Engine for reservoir footprint extraction and NASA Earthdata for SWOT product discovery and retrieval.
 * Command-line interface (CLI) designed for reproducible and scriptable scientific workflows.
 * Configurable caching of reservoir footprints and downloaded observation products to reduce repeated processing and improve execution speed.
-* Parallel processing for accelerated extraction from multiple SWOT observation products.
+* Parallel processing for accelerated extraction from multiple SWOT granules.
 * Configurable runtime behaviour through a centralized configuration system.
 
 ---
@@ -49,7 +49,7 @@ The package relies on two external platforms:
 * **NASA Earthdata** for discovering and downloading SWOT observation products.
 
 
-The users are requested to follow the steps mentioned below . These steps only need to be completed once.
+Follow the steps below before using the package for the first time. These steps only need to be completed once.
 > **Note**
 >
 > For your convenience, please copy the links and open them in different windows of your web browser.
@@ -329,7 +329,7 @@ By default, cached files are retained between executions and are reused whenever
 
 Cached data may be removed at any time using the built-in cache management commands or by deleting the configured cache directory. Missing files are regenerated or downloaded automatically when required.
 
-For cache management commands and cache configuration options, see  (docs/command_reference.md)
+For cache management commands and cache configuration options, see the [Command Reference](docs/command_reference.md).
 
 
 ---
