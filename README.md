@@ -1,6 +1,6 @@
 ## Overview
 
-**swot-reservoir-wse** is a Python package for generating reservoir-specific Water Surface Elevation (WSE) time series from Surface Water and Ocean Topography (SWOT) observations using user-supplied reservoir coordinates and a user-defined date range.
+**swot-reservoir-wse** is a Python package for generating reservoir-specific Water Surface Elevation (WSE) time series from Surface Water and Ocean Topography (SWOT) observations using user-supplied dam coordinates and a user-defined date range.
 
 The package is built around a configurable source architecture that enables different SWOT science products to be processed through a common workflow. The current release supports the SWOT Level-2 Lake Single Pass (LakeSP) Vector Data Product (Version D), while future releases will extend support to additional SWOT observation products without changing the user interface.
 
@@ -15,9 +15,9 @@ Check out the background and motivation for this project in [intro to swot-reser
 
 * Reservoir-specific Water Surface Elevation (WSE) time-series extraction from configurable SWOT observation products.
 * Modular observation-source architecture supporting multiple SWOT-derived products through a common processing interface.
-* Automated processing pipeline that performs reservoir footprint extraction, product discovery, spatial verification, observation extraction, quality filtering, and time-series generation using a single command.
+* Automated processing pipeline that performs reservoir footprint extraction, granule discovery, spatial intersection, observation extraction, quality filtering, and time-series generation using a single command.
 * Integrated workflow combining Google Earth Engine for reservoir footprint extraction and NASA Earthdata for SWOT product discovery and retrieval.
-* Command-line interface (CLI) designed for reproducible and scriptable scientific workflows.
+* Command-line interface (CLI) designed for reproducible and scriptable workflows.
 * Configurable caching of reservoir footprints and downloaded observation products to reduce repeated processing and improve execution speed.
 * Parallel processing for accelerated extraction from multiple SWOT granules.
 * Configurable runtime behaviour through a centralized configuration system.
