@@ -1,7 +1,6 @@
-# Developer Guide
+# Overview
 
-This document provides a complete reference for the command-line interface (CLI) of **swot-reservoir-wse**. It is intended for developers, contributors, and advanced users who need detailed information about the available commands, configurable parameters, and runtime behaviour.
-
+This document provides a complete reference for the command-line interface (CLI) of **swot-reservoir-wse**. 
 ---
 
 # Command Overview
@@ -46,11 +45,7 @@ swot-wse polygon --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --en
 ## Example
 
 ```bash
-swot-wse polygon \
-    --lat 19.690 \
-    --lon 73.340 \
-    --start-date 2026-01-20 \
-    --end-date 2026-07-16
+swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16
 ```
 
 ## Source Selection
@@ -61,8 +56,7 @@ Current implementation:
 
 | Source   | Status                                   |
 | -------- | ---------------------------------------- |
-| `auto`   | Supported (currently resolves to LakeSP) |
-| `lakesp` | Supported                                |
+| `auto`   | Supported (currently resolves to LakeSP) |          
 
 Future releases may extend `auto` to select from multiple supported SWOT observation products.
 
