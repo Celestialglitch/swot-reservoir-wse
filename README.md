@@ -183,10 +183,6 @@ swot-wse --help
 
 ---
 
-## Architecture
-
-For an overview of the package design and internal processing architecture, see [Package Architecture](docs/architecture.md).
-
 ## Initialisation
 
 Before generating a WSE time series, Google Earth Engine must be configured for the package.
@@ -220,6 +216,20 @@ NASA Earthdata authentication is performed automatically when SWOT observation p
 Depending on your existing login status, you may be prompted to authenticate with your NASA Earthdata account before product discovery and download begins.
 
 ---
+
+## Processing Workflow
+
+For each execution, **swot-reservoir-wse** performs the following workflow:
+
+1. Generate a reservoir footprint from the user-supplied dam location.
+2. Identify SWOT LakeSP granules available for the requested time period and spatial extent.
+3. Associate LakeSP observations with the generated reservoir footprint.
+4. Apply quality-control procedures to retain reliable observations.
+5. Aggregate accepted observations to derive representative reservoir-level Water Surface Elevation (WSE) values.
+6. Construct the final reservoir-specific WSE time series.
+7. Export the generated outputs.
+
+For an overview of the package design and internal processing architecture, see [Package Architecture](docs/architecture.md).
 
 ## Usage
 
@@ -265,19 +275,6 @@ The package also provides commands for:
 A complete reference for every supported command, command-line option, configurable parameter, and usage example is available in [Command Reference](docs/command_reference.md).
 
 
----
-
-## Processing Workflow
-
-For each execution, **swot-reservoir-wse** performs the following workflow:
-
-1. Generate a reservoir footprint from the user-supplied dam location.
-2. Identify SWOT LakeSP granules available for the requested time period and spatial extent.
-3. Associate LakeSP observations with the generated reservoir footprint.
-4. Apply quality-control procedures to retain reliable observations.
-5. Aggregate accepted observations to derive representative reservoir-level Water Surface Elevation (WSE) values.
-6. Construct the final reservoir-specific WSE time series.
-7. Export the generated outputs.
 
 ---
 
