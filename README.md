@@ -13,14 +13,15 @@ Check out the background and motivation for this project in [intro to swot-reser
 
 ## Features
 
-* Reservoir-specific Water Surface Elevation (WSE) time-series extraction from configurable SWOT observation products.
-* Modular observation-source architecture supporting multiple SWOT-derived products through a common processing interface.
-* Automated processing pipeline that performs reservoir footprint extraction, granule discovery, spatial intersection, observation extraction, quality filtering, and time-series generation using a single command.
-* Integrated workflow combining Google Earth Engine for reservoir footprint extraction and NASA Earthdata for SWOT product discovery and retrieval.
-* Command-line interface (CLI) designed for reproducible and scriptable workflows.
-* Configurable caching of reservoir footprints and downloaded observation products to reduce repeated processing and improve execution speed.
-* Parallel processing for accelerated extraction from multiple SWOT granules.
-* Configurable runtime behaviour through a centralized configuration system.
+* Generates reservoir-specific Water Surface Elevation (WSE) time series from user-supplied dam coordinates and a specified date range.
+* Automatically identifies the representative reservoir footprint from the user-supplied dam location and retrieves the required SWOT WSE observations.
+* Provides an end-to-end processing workflow from reservoir identification to final WSE time-series generation through a single command.
+* Supports multiple SWOT observation products through a configurable observation-source architecture.
+* Produces clean CSV time series and graphical visualizations of extracted WSE observations.
+* Includes a command-line interface (CLI) for reproducible and scriptable processing workflows.
+* Allows processing behaviour, output locations, cache settings, and observation-source parameters to be customized through a centralized configuration system.
+* Maintains reusable local caches to reduce repeated processing across successive executions.
+
 
 ---
 ## Requirements
@@ -188,7 +189,7 @@ For an overview of the package design and internal processing architecture, see 
 
 ## Initialisation
 
-Before generating a Water Surface Elevation (WSE) time series, Google Earth Engine must be configured for the package.
+Before generating a WSE time series, Google Earth Engine must be configured for the package.
 
 Run
 
@@ -253,8 +254,8 @@ By default, the package automatically selects the appropriate supported SWOT obs
 
 The package also provides commands for:
 
-- configuring Google Earth Engine authentication;
-- viewing and modifying runtime configuration; and
+- configuring Google Earth Engine authentication
+- viewing and modifying runtime configuration
 - inspecting or managing cached files.
 
 ---
@@ -268,15 +269,15 @@ A complete reference for every supported command, command-line option, configura
 
 ## Processing Workflow
 
-For each execution, the package performs the following workflow.
+For each execution, **swot-reservoir-wse** performs the following workflow:
 
-1. Generate (or load) the reservoir footprint.
-2. Discover candidate SWOT observation products.
-3. Perform spatial verification against the reservoir footprint.
-4. Download any required observation products.
-5. Extract Water Surface Elevation (WSE) observations.
-6. Apply source-specific quality filtering.
-7. Generate the final WSE time series and associated outputs.
+1. Generate a reservoir footprint from the user-supplied dam location.
+2. Identify SWOT LakeSP granules available for the requested time period and spatial extent.
+3. Associate LakeSP observations with the generated reservoir footprint.
+4. Apply quality-control procedures to retain reliable observations.
+5. Aggregate accepted observations to derive representative reservoir-level Water Surface Elevation (WSE) values.
+6. Construct the final reservoir-specific WSE time series.
+7. Export the generated outputs.
 
 ---
 
