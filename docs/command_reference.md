@@ -1,14 +1,16 @@
 # Command Reference
 
-This document provides a complete reference for the command-line interface (CLI) of **swot-reservoir-wse**, including all supported commands, options, configurable parameters, and usage examples.
+This document provides a complete reference for the command-line interface (CLI) of **swot-reservoir-wse**, including all supported commands, command-line options, configurable parameters, and usage examples.
 
-## Display Available Commands
+---
+
+# Display Available Commands
+
+Display the available command groups.
 
 ```bash
 swot-wse --help
 ```
-
-Displays all available command groups.
 
 Each command group also provides its own help page.
 
@@ -21,35 +23,37 @@ swot-wse cache --help
 
 ---
 
-## 1. Reservoir WSE Extraction
+# 1. Reservoir WSE Extraction
+
+Generate a reservoir-specific Water Surface Elevation (WSE) time series.
 
 ```bash
 swot-wse polygon --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --end-date YYYY-MM-DD [--source <source>]
 ```
 
-Example:
+Example
 
 ```bash
 swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16
 ```
 
-Arguments:
+### Arguments
 
 | Argument | Required | Description |
 |----------|:--------:|-------------|
-| `--lat` | Yes | Reservoir or dam latitude. |
-| `--lon` | Yes | Reservoir or dam longitude. |
+| `--lat` | Yes | Latitude of the dam location. |
+| `--lon` | Yes | Longitude of the dam location. |
 | `--start-date` | Yes | Start date in `YYYY-MM-DD` format. |
 | `--end-date` | Yes | End date in `YYYY-MM-DD` format. |
 | `--source` | No | SWOT observation source. Default: `auto`. |
 
-The current release resolves
+In the current release,
 
 ```text
 auto → LakeSP
 ```
 
-Explicit LakeSP selection:
+LakeSP may also be selected explicitly.
 
 ```bash
 swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
@@ -57,7 +61,7 @@ swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 20
 
 ---
 
-## 2. Google Earth Engine Authentication
+# 2. Google Earth Engine Authentication
 
 ### Standard authentication
 
@@ -65,7 +69,9 @@ swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 20
 swot-wse auth
 ```
 
-Prompts for the Google Earth Engine Project ID, checks for existing credentials, starts authentication when required, and saves the selected Project ID.
+Prompts for the Google Earth Engine Project ID, verifies existing credentials, performs authentication when required, and stores the selected Project ID for future use.
+
+---
 
 ### Supply the Project ID directly
 
@@ -73,41 +79,45 @@ Prompts for the Google Earth Engine Project ID, checks for existing credentials,
 swot-wse auth --project-id <project-id>
 ```
 
-Example:
+Example
 
 ```bash
 swot-wse auth --project-id my-earth-engine-project
 ```
 
-This avoids the interactive Project ID prompt.
+This bypasses the interactive Project ID prompt.
 
-### Force a new authentication flow
+---
+
+### Force a new authentication
 
 ```bash
 swot-wse auth --force
 ```
 
-Forces Google Earth Engine to start a new browser-based authentication flow instead of reusing existing credentials.
+Starts a new Google Earth Engine authentication flow instead of reusing existing credentials.
 
-Use this command when:
+Use this command when
 
-- changing the Google account;
-- replacing expired or invalid credentials; or
+- changing the Google account
+- replacing expired or invalid credentials
 - reauthorizing Earth Engine access.
 
-### Change both account and Project ID
+---
+
+### Specify both Project ID and force authentication
 
 ```bash
 swot-wse auth --force --project-id <project-id>
 ```
 
-Example:
+Example
 
 ```bash
 swot-wse auth --force --project-id another-earth-engine-project
 ```
 
-Authentication arguments:
+### Arguments
 
 | Argument | Required | Description |
 |----------|:--------:|-------------|
@@ -116,31 +126,35 @@ Authentication arguments:
 
 ---
 
-## 3. Display Configuration
+# 3. Display Configuration
+
+Display the active runtime configuration.
 
 ```bash
 swot-wse config show
 ```
 
-Displays the complete active configuration.
-
 ---
 
-## 4. Modify Configuration
+# 4. Modify Configuration
+
+Update a single configuration parameter without modifying the package source code.
 
 ```bash
 swot-wse config set <key> <value>
 ```
 
-### General parameters
+---
 
-Change the number of worker threads:
+## General Parameters
+
+Change the number of worker threads.
 
 ```bash
 swot-wse config set max_workers 4
 ```
 
-Enable or disable plot generation:
+Enable or disable plot generation.
 
 ```bash
 swot-wse config set generate_plot true
@@ -149,45 +163,50 @@ swot-wse config set generate_plot false
 
 ---
 
-### Earth Engine
+## Google Earth Engine
 
-Set the Earth Engine Project ID directly:
+Set the Google Earth Engine Project ID.
 
 ```bash
 swot-wse config set earth_engine_project my-earth-engine-project
 ```
 
-Clear the saved Project ID:
+Clear the stored Project ID.
 
 ```bash
 swot-wse config set earth_engine_project none
 ```
 
-Changing this value alone does not authenticate Google Earth Engine. Run `swot-wse auth` if credentials must also be verified or renewed.
+Changing this value does not authenticate Google Earth Engine. Run
+
+```bash
+swot-wse auth
+```
+
 
 ---
 
-### Reservoir extraction parameters
+## Reservoir Footprint Parameters
 
-Change the search radius:
+Change the search radius.
 
 ```bash
 swot-wse config set search_radius_m 100000
 ```
 
-Change the JRC water-occurrence threshold:
+Change the JRC Global Surface Water occurrence threshold.
 
 ```bash
 swot-wse config set pekel_threshold 30
 ```
 
-Use automatic projected CRS selection:
+Use automatic projected CRS selection.
 
 ```bash
 swot-wse config set working_crs auto
 ```
 
-Use a specific projected CRS:
+Specify a projected CRS.
 
 ```bash
 swot-wse config set working_crs EPSG:32643
@@ -195,27 +214,27 @@ swot-wse config set working_crs EPSG:32643
 
 ---
 
-### LakeSP source parameters
+## LakeSP Parameters
 
-Change the LakeSP collection:
+Change the LakeSP collection.
 
 ```bash
 swot-wse config set sources.lakesp.collection SWOT_L2_HR_LakeSP_Obs_D
 ```
 
-Change the search buffer:
+Change the search buffer.
 
 ```bash
 swot-wse config set sources.lakesp.search_buffer_degrees 0.75
 ```
 
-Restrict processing to selected SWOT science cycles:
+Restrict processing to selected SWOT science cycles.
 
 ```bash
 swot-wse config set sources.lakesp.science_cycles 045,046,047
 ```
 
-Change the MAD filtering threshold:
+Change the MAD filtering threshold.
 
 ```bash
 swot-wse config set sources.lakesp.mad_threshold 2.5
@@ -223,29 +242,29 @@ swot-wse config set sources.lakesp.mad_threshold 2.5
 
 ---
 
-### Cache parameters
+## Cache Parameters
 
-Enable or disable reservoir polygon caching:
+Enable or disable reservoir polygon caching.
 
 ```bash
 swot-wse config set polygon_cache_enabled true
 swot-wse config set polygon_cache_enabled false
 ```
 
-Enable or disable LakeSP granule caching:
+Enable or disable LakeSP granule caching.
 
 ```bash
 swot-wse config set lakesp_cache_enabled true
 swot-wse config set lakesp_cache_enabled false
 ```
 
-Change the cache directory:
+Change the cache directory.
 
 ```bash
 swot-wse config set cache_dir cache
 ```
 
-Change the temporary download directory:
+Change the temporary download directory.
 
 ```bash
 swot-wse config set temp_download_dir downloads/temp
@@ -253,9 +272,9 @@ swot-wse config set temp_download_dir downloads/temp
 
 ---
 
-### Output parameters
+## Output Parameters
 
-Change the output directory:
+Change the output directory.
 
 ```bash
 swot-wse config set output_dir outputs
@@ -263,7 +282,7 @@ swot-wse config set output_dir outputs
 
 ---
 
-Boolean values accept
+### Accepted Boolean Values
 
 ```text
 true
@@ -276,60 +295,64 @@ on
 off
 ```
 
-List values are supplied as comma-separated values.
+### Science Cycle Values
 
-Example:
+Science cycles are manipulated as a comma-separated list.
 
-```text
-045,046,047
+Example
+
+```bash
+swot-wse config set sources.lakesp.science_cycles 045,046,047
 ```
 
 ---
 
-## 5. Reset Configuration
+# 5. Reset Configuration
+
+Restore all configuration parameters to their default values.
 
 ```bash
 swot-wse config reset
 ```
 
-Restores all configuration values to their defaults, including the saved Earth Engine Project ID.
+This also clears the stored Google Earth Engine Project ID.
 
 ---
 
-## 6. Display Cache Summary
+# 6. Display Cache Summary
+
+Display the cache location together with the number of cached reservoir polygons and LakeSP granules.
 
 ```bash
 swot-wse cache
 ```
 
-Displays the cache location together with the number of cached reservoir polygons and LakeSP granules.
-
 ---
 
-## 7. Clear Reservoir Polygon Cache
+# 7. Clear Reservoir Polygon Cache
+
+Remove all cached reservoir polygons.
 
 ```bash
 swot-wse cache --clear-polygons
 ```
 
-Removes all cached reservoir polygons.
-
 ---
 
-## 8. Clear LakeSP Granule Cache
+# 8. Clear LakeSP Granule Cache
+
+Remove all cached LakeSP granules.
 
 ```bash
 swot-wse cache --clear-lakesp
 ```
 
-Removes all cached LakeSP granules.
-
 ---
 
-## 9. Clear All Cached Data
+# 9. Clear All Cached Data
+
+Remove all cached reservoir polygons and LakeSP granules.
 
 ```bash
 swot-wse cache --clear-all
 ```
-
-Removes both reservoir polygon and LakeSP granule caches.
