@@ -1,26 +1,22 @@
-# Python
 __pycache__/
 *.py[cod]
 
-# Packaging
 build/
 dist/
 *.egg-info/
 
-# Virtual environments
 .venv/
 venv/
 
-# Runtime data
 data/
 downloads/
 outputs/
 cache/
 config.json
 
-# Editors / OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+
 docs/_build/
