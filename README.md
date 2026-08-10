@@ -1,149 +1,158 @@
-## Overview
+# swot-reservoir-wse
 
 **swot-reservoir-wse** is a Python package for generating reservoir-specific Water Surface Elevation (WSE) time series from Surface Water and Ocean Topography (SWOT) observations using user-supplied dam coordinates and a user-defined date range.
 
-The package is built around a configurable source architecture that enables different SWOT science products to be processed through a common workflow. The current release supports the SWOT Level-2 Lake Single Pass (LakeSP) Vector Data Product (Version D), while future releases will extend support to additional SWOT observation products without changing the user interface.
+The package provides an end-to-end command-line workflow for reservoir footprint extraction, SWOT observation discovery, reservoir association, quality control, temporal aggregation, caching, and output generation.
+
+The current release supports the SWOT Level-2 Lake Single Pass (LakeSP) observation product, Version D.
 
 ---
-## Background
 
-Check out the background and motivation for this project in [intro to swot-reservoir-wse](docs/introduction.md).
+## Overview
+
+A user provides:
+
+- the latitude and longitude of a dam or reservoir location;
+- a start date; and
+- an end date.
+
+For example:
+
+```bash
+swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16
+```
+
+From these inputs, **swot-reservoir-wse** identifies the corresponding reservoir footprint, discovers relevant SWOT observations, associates those observations with the reservoir, applies quality-control procedures, and generates a reservoir-specific WSE time series.
+
+The package is built around an observation-source architecture that separates the common processing workflow from product-specific processing logic. In the current release, LakeSP is the implemented observation source.
+
+For additional background and motivation, see the [Introduction](docs/introduction.md).
 
 ---
 
 ## Features
 
-* Generates reservoir-specific Water Surface Elevation (WSE) time series from user-supplied dam coordinates and a specified date range.
-* Automatically identifies the representative reservoir footprint from the user-supplied dam location and retrieves the required SWOT WSE observations.
-* Provides an end-to-end processing workflow from reservoir identification to final WSE time-series generation through a single command.
-* Supports multiple SWOT observation products through a configurable observation-source architecture.
-* Produces clean CSV time series and graphical visualizations of extracted WSE observations.
-* Includes a command-line interface (CLI) for reproducible and scriptable processing workflows.
-* Allows processing behaviour, output locations, cache settings, and observation-source parameters to be customized through a centralized configuration system.
-* Maintains reusable local caches to reduce repeated processing across successive executions.
-
+- Generates reservoir-specific Water Surface Elevation (WSE) time series from dam coordinates and a specified date range.
+- Automatically derives a representative reservoir footprint from the supplied location using the JRC Global Surface Water dataset.
+- Discovers relevant SWOT observations through NASA Earthdata.
+- Associates SWOT LakeSP observations with the generated reservoir footprint.
+- Applies product-quality screening, daily aggregation, and temporal outlier filtering.
+- Provides an end-to-end processing workflow through a single reservoir-processing command.
+- Produces CSV time series and optional PNG visualizations.
+- Provides a command-line interface for reproducible and scriptable processing.
+- Manages Google Earth Engine and NASA Earthdata authentication through the package CLI.
+- Provides centralized configuration for processing, caching, output generation, and observation-source parameters.
+- Maintains reusable reservoir-footprint and LakeSP caches to reduce repeated computation and downloads.
+- Uses an observation-source architecture that allows additional SWOT products to be integrated in future releases.
 
 ---
+
 ## Requirements
 
-Before installing and running **swot-reservoir-wse**, ensure that the following requirements are available:
+Before using **swot-reservoir-wse**, ensure that the following are available:
 
-* Python 3.10 or later
-* A NASA Earthdata account
-* A Google Earth Engine account
-* A Google Cloud project registered for Earth Engine API access
-* An active internet connection for reservoir footprint extraction and SWOT product discovery
-* Sufficient local disk space for downloaded SWOT products and cached files
+- Python 3.10 or later
+- A NASA Earthdata Login account
+- A Google Earth Engine account
+- A Google Cloud project configured for Earth Engine access
+- An active internet connection
+- Sufficient local disk space for downloaded SWOT products and cached data
 
-All required Python dependencies are installed automatically when the package is installed using `pip`.
-
----
-
-
-## Initial Setup
-
-Before using **swot-reservoir-wse** for the first time, the required external services must be configured.
-
-The package relies on two external platforms:
-
-* **Google Earth Engine** for reservoir footprint extraction from the JRC Global Surface Water dataset.
-* **NASA Earthdata** for discovering and downloading SWOT observation products.
-
-
-Follow the steps below before using the package for the first time. These steps only need to be completed once.
-> **Note**
->
-> For your convenience, please copy the links and open them in different windows of your web browser.
+Python dependencies are installed automatically when the package is installed with `pip`.
 
 ---
 
-### 1. Create a NASA Earthdata Account
+## External Service Setup
 
-1. Create a NASA Earthdata account at https://urs.earthdata.nasa.gov/
-2. After creating your account, sign-in once through the Earthdata website to activate the account and accept any required terms of use.
+The package relies on two external services:
 
-This account is required to discover and download granules from required SWOT science products from NASA Earthdata.
+- **Google Earth Engine** for reservoir footprint extraction using the JRC Global Surface Water dataset.
+- **NASA Earthdata** for discovery and access to SWOT observation products.
 
-Keep your Earthdata username and password available, as they will be requested during the first execution of the package.
+The required accounts must be created before authentication can be performed through the package.
+
+### 1. Create a NASA Earthdata Login Account
+
+Create a NASA Earthdata Login account at:
+
+https://urs.earthdata.nasa.gov/
+
+After registration, sign in through the Earthdata website and complete any required account activation or terms-of-use steps.
+
+Your Earthdata username and password will be required when authenticating the package.
 
 ---
 
 ### 2. Register for Google Earth Engine
 
-Register for Google Earth Engine using your Google account at https://code.earthengine.google.com/
+Register for Google Earth Engine at:
 
-1. Follow the registration process and complete the required account verification .
-2. Complete the required registration details. You may register as an individual or as an organization, depending on your use case.
-3. Complete any verification steps like payment verification requested during registration.
+https://code.earthengine.google.com/
 
-If your registration is still pending, the package will not be able to extract reservoir footprints.
+Use the Google account that you intend to associate with the Google Cloud project used by the package.
 
-> **Important**
->
-> Use the same Google account throughout the remaining setup steps, including Google Cloud.
+Complete the registration and any verification steps required by Google.
+
+Earth Engine access must be active before the package can perform reservoir-footprint extraction.
 
 ---
 
 ### 3. Create a Google Cloud Project
 
-Open the Google Cloud Console at https://console.cloud.google.com/
+Open the Google Cloud Console:
 
-1. Click on My First Project and then click on Select project.
-2. Create your project and then open the project dashboard.
-3. Select your project display name and copy the **Project ID** displayed on the dashboard.
+https://console.cloud.google.com/
 
-Do **not** copy the project display name or the project number.
+Create or select the Google Cloud project that will be used with Earth Engine.
 
-The package will request this Project ID during execution.
+From the project dashboard, copy the **Project ID**.
+
+The Project ID is different from the project display name and project number.
+
+The package uses this Project ID when initializing Google Earth Engine.
 
 ---
 
 ### 4. Enable the Earth Engine API
 
-Within the Google Cloud project created in the previous step:
+Within the selected Google Cloud project:
 
-1. Open **APIs & Services** under Quick Access section.
-2. Select **API Library**.
+1. Open **APIs & Services**.
+2. Open the API Library.
 3. Search for **Google Earth Engine API**.
-4. Open the Earth Engine API page.
-5. Click **Enable**.
+4. Select the API.
+5. Enable it for the project.
 
-The package cannot communicate with Google Earth Engine unless this API is enabled.
-
----
-
-### 5. Associate the Google Cloud Project with Earth Engine
-
-1. Open the Google Earth Engine Code Editor at https://code.earthengine.google.com/
-2. Sign in using the same Google account used to create the Google Cloud project.
-3. Click on "Select an existing cloud project" and then choose your existing project (Step 3).
-4. In the configuration, click on 'See if you are eligible for non-commercial use' and click on Get Started.
-5. Register with appropriate details. New registrations may require approval.
-6. Choose Community quota tier (for non-billing account).
-7. Finish all the checkboxes and click on Register.
-
-
-This associates your Google Cloud project with Google Earth Engine so it can be used by the package.
+Earth Engine requests cannot be performed through the project until the API is enabled.
 
 ---
 
+### 5. Register the Cloud Project for Earth Engine
+
+Open the Google Earth Engine Code Editor:
+
+https://code.earthengine.google.com/
+
+Sign in using the Google account associated with the Cloud project.
+
+Select or register the Google Cloud project for Earth Engine use and complete the registration procedure presented by Google.
+
+For non-commercial use, select the appropriate non-commercial registration option and quota tier where applicable.
+
+The exact Google registration interface may change over time, so follow the instructions presented by Earth Engine during registration.
+
+---
 
 ## Installation
 
-If an earlier version of **swot-reservoir-wse** has already been installed, remove the old installation before installing the latest release.
-
-```bash
-python -m pip uninstall swot-wse -y
-```
-
-Clone the repository.
+Clone the repository:
 
 ```bash
 git clone https://github.com/Celestialglitch/swot-reservoir-wse.git
 cd swot-reservoir-wse
 ```
 
-Create a virtual environment.
+Creating a virtual environment is recommended.
 
 ### Windows
 
@@ -159,236 +168,443 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Upgrade pip.
+Upgrade `pip`:
 
 ```bash
 python -m pip install --upgrade pip
 ```
 
-Install the package.
+Install the package:
 
 ```bash
 python -m pip install .
 ```
-This installs swot-reservoir-wse together with all required Python dependencies specified by the package.
 
-Verify the installation.
+If an earlier local installation already exists, upgrade it with:
+
+```bash
+python -m pip install . --upgrade
+```
+
+Verify the installation:
 
 ```bash
 swot-wse --help
 ```
-> **Note**
->
-> If the installation was successful, the command above will display the available command-line options.
+
+A successful installation displays the available command groups and CLI options.
+
+For additional installation information, see [Installation](docs/installation.md).
 
 ---
 
-## Initialisation
+## Authentication
 
-Before generating a WSE time series, Google Earth Engine must be configured for the package.
+Before processing reservoirs, authenticate the external services used by the package.
 
-Run
+### Authenticate Both Services
+
+Run:
 
 ```bash
 swot-wse auth
 ```
 
-The package will prompt for your Google Earth Engine **Project ID**.
+The command manages both:
 
-Example
+- Google Earth Engine authentication; and
+- NASA Earthdata authentication.
+
+For Earth Engine, the package uses the configured Google Cloud Project ID. If no Project ID has been stored, the command prompts for one:
 
 ```text
 Google Earth Engine project ID:
 ```
 
-If Google Earth Engine has not been authenticated previously on your system, a browser window will open requesting authorization.
+Existing valid credentials are reused when possible.
 
-Once authentication is complete:
-
-- the selected Google Earth Engine Project ID is stored in the package configuration;
-- authentication credentials are securely managed by the Google Earth Engine API; and
-- future executions normally will not require re-authentication unless the credentials are removed or expire.
-
-### NASA Earthdata
-
-NASA Earthdata authentication is performed automatically when SWOT observation products are accessed for the first time.
-
-Depending on your existing login status, you may be prompted to authenticate with your NASA Earthdata account before product discovery and download begins.
+For NASA Earthdata, existing persistent credentials are also reused when available. Otherwise, the package starts the Earthdata authentication process and stores credentials for subsequent executions.
 
 ---
 
-## Processing Workflow
-
-For each execution, **swot-reservoir-wse** performs the following workflow:
-
-1. Generate a reservoir footprint from the user-supplied dam location.
-2. Identify SWOT LakeSP granules available for the requested time period and spatial extent.
-3. Associate LakeSP observations with the generated reservoir footprint.
-4. Apply quality-control procedures to retain reliable observations.
-5. Aggregate accepted observations to derive representative reservoir-level Water Surface Elevation (WSE) values.
-6. Construct the final reservoir-specific WSE time series.
-7. Export the generated outputs.
-
-For an overview of the package design and internal processing architecture, see [Package Architecture](docs/architecture.md).
-
-## Usage
-
-The package currently provides four command groups.
-
-| Command | Purpose |
-|---------|---------|
-| `polygon` | Generate reservoir-specific Water Surface Elevation (WSE) time series |
-| `auth` | Configure Google Earth Engine authentication |
-| `config` | View or modify package configuration |
-| `cache` | Inspect or manage cached files |
-
-Display all available commands using
+### Authenticate Only Google Earth Engine
 
 ```bash
-swot-wse --help
+swot-wse auth --earth-engine-only
 ```
 
-### Generate a Reservoir WSE Time Series
+A Project ID can also be supplied directly:
 
 ```bash
-swot-wse polygon --lat <latitude> --lon <longitude>  --start-date YYYY-MM-DD --end-date YYYY-MM-DD
+swot-wse auth --earth-engine-only --project-id my-earth-engine-project
 ```
 
-Example
+---
+
+### Authenticate Only NASA Earthdata
+
+```bash
+swot-wse auth --earthdata-only
+```
+
+---
+
+### Force Reauthentication
+
+Force authentication instead of reusing existing credentials:
+
+```bash
+swot-wse auth --force
+```
+
+The option can also be restricted to one service:
+
+```bash
+swot-wse auth --earth-engine-only --force
+```
+
+or:
+
+```bash
+swot-wse auth --earthdata-only --force
+```
+
+---
+
+### Remove Stored Authentication
+
+Remove locally managed authentication information:
+
+```bash
+swot-wse auth --remove
+```
+
+This can also be restricted to a single service:
+
+```bash
+swot-wse auth --earth-engine-only --remove
+```
+
+```bash
+swot-wse auth --earthdata-only --remove
+```
+
+For Google Earth Engine, this removes the Project ID stored in the package configuration. Google-managed OAuth credentials are not deleted by this operation.
+
+For complete authentication documentation, see [Authentication](docs/authentication.md).
+
+---
+
+## Basic Usage
+
+Generate a reservoir-specific WSE time series with:
+
+```bash
+swot-wse polygon --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --end-date YYYY-MM-DD
+```
+
+Example:
 
 ```bash
 swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16
 ```
 
-By default, the package automatically selects the appropriate supported SWOT observation source. In the current release, `auto` resolves to **LakeSP**.
+The latitude and longitude identify the dam or reservoir location from which the package determines the corresponding reservoir footprint.
 
-The package also provides commands for:
+The observation source can also be selected explicitly:
 
-- configuring Google Earth Engine authentication
-- viewing and modifying runtime configuration
-- inspecting or managing cached files.
+```bash
+swot-wse polygon --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+```
+
+If `--source` is omitted, the default source-selection mode is:
+
+```text
+auto
+```
+
+In the current release:
+
+```text
+auto → LakeSP
+```
+
+For a more detailed walkthrough, see [Usage](docs/usage.md).
 
 ---
 
-## Command Reference
+## Processing Workflow
 
-A complete reference for every supported command, command-line option, configurable parameter, and usage example is available in [Command Reference](docs/command_reference.md).
+For a typical execution, **swot-reservoir-wse** performs the following workflow:
 
+1. Receive the dam coordinates and requested observation period.
+2. Generate or retrieve the corresponding reservoir footprint.
+3. Search NASA Earthdata for candidate SWOT LakeSP granules.
+4. Determine which candidate granules contain observations associated with the reservoir.
+5. Extract relevant LakeSP observations.
+6. Apply product-quality screening.
+7. Aggregate accepted observations by acquisition date.
+8. Apply temporal Median Absolute Deviation (MAD) filtering.
+9. Construct the final reservoir-specific WSE time series.
+10. Write the generated outputs and retain reusable cached data where enabled.
 
+For the internal package design and data flow, see [Package Architecture](docs/architecture.md).
 
 ---
 
-## Output
+## CLI Commands
 
-The package currently generates two output files for each processed reservoir.
+The package provides four primary command groups.
 
-### Water Surface Elevation Time Series (`CSV`)
+| Command | Purpose |
+| --- | --- |
+| `polygon` | Generate a reservoir-specific WSE time series |
+| `auth` | Manage Google Earth Engine and NASA Earthdata authentication |
+| `config` | View, modify, or reset package configuration |
+| `cache` | Inspect or manage cached data |
 
-<img width="337" height="370" alt="image" src="https://github.com/user-attachments/assets/dd5395a9-faa9-49ca-b173-da9613e780dd" />
+Display all commands:
 
-### Water Surface Elevation Plot (`PNG`)
+```bash
+swot-wse --help
+```
 
-<img width="3000" height="1500" alt="19.69000_73.34000_wse" src="https://github.com/user-attachments/assets/dc4afe5d-c953-4d67-a82f-1abc4d150d31" />
+Display command-specific help:
 
-By default, outputs are written to the package's configured output directory.
+```bash
+swot-wse polygon --help
+swot-wse auth --help
+swot-wse config --help
+swot-wse cache --help
+```
 
-The output location can be viewed or modified using the configuration system.
+For every supported command and option, see the [Command Reference](docs/command_reference.md).
 
-For more details check out [Command Reference](docs/command_reference.md).
+---
 
+## Configuration
+
+The active package configuration can be displayed with:
+
+```bash
+swot-wse config show
+```
+
+Individual values can be changed without modifying the package source code:
+
+```bash
+swot-wse config set <key> <value>
+```
+
+For example:
+
+```bash
+swot-wse config set max_workers 4
+```
+
+Nested source-specific values use dotted keys:
+
+```bash
+swot-wse config set sources.lakesp.mad_threshold 2.5
+```
+
+Restore the default configuration with:
+
+```bash
+swot-wse config reset
+```
+
+Configuration controls reservoir extraction, LakeSP processing, quality filtering, parallel execution, caching, output generation, and other runtime behaviour.
+
+For descriptions of all configurable parameters, see [Configuration](docs/configuration.md).
+
+---
+
+## Outputs
+
+A successful processing run generates a reservoir-specific Water Surface Elevation time series.
+
+### CSV Time Series
+
+The CSV output contains the processed reservoir WSE observations and their associated information.
+
+### PNG Visualization
+
+When plot generation is enabled, the package also generates a PNG visualization of the WSE time series.
+
+Plot generation can be disabled with:
+
+```bash
+swot-wse config set generate_plot false
+```
+
+Output files are written to the configured output directory.
+
+For details about generated files, fields, and quality information, see [Outputs](docs/outputs.md).
 
 ---
 
 ## Cache
 
-To reduce repeated processing and unnecessary downloads, the package maintains a local cache.
-
-The current release supports two independent cache types.
+The package maintains reusable local caches to avoid unnecessary repeated processing.
 
 | Cache | Purpose |
-|--------|---------|
-| Reservoir Polygon Cache | Stores extracted reservoir footprints. |
-| LakeSP Granule Cache | Stores downloaded LakeSP products for future reuse. |
+| --- | --- |
+| Reservoir Polygon Cache | Stores generated reservoir footprints |
+| LakeSP Granule Cache | Stores downloaded LakeSP products for reuse |
 
-Both cache types can be enabled or disabled independently through the package configuration.
+Display the cache summary:
 
-By default, cached files are retained between executions and are reused whenever possible.
+```bash
+swot-wse cache
+```
 
-Cached data may be removed at any time using the built-in cache management commands or by deleting the configured cache directory. Missing files are regenerated or downloaded automatically when required.
+Clear reservoir polygons:
 
-For cache management commands and cache configuration options, see the [Command Reference](docs/command_reference.md).
+```bash
+swot-wse cache --clear-polygons
+```
 
+Clear LakeSP granules:
+
+```bash
+swot-wse cache --clear-lakesp
+```
+
+Clear all package caches:
+
+```bash
+swot-wse cache --clear-all
+```
+
+Caching can also be enabled or disabled through the configuration system.
 
 ---
 
-## Possible Messages
+## Possible Processing Messages
 
-Some messages indicate that no usable observations were found rather than an installation or configuration problem.
+Some messages indicate that the requested reservoir or observation period did not produce usable observations. They do not necessarily indicate a package failure.
 
-### No reservoir polygon found
+### No Reservoir Polygon Found
 
-```
+```text
 No reservoir polygon found at lat=<latitude>, lon=<longitude>.
 ```
 
-The supplied coordinates do not intersect a detectable reservoir footprint.
+The package could not identify a suitable reservoir footprint for the supplied location.
 
----
+### No LakeSP Granules Found
 
-### No observation products found
-
-```
+```text
 No LakeSP granules found.
 ```
 
-No observation products were available for the requested location and time period.
+No candidate LakeSP products were found for the requested spatial and temporal search.
 
----
+### No LakeSP Intersections Found
 
-### No spatial intersections found
-
-```
+```text
 No LakeSP intersections found.
 ```
 
-Observation products were found, but none intersected the extracted reservoir footprint.
+Candidate products were discovered, but no usable observations were associated with the generated reservoir footprint.
 
----
+### No Observations After Filtering
 
-### No observations after filtering
-
-```
+```text
 No observations remained after filtering.
 ```
 
-Observations were extracted successfully but were removed by the configured quality-control procedure.
+Observations were extracted, but none remained after the configured quality-control procedure.
+
+---
 
 ## Troubleshooting
 
-### 1. Google Earth Engine permission error
+### Google Earth Engine Permission Error
 
-If you receive an error similar to 
-```
+An error similar to:
+
+```text
 Caller does not have required permission to use project <PROJECT_ID>.
 Grant the caller the roles/serviceusage.serviceUsageConsumer role...
 ```
-your Google account does not have permission to use the selected Google Cloud project for Earth Engine API requests.
-To resolve this :
-1. Open your Google Cloud project at https://console.cloud.google.com/ (make sure you are logged in with your project).
-2. Open IAM & Admin under Quick access and select IAM option. Then click on Grant Access option.
-3. Type your gmail in New Principals section and select your account in gmail:user_name option as autochoice with a tick.
-4. Click on 'Select a role' under Assign Roles section and assign the Service Usage Consumer role to your Google account..
 
-After changing permissions, please wait a few minutes for Google Cloud IAM permissions to update the policy.
+indicates that the authenticated Google account does not have the required permission to use the selected Google Cloud project.
 
-### 2. Google Earth Engine authentication window issue
+Open the Google Cloud Console:
 
-If authentication does not start automatically, run the following command :
+https://console.cloud.google.com/
+
+Then:
+
+1. Select the Google Cloud project used by **swot-reservoir-wse**.
+2. Open **IAM & Admin → IAM**.
+3. Grant access to the Google account being used for Earth Engine.
+4. Assign the **Service Usage Consumer** role where required.
+5. Allow a few minutes for IAM changes to propagate.
+
+Then retry authentication:
+
+```bash
+swot-wse auth --earth-engine-only
 ```
-earthengine authenticate --force
+
+If necessary, force a new authentication flow:
+
+```bash
+swot-wse auth --earth-engine-only --force
 ```
-This will force open the authentication window.
+
+### NASA Earthdata Authentication Problems
+
+Force a new Earthdata authentication:
+
+```bash
+swot-wse auth --earthdata-only --force
+```
+
+The package removes its stored Earthdata credentials and starts a new authentication flow.
+
+To remove the stored credentials without immediately authenticating again:
+
+```bash
+swot-wse auth --earthdata-only --remove
+```
+
+---
+
+## Documentation
+
+The repository contains detailed documentation for the package:
+
+- [Introduction](docs/introduction.md)
+- [Installation](docs/installation.md)
+- [Authentication](docs/authentication.md)
+- [Usage](docs/usage.md)
+- [Configuration](docs/configuration.md)
+- [Command Reference](docs/command_reference.md)
+- [Package Architecture](docs/architecture.md)
+- [Outputs](docs/outputs.md)
+- [Contributing](CONTRIBUTING.md)
+
+The documentation can also be built locally with Sphinx:
+
+```bash
+python -m pip install -r docs/requirements.txt
+python -m sphinx -b html docs docs/_build/html
+```
+
+---
+
+## Contributing
+
+Contributions, bug reports, documentation improvements, and proposals for additional SWOT observation-source implementations are welcome.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development and contribution guidelines.
+
+---
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
