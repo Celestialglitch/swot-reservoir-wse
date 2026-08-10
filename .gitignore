@@ -1,30 +1,26 @@
-# Python generated files
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
 
 # Packaging
-*.egg-info/
 build/
 dist/
+*.egg-info/
 
 # Virtual environments
 .venv/
-.venv-test/
 venv/
-env/
 
 # Runtime data
-cache/
+data/
 downloads/
 outputs/
-data/
-
-# Local configuration
+cache/
 config.json
 
-# Editors and operating systems
+# Editors / OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+docs/_build/

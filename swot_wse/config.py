@@ -1,13 +1,23 @@
-
 from pathlib import Path
 import copy
 import json
 import os
 
 
-PACKAGE_ROOT = Path.cwd().resolve()
+# -------------------------------------------------
+# Package runtime location
+# -------------------------------------------------
 
-CONFIG_FILE = PACKAGE_ROOT / "config.json"
+RUNTIME_ROOT = (
+    Path.home()
+    / ".swot_wse"
+).resolve()
+
+
+CONFIG_FILE = (
+    RUNTIME_ROOT
+    / "config.json"
+)
 
 
 DEFAULT_CONFIG = {
@@ -48,11 +58,11 @@ DEFAULT_CONFIG = {
     # ------------------------------------------
 
     "cache_dir": str(
-        PACKAGE_ROOT / "cache"
+        RUNTIME_ROOT / "cache"
     ),
 
     "output_dir": str(
-        PACKAGE_ROOT / "outputs"
+        RUNTIME_ROOT / "outputs"
     ),
 
     # ------------------------------------------
@@ -60,7 +70,9 @@ DEFAULT_CONFIG = {
     # ------------------------------------------
 
     "temp_download_dir": str(
-        PACKAGE_ROOT / "downloads" / "temp"
+        RUNTIME_ROOT
+        / "downloads"
+        / "temp"
     ),
 
     # ------------------------------------------
@@ -71,7 +83,9 @@ DEFAULT_CONFIG = {
 
         "lakesp": {
 
-            "collection": "SWOT_L2_HR_LakeSP_Obs_D",
+            "collection": (
+                "SWOT_L2_HR_LakeSP_Obs_D"
+            ),
 
             "search_buffer_degrees": 0.5,
 
@@ -89,12 +103,20 @@ DEFAULT_CONFIG = {
 }
 
 
-def _merge_config(default, user):
+def _merge_config(
+    default,
+    user,
+):
     """
-    Recursively merge user configuration with defaults.
+    Recursively merge user configuration
+    with the package defaults.
+
+    Unknown configuration keys are ignored.
     """
 
-    merged = copy.deepcopy(default)
+    merged = copy.deepcopy(
+        default
+    )
 
     for key, value in user.items():
 
@@ -102,8 +124,14 @@ def _merge_config(default, user):
             continue
 
         if (
-            isinstance(merged[key], dict)
-            and isinstance(value, dict)
+            isinstance(
+                merged[key],
+                dict,
+            )
+            and isinstance(
+                value,
+                dict,
+            )
         ):
 
             merged[key] = _merge_config(
@@ -118,30 +146,56 @@ def _merge_config(default, user):
     return merged
 
 
-
 def load_config():
     """
-    Load package configuration.
+    Load the active package configuration.
 
-    Missing keys are automatically restored
-    from DEFAULT_CONFIG.
+    Missing configuration values are restored
+    automatically from DEFAULT_CONFIG.
     """
 
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(
+        DEFAULT_CONFIG
+    )
 
     if CONFIG_FILE.exists():
 
-        with open(
-            CONFIG_FILE,
-            "r",
-            encoding="utf-8",
-        ) as f:
+        try:
 
-            user = json.load(f)
+            with open(
+                CONFIG_FILE,
+                "r",
+                encoding="utf-8",
+            ) as file:
 
-        if not isinstance(user, dict):
+                user = json.load(
+                    file
+                )
+
+        except json.JSONDecodeError as exc:
+
             raise RuntimeError(
-                "Configuration file must contain a JSON object."
+                "The swot-reservoir-wse "
+                "configuration file is invalid:\n\n"
+                f"    {CONFIG_FILE}"
+            ) from exc
+
+        except OSError as exc:
+
+            raise RuntimeError(
+                "The swot-reservoir-wse "
+                "configuration file could not "
+                "be read."
+            ) from exc
+
+        if not isinstance(
+            user,
+            dict,
+        ):
+
+            raise RuntimeError(
+                "Configuration file must "
+                "contain a JSON object."
             )
 
         config = _merge_config(
@@ -154,38 +208,54 @@ def load_config():
 
 def save_config(config):
     """
-    Save configuration to disk.
+    Save package configuration.
     """
 
-    CONFIG_FILE.parent.mkdir(
+    RUNTIME_ROOT.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    with open(
-        CONFIG_FILE,
-        "w",
-        encoding="utf-8",
-    ) as f:
+    try:
 
-        json.dump(
-            config,
-            f,
-            indent=4,
-        )
+        with open(
+            CONFIG_FILE,
+            "w",
+            encoding="utf-8",
+        ) as file:
+
+            json.dump(
+                config,
+                file,
+                indent=4,
+            )
+
+    except OSError as exc:
+
+        raise RuntimeError(
+            "The swot-reservoir-wse "
+            "configuration could not be saved."
+        ) from exc
 
 
 def _resolve_directory(path):
     """
     Resolve a configured directory path.
 
-    Relative paths are resolved from the package root.
+    Relative paths are resolved from the
+    swot-reservoir-wse runtime directory.
     """
 
-    path = Path(path).expanduser()
+    path = Path(
+        path
+    ).expanduser()
 
     if not path.is_absolute():
-        path = PACKAGE_ROOT / path
+
+        path = (
+            RUNTIME_ROOT
+            / path
+        )
 
     return path.resolve()
 
@@ -197,41 +267,53 @@ CACHE_DIR = _resolve_directory(
     CONFIG["cache_dir"]
 )
 
+
 POLYGON_CACHE_DIR = (
-    CACHE_DIR / "reservoir_polygons"
+    CACHE_DIR
+    / "reservoir_polygons"
 )
+
 
 LAKESP_CACHE_DIR = (
-    CACHE_DIR / "lakesp_granules"
+    CACHE_DIR
+    / "lakesp_granules"
 )
 
 
-DATA_DIR = PACKAGE_ROOT / "data"
+DOWNLOAD_DIR = (
+    RUNTIME_ROOT
+    / "downloads"
+)
 
-DOWNLOAD_DIR = PACKAGE_ROOT / "downloads"
 
 TEMP_DOWNLOAD_DIR = _resolve_directory(
-    CONFIG["temp_download_dir"]
+    CONFIG[
+        "temp_download_dir"
+    ]
 )
 
 
 OUTPUT_DIR = _resolve_directory(
-    CONFIG["output_dir"]
+    CONFIG[
+        "output_dir"
+    ]
 )
 
 
 def initialize_directories():
     """
-    Create all package directories.
+    Create all runtime directories required
+    by the package.
     """
 
     for directory in (
+
+        RUNTIME_ROOT,
 
         CACHE_DIR,
         POLYGON_CACHE_DIR,
         LAKESP_CACHE_DIR,
 
-        DATA_DIR,
         DOWNLOAD_DIR,
         TEMP_DOWNLOAD_DIR,
 
@@ -247,5 +329,7 @@ def initialize_directories():
     if not CONFIG_FILE.exists():
 
         save_config(
-            copy.deepcopy(DEFAULT_CONFIG)
+            copy.deepcopy(
+                DEFAULT_CONFIG
+            )
         )

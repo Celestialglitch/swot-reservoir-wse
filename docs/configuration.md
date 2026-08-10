@@ -1,0 +1,501 @@
+# Configuration
+
+**swot-reservoir-wse** provides a centralized configuration system for controlling reservoir footprint generation, LakeSP processing, parallel execution, caching, and output generation.
+
+The default configuration is intended to work for normal use. Configuration parameters can be changed when a workflow requires different spatial search settings, selected SWOT science cycles, processing concurrency, quality-control thresholds, cache behaviour, or output locations.
+
+---
+
+## Viewing the Configuration
+
+Display the active configuration with:
+
+```bash
+swot-wse config show
+```
+
+A configuration contains parameters of the following form:
+
+```json
+{
+  "earth_engine_project": null,
+  "search_radius_m": 50000,
+  "pekel_threshold": 20,
+  "working_crs": "auto",
+  "max_workers": 7,
+  "generate_plot": true,
+  "polygon_cache_enabled": true,
+  "lakesp_cache_enabled": true,
+  "cache_dir": "...",
+  "output_dir": "...",
+  "temp_download_dir": "...",
+  "sources": {
+    "lakesp": {
+      "collection": "SWOT_L2_HR_LakeSP_Obs_D",
+      "search_buffer_degrees": 0.5,
+      "science_cycles": ["001", "002", "003"],
+      "mad_threshold": 3.0
+    }
+  }
+}
+```
+
+The exact directory paths, `max_workers` value, and configured science cycles depend on the active configuration and system.
+
+---
+
+## Modifying the Configuration
+
+Change an individual parameter with:
+
+```bash
+swot-wse config set <key> <value>
+```
+
+For example:
+
+```bash
+swot-wse config set max_workers 4
+```
+
+Nested parameters use dotted keys:
+
+```bash
+swot-wse config set sources.lakesp.mad_threshold 2.5
+```
+
+Changes are stored in the package configuration and used by subsequent executions.
+
+---
+
+# General Processing Parameters
+
+## `max_workers`
+
+```text
+Default: max(1, CPU count - 1)
+```
+
+`max_workers` controls the maximum number of candidate LakeSP granules that can be processed concurrently during spatial verification.
+
+A LakeSP search may return several candidate granules for the requested location and date range. Each candidate must then be examined to determine whether its LakeSP observations actually intersect the generated reservoir footprint.
+
+The package performs these checks concurrently rather than processing every candidate granule sequentially.
+
+For example:
+
+```bash
+swot-wse config set max_workers 4
+```
+
+allows up to four granule-processing tasks to run concurrently.
+
+Increasing `max_workers` may reduce processing time when many candidate granules are returned, but it also increases simultaneous network, disk, and processing activity. A larger value therefore does not necessarily result in faster execution.
+
+---
+
+## `generate_plot`
+
+```text
+Default: true
+```
+
+Controls whether a PNG visualization is generated together with the final WSE time series.
+
+Disable plot generation:
+
+```bash
+swot-wse config set generate_plot false
+```
+
+Enable it again:
+
+```bash
+swot-wse config set generate_plot true
+```
+
+This setting does not affect generation of the CSV time series.
+
+---
+
+# Google Earth Engine Configuration
+
+## `earth_engine_project`
+
+Stores the Google Cloud Project ID used when accessing Google Earth Engine.
+
+The recommended way to configure it is through:
+
+```bash
+swot-wse auth
+```
+
+It can also be changed directly:
+
+```bash
+swot-wse config set earth_engine_project my-project-id
+```
+
+Changing this value directly does not authenticate a Google account.
+
+The stored Project ID can be cleared with:
+
+```bash
+swot-wse config set earth_engine_project none
+```
+
+For authentication and reauthentication options, see the [Authentication](authentication.md) documentation.
+
+---
+
+# Reservoir Footprint Parameters
+
+These parameters control how the reservoir footprint is generated from the supplied dam coordinates using the JRC Global Surface Water dataset.
+
+## `search_radius_m`
+
+```text
+Default: 50000
+Unit: metres
+```
+
+Defines the radius around the supplied dam location within which candidate water bodies are considered during reservoir footprint generation.
+
+For example:
+
+```bash
+swot-wse config set search_radius_m 100000
+```
+
+changes the radius from 50 km to 100 km.
+
+Increasing the radius expands the area from which candidate water bodies can be identified, but may also introduce additional unrelated water bodies into the search region.
+
+---
+
+## `pekel_threshold`
+
+```text
+Default: 20
+Unit: percent water occurrence
+```
+
+Controls the minimum water-occurrence value retained from the JRC Global Surface Water occurrence layer when constructing the water mask.
+
+Each pixel in the occurrence layer represents the percentage of available observations in which that location was classified as water.
+
+With the default threshold of `20`, pixels with water occurrence greater than 20% are retained for construction of the water mask from which candidate reservoir polygons are generated.
+
+The threshold can be changed with:
+
+```bash
+swot-wse config set pekel_threshold 30
+```
+
+Changing this value alters the spatial water mask and can therefore change the reservoir footprint generated by the package.
+
+---
+
+## `working_crs`
+
+```text
+Default: auto
+```
+
+Controls the projected Coordinate Reference System used for geometric operations during reservoir footprint generation.
+
+With:
+
+```text
+working_crs = auto
+```
+
+the package selects a projected CRS appropriate for the supplied location.
+
+A CRS can also be specified explicitly:
+
+```bash
+swot-wse config set working_crs EPSG:32643
+```
+
+Most users should retain `auto` unless a specific projected CRS is required.
+
+---
+
+# LakeSP Source Configuration
+
+Parameters specific to the LakeSP workflow are grouped under:
+
+```text
+sources.lakesp
+```
+
+For example:
+
+```text
+sources.lakesp.mad_threshold
+```
+
+refers to the MAD threshold used specifically during LakeSP quality control.
+
+These parameters are modified through the same `config set` interface used for general configuration.
+
+---
+
+## `sources.lakesp.collection`
+
+```text
+Default: SWOT_L2_HR_LakeSP_Obs_D
+```
+
+Specifies the NASA Earthdata collection queried when searching for LakeSP observations.
+
+The current implementation processes the SWOT Level-2 Lake Single Pass Observation Vector Product, Version D.
+
+The collection can be changed with:
+
+```bash
+swot-wse config set sources.lakesp.collection SWOT_L2_HR_LakeSP_Obs_D
+```
+
+This parameter should normally remain unchanged.
+
+Changing the collection identifier does **not** automatically add support for another SWOT product. A different product may contain different variables, structures, and quality information and therefore requires corresponding processing support in the package.
+
+---
+
+## `sources.lakesp.search_buffer_degrees`
+
+```text
+Default: 0.5
+Unit: degrees
+```
+
+Controls the geographic buffer applied around the reservoir footprint when querying NASA Earthdata for candidate LakeSP granules.
+
+For example:
+
+```bash
+swot-wse config set sources.lakesp.search_buffer_degrees 0.75
+```
+
+expands the initial search region.
+
+This parameter affects only **candidate granule discovery**. Granules returned by the Earthdata search are subsequently examined against the actual reservoir footprint before their observations are accepted.
+
+Increasing the buffer may therefore increase the number of candidate granules that must be checked without necessarily increasing the number of valid reservoir observations.
+
+---
+
+## `sources.lakesp.science_cycles`
+
+Specifies the SWOT science cycles accepted during LakeSP granule search.
+
+The configured cycle list is used to restrict processing to selected Science Phase observations.
+
+For example:
+
+```bash
+swot-wse config set sources.lakesp.science_cycles 045,046,047
+```
+
+restricts processing to cycles `045`, `046`, and `047`.
+
+This is useful when an analysis requires observations from only a selected portion of the SWOT mission rather than all configured science cycles.
+
+The active cycle list can be inspected with:
+
+```bash
+swot-wse config show
+```
+
+---
+
+## `sources.lakesp.mad_threshold`
+
+```text
+Default: 3.0
+```
+
+Controls the threshold used during temporal Median Absolute Deviation (MAD) filtering of the LakeSP WSE time series.
+
+Before this stage, LakeSP observations have already undergone product-quality screening and daily aggregation. For each acquisition date, the median WSE is used as the representative daily measurement.
+
+The package then calculates:
+
+```text
+modified_z = 0.6745 × |WSE - median(WSE)| / MAD
+```
+
+where:
+
+```text
+MAD = median(|WSE - median(WSE)|)
+```
+
+A daily observation is retained when:
+
+```text
+modified_z <= mad_threshold
+```
+
+With the default:
+
+```text
+mad_threshold = 3.0
+```
+
+daily WSE observations with a modified deviation score greater than `3.0` are removed.
+
+The threshold can be changed with:
+
+```bash
+swot-wse config set sources.lakesp.mad_threshold 2.5
+```
+
+A smaller value applies stricter temporal outlier removal, while a larger value permits greater deviation from the median.
+
+Because this parameter can directly change which WSE observations appear in the final time series, it should be modified deliberately and reported when altered for scientific analysis.
+
+---
+
+# Cache Configuration
+
+## `polygon_cache_enabled`
+
+```text
+Default: true
+```
+
+Controls whether generated reservoir footprints are retained and reused.
+
+Disable reservoir footprint caching:
+
+```bash
+swot-wse config set polygon_cache_enabled false
+```
+
+When caching is enabled, a previously generated footprint for the same dam coordinates can be reused instead of repeating the reservoir footprint generation procedure.
+
+---
+
+## `lakesp_cache_enabled`
+
+```text
+Default: true
+```
+
+Controls whether downloaded LakeSP granules are retained for later reuse.
+
+Disable LakeSP caching:
+
+```bash
+swot-wse config set lakesp_cache_enabled false
+```
+
+When enabled, a previously downloaded granule can be reused during subsequent processing instead of being downloaded again.
+
+---
+
+## `cache_dir`
+
+Defines the root directory used for persistent package caches.
+
+It can be changed with:
+
+```bash
+swot-wse config set cache_dir <path>
+```
+
+Reservoir footprint and LakeSP granule caches are maintained beneath this location.
+
+The currently configured path can be inspected with:
+
+```bash
+swot-wse config show
+```
+
+---
+
+## `temp_download_dir`
+
+Defines the workspace used for temporary files created while LakeSP granules are being downloaded, extracted, and examined.
+
+Change it with:
+
+```bash
+swot-wse config set temp_download_dir <path>
+```
+
+Temporary working files are removed when they are no longer required.
+
+---
+
+# Output Configuration
+
+## `output_dir`
+
+Defines the directory in which generated WSE products are written.
+
+Change it with:
+
+```bash
+swot-wse config set output_dir <path>
+```
+
+The final CSV time series and, when enabled, the PNG visualization are written to this location.
+
+The active output directory can be inspected with:
+
+```bash
+swot-wse config show
+```
+
+---
+
+# Accepted Value Formats
+
+Boolean configuration parameters accept:
+
+```text
+true
+false
+1
+0
+yes
+no
+on
+off
+```
+
+Science-cycle lists are supplied as comma-separated values:
+
+```bash
+swot-wse config set sources.lakesp.science_cycles 045,046,047
+```
+
+Numeric values are supplied directly:
+
+```bash
+swot-wse config set max_workers 4
+swot-wse config set pekel_threshold 30
+swot-wse config set sources.lakesp.mad_threshold 2.5
+```
+
+---
+
+# Restoring the Default Configuration
+
+Restore all configuration parameters to their defaults with:
+
+```bash
+swot-wse config reset
+```
+
+This also clears the stored Google Earth Engine Project ID.
+
+The restored configuration can be inspected with:
+
+```bash
+swot-wse config show
+```

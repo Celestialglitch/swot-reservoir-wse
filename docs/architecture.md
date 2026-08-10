@@ -58,8 +58,8 @@ The remaining observations constitute the final reservoir-specific Water Surface
 
 The package currently generates:
 
-* a CSV file containing the reservoir-specific Water Surface Elevation time series; and
-* a PNG visualization of the generated time series.
+- a CSV file containing the reservoir-specific Water Surface Elevation time series; and
+- a PNG visualization of the generated time series.
 
 Output locations are configurable through the package configuration system.
 
@@ -85,11 +85,11 @@ Cached data are reused automatically whenever possible, reducing processing time
 
 The package integrates several external platforms throughout the processing workflow.
 
-| Service | Purpose |
-|---------|---------|
-| **Google Earth Engine (GEE)** | Executes large-scale geospatial processing for reservoir footprint generation. |
+| Service                              | Purpose                                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| **Google Earth Engine (GEE)**        | Executes large-scale geospatial processing for reservoir footprint generation.             |
 | **JRC Global Surface Water Dataset** | Provides historical global surface-water observations used to derive reservoir footprints. |
-| **NASA Earthdata** | Provides discovery and access to SWOT observation products. |
+| **NASA Earthdata**                   | Provides discovery and access to SWOT observation products.                                |
 
 ---
 
