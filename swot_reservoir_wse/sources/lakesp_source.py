@@ -3,11 +3,11 @@ from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 from tqdm import tqdm
 
-from swot_wse.config import load_config
-from swot_wse.filtering.lakesp.stages import filter_timeseries
-from swot_wse.lakesp.discovery import discover_granules
-from swot_wse.lakesp.extract import process_granule
-from swot_wse.lakesp.search import search_lakesp_granules
+from swot_reservoir_wse.config import load_config
+from swot_reservoir_wse.filtering.lakesp.stages import filter_timeseries
+from swot_reservoir_wse.lakesp.discovery import discover_granules
+from swot_reservoir_wse.lakesp.extract import process_granule
+from swot_reservoir_wse.lakesp.search import search_lakesp_granules
 
 
 def _remove_temporary_granules(

@@ -5,7 +5,7 @@ import zipfile
 
 import geopandas as gpd
 
-from swot_wse.config import load_config
+from swot_reservoir_wse.config import load_config
 
 
 OUTPUT_COLUMNS = [

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from swot_wse.config import load_config
+from swot_reservoir_wse.config import load_config
 
 
 def build_daily_statistics(

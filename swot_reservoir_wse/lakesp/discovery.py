@@ -12,7 +12,7 @@ import earthaccess
 import geopandas as gpd
 from tqdm import tqdm
 
-from swot_wse.config import (
+from swot_reservoir_wse.config import (
     LAKESP_CACHE_DIR,
     load_config,
 )

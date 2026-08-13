@@ -1,7 +1,7 @@
 import earthaccess
 
-from swot_wse.config import load_config
-from swot_wse.earthdata import initialize_earthdata
+from swot_reservoir_wse.config import load_config
+from swot_reservoir_wse.earthdata import initialize_earthdata
 
 
 def _granule_filename(granule):

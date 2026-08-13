@@ -6,11 +6,11 @@ from concurrent.futures import (
 import pandas as pd
 from tqdm import tqdm
 
-from swot_wse.config import load_config
-from swot_wse.filtering.pixc.stages import filter_timeseries
-from swot_wse.pixc.discovery import discover_pixc_granules
-from swot_wse.pixc.extract import process_pixc_granule
-from swot_wse.pixc.search import search_pixc_granules
+from swot_reservoir_wse.config import load_config
+from swot_reservoir_wse.filtering.pixc.stages import filter_timeseries
+from swot_reservoir_wse.pixc.discovery import discover_pixc_granules
+from swot_reservoir_wse.pixc.extract import process_pixc_granule
+from swot_reservoir_wse.pixc.search import search_pixc_granules
 
 
 def run_pixc_pipeline(

@@ -1,8 +1,18 @@
 # Command Reference
 
-This page is the complete command-line reference for **swot-wse**.
+This document provides the complete command-line reference for **swot-reservoir-wse**, including extraction, authentication, configuration, and cache-management commands.
 
-The CLI contains four command groups:
+---
+
+# Display Available Commands
+
+Display the top-level command groups:
+
+```bash
+swot-reservoir-wse --help
+```
+
+The current command groups are:
 
 ```text
 extract
@@ -11,196 +21,31 @@ config
 cache
 ```
 
-Display the top-level help page with:
+Display help for an individual command:
 
 ```bash
-swot-wse --help
+swot-reservoir-wse extract --help
+swot-reservoir-wse auth --help
+swot-reservoir-wse config --help
+swot-reservoir-wse cache --help
 ```
 
-Command-specific help is available through:
+Configuration subcommands also provide their own help pages:
 
 ```bash
-swot-wse extract --help
-swot-wse auth --help
-swot-wse config --help
-swot-wse cache --help
-```
-
-The `config` command also contains three subcommands:
-
-```bash
-swot-wse config show --help
-swot-wse config set --help
-swot-wse config reset --help
+swot-reservoir-wse config show --help
+swot-reservoir-wse config set --help
+swot-reservoir-wse config reset --help
 ```
 
 ---
 
-# Typical Workflows
+# 1. Reservoir WSE Extraction
 
-The following examples show complete command sequences for a new working directory.
-
-They are intended as practical examples of how the individual commands fit together. The remaining sections document each command separately.
-
----
-
-## LakeSP Example
-
-Suppose the target dam is located at:
-
-```text
-Latitude  : 19.690
-Longitude : 73.340
-```
-
-and the required observation period is:
-
-```text
-2026-01-20 to 2026-07-16
-```
-
-### 1. Authenticate
-
-Run:
+The `extract` command generates a reservoir-specific Water Surface Elevation (WSE) time series from a supplied dam location, date range, and SWOT observation source.
 
 ```bash
-swot-wse auth
-```
-
-If the Earth Engine Project ID has not yet been configured, the package asks for it.
-
-If valid NASA Earthdata credentials are not already available, the package also requests the Earthdata Login username and password.
-
----
-
-### 2. Inspect the configuration
-
-```bash
-swot-wse config show
-```
-
-The default LakeSP quality classes are:
-
-```text
-good
-suspect
-degraded
-```
-
-To use those defaults, no configuration change is required.
-
-For example, if only `GOOD` and `SUSPECT` observations should be accepted:
-
-```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good,suspect
-```
-
----
-
-### 3. Run LakeSP extraction
-
-```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
-```
-
-With the default output directory, successful products are written under:
-
-```text
-outputs/
-```
-
-with filenames such as:
-
-```text
-19.69000_73.34000_lakesp_wse.csv
-19.69000_73.34000_lakesp_wse.png
-```
-
----
-
-### 4. Inspect the cache
-
-```bash
-swot-wse cache
-```
-
-If the same reservoir or LakeSP products are required again, cached data can be reused when caching is enabled.
-
----
-
-## PIXC Example
-
-The same reservoir can be processed independently using PIXC.
-
-### 1. Authenticate
-
-If authentication has already been configured for the current working directory, this step normally does not need to be repeated.
-
-Otherwise:
-
-```bash
-swot-wse auth
-```
-
----
-
-### 2. Select an appropriate worker count
-
-PIXC products are considerably larger than LakeSP vector products.
-
-On systems with limited memory, reducing parallel processing is recommended:
-
-```bash
-swot-wse config set max_workers 4
-```
-
-or:
-
-```bash
-swot-wse config set max_workers 2
-```
-
----
-
-### 3. Inspect the PIXC configuration
-
-```bash
-swot-wse config show
-```
-
-For example, processing can be restricted to selected SWOT science cycles:
-
-```bash
-swot-wse config set sources.pixc.science_cycles 045,046,047
-```
-
----
-
-### 4. Run PIXC extraction
-
-```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
-```
-
-Successful products are written with source-specific names such as:
-
-```text
-19.69000_73.34000_pixc_wse.csv
-19.69000_73.34000_pixc_wse.png
-```
-
-LakeSP and PIXC are independent processing sources. Running one does not automatically invoke the other.
-
----
-
-# 1. `extract`
-
-Generate a reservoir-specific Water Surface Elevation (WSE) time series from the selected SWOT observation source.
-
-## Syntax
-
-```bash
-swot-wse extract \
+swot-reservoir-wse extract \
     --lat <latitude> \
     --lon <longitude> \
     --start-date YYYY-MM-DD \
@@ -210,8 +55,8 @@ swot-wse extract \
 
 On Windows PowerShell, the command can be entered on one line:
 
-```powershell
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+```bash
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
 ```
 
 ---
@@ -246,74 +91,64 @@ The observation source is mandatory. There is no `auto` source and no automatic 
 
 ---
 
-## LakeSP
+## LakeSP Extraction
+
+Use the SWOT LakeSP pipeline with:
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
 ```
 
-LakeSP-specific processing and quality-control behaviour are described in [Package Architecture](architecture.md) and [Configuration](configuration.md).
+The LakeSP workflow performs:
+
+1. reservoir footprint generation or cache retrieval;
+2. LakeSP metadata search;
+3. granule-level spatial verification;
+4. reservoir observation association using intersecting LakeSP observations;
+5. configured quality-class filtering;
+6. acquisition-day aggregation;
+7. temporal MAD filtering; and
+8. CSV and optional PNG output generation.
 
 ---
 
-## PIXC
+## PIXC Extraction
+
+Use the SWOT PIXC pipeline with:
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
 ```
 
-PIXC-specific processing is described in [Package Architecture](architecture.md).
+The PIXC workflow performs:
 
-Because PIXC processing operates on pixel-cloud products, resource use can be considerably higher than for LakeSP. `max_workers` can be reduced when necessary.
+1. reservoir footprint generation or cache retrieval;
+2. PIXC metadata search;
+3. CMR footprint verification;
+4. PIXC NetCDF download and pixel-cloud extraction;
+5. reservoir intersection and pixel filtering;
+6. WSE calculation;
+7. acquisition-day aggregation;
+8. temporal MAD filtering; and
+9. CSV and optional PNG output generation.
+
+PIXC processing can require substantially more memory, disk I/O, and processing time than LakeSP because individual pixel-cloud granules are processed directly.
 
 ---
 
-# 2. `auth`
+# 2. Authentication
 
-Manage Google Earth Engine and NASA Earthdata authentication.
+The `auth` command manages authentication for:
 
-## Syntax
-
-```bash
-swot-wse auth [options]
-```
-
-Without service-specific options:
-
-```bash
-swot-wse auth
-```
-
-the command manages both services.
-
----
-
-## Options
-
-| Option | Description |
-| --- | --- |
-| `--project-id <project-id>` | Supply the Google Cloud Project ID used for Earth Engine. |
-| `--force` | Authenticate again instead of reusing the current authentication state. |
-| `--remove` | Remove authentication information managed directly by **swot-wse**. |
-| `--earth-engine-only` | Apply the operation only to Google Earth Engine. |
-| `--earthdata-only` | Apply the operation only to NASA Earthdata. |
-
-The following option combinations are invalid:
-
-```text
---force + --remove
-
---earth-engine-only + --earthdata-only
-
---earthdata-only + --project-id
-```
+- **Google Earth Engine**, used for reservoir footprint generation; and
+- **NASA Earthdata**, used for SWOT product discovery and access.
 
 ---
 
 ## Authenticate Both Services
 
 ```bash
-swot-wse auth
+swot-reservoir-wse auth
 ```
 
 ---
@@ -321,13 +156,13 @@ swot-wse auth
 ## Google Earth Engine Only
 
 ```bash
-swot-wse auth --earth-engine-only
+swot-reservoir-wse auth --earth-engine-only
 ```
 
 Supply the Project ID directly:
 
 ```bash
-swot-wse auth --earth-engine-only --project-id my-earth-engine-project
+swot-reservoir-wse auth --earth-engine-only --project-id my-earth-engine-project
 ```
 
 ---
@@ -335,7 +170,16 @@ swot-wse auth --earth-engine-only --project-id my-earth-engine-project
 ## NASA Earthdata Only
 
 ```bash
-swot-wse auth --earthdata-only
+swot-reservoir-wse auth --earthdata-only
+```
+
+If valid Earthdata credentials are already present in the user's netrc file, they are reused.
+
+Otherwise, the package prompts for:
+
+```text
+Earthdata Login username:
+Earthdata password:
 ```
 
 ---
@@ -345,53 +189,53 @@ swot-wse auth --earthdata-only
 Both services:
 
 ```bash
-swot-wse auth --force
+swot-reservoir-wse auth --force
 ```
 
 Earth Engine only:
 
 ```bash
-swot-wse auth --earth-engine-only --force
+swot-reservoir-wse auth --earth-engine-only --force
 ```
 
 Earthdata only:
 
 ```bash
-swot-wse auth --earthdata-only --force
+swot-reservoir-wse auth --earthdata-only --force
 ```
 
 Earth Engine with a different project:
 
 ```bash
-swot-wse auth --earth-engine-only --force --project-id another-earth-engine-project
+swot-reservoir-wse auth --earth-engine-only --force --project-id another-earth-engine-project
 ```
 
 The Project ID can also be supplied while forcing both services:
 
 ```bash
-swot-wse auth --force --project-id another-earth-engine-project
+swot-reservoir-wse auth --force --project-id another-earth-engine-project
 ```
 
 ---
 
 ## Remove Authentication Information
 
-Both services:
+Remove authentication information managed directly by **swot-reservoir-wse** for both services:
 
 ```bash
-swot-wse auth --remove
+swot-reservoir-wse auth --remove
 ```
 
 Earth Engine configuration only:
 
 ```bash
-swot-wse auth --earth-engine-only --remove
+swot-reservoir-wse auth --earth-engine-only --remove
 ```
 
 Earthdata credentials only:
 
 ```bash
-swot-wse auth --earthdata-only --remove
+swot-reservoir-wse auth --earthdata-only --remove
 ```
 
 `--earth-engine-only --remove` removes the Project ID stored in the active `config.json`. It does not delete Google-managed OAuth credentials.
@@ -406,13 +250,15 @@ For authentication storage and behaviour, see [Authentication](authentication.md
 
 View, modify, or restore runtime configuration.
 
-## Syntax
+The active configuration is stored in:
 
-```bash
-swot-wse config {show,set,reset}
+```text
+config.json
 ```
 
-The active runtime configuration is stored in:
+in the directory from which `swot-reservoir-wse` is being used.
+
+The repository also provides:
 
 ```text
 config.json
@@ -427,26 +273,25 @@ in the current **swot-wse working directory**.
 Display the complete active configuration.
 
 ```bash
-swot-wse config show
+swot-reservoir-wse config show
 ```
 
-This includes common settings and source-specific configuration under:
+This displays the complete active configuration, including:
 
-```text
-sources.lakesp
-sources.pixc
-```
+- Earth Engine Project ID;
+- reservoir-footprint parameters;
+- worker count;
+- plotting behavior;
+- cache and output directories;
+- LakeSP parameters; and
+- PIXC parameters.
 
 ---
 
-# 3.2 `config set`
-
-Modify one configuration value.
-
-## Syntax
+## Modify a Configuration Value
 
 ```bash
-swot-wse config set <key> <value>
+swot-reservoir-wse config set <key> <value>
 ```
 
 Nested keys use dotted notation.
@@ -454,7 +299,7 @@ Nested keys use dotted notation.
 Example:
 
 ```bash
-swot-wse config set sources.lakesp.mad_threshold 2.5
+swot-reservoir-wse config set sources.lakesp.mad_threshold 2.5
 ```
 
 The following sections list the supported configuration keys.
@@ -468,7 +313,7 @@ The following sections list the supported configuration keys.
 Set the maximum number of concurrent worker tasks:
 
 ```bash
-swot-wse config set max_workers 4
+swot-reservoir-wse config set max_workers 4
 ```
 
 The value must be at least:
@@ -492,13 +337,13 @@ A lower value may be preferable for PIXC processing when memory is limited.
 Enable PNG generation:
 
 ```bash
-swot-wse config set generate_plot true
+swot-reservoir-wse config set generate_plot true
 ```
 
 Disable it:
 
 ```bash
-swot-wse config set generate_plot false
+swot-reservoir-wse config set generate_plot false
 ```
 
 Disabling plot generation does not disable CSV generation.
@@ -510,7 +355,7 @@ Disabling plot generation does not disable CSV generation.
 ## `search_radius_m`
 
 ```bash
-swot-wse config set search_radius_m 100000
+swot-reservoir-wse config set earth_engine_project my-earth-engine-project
 ```
 
 The value must be greater than `0`.
@@ -520,19 +365,19 @@ The value must be greater than `0`.
 ## `pekel_threshold`
 
 ```bash
-swot-wse config set pekel_threshold 30
+swot-reservoir-wse config set earth_engine_project none
 ```
 
 Accepted values are between:
 
-```text
-0
+```bash
+swot-reservoir-wse auth
 ```
 
 and:
 
-```text
-100
+```bash
+swot-reservoir-wse auth --earth-engine-only
 ```
 
 ---
@@ -542,13 +387,13 @@ and:
 Use automatic projected CRS selection:
 
 ```bash
-swot-wse config set working_crs auto
+swot-reservoir-wse config set search_radius_m 100000
 ```
 
 Or provide an explicit CRS:
 
 ```bash
-swot-wse config set working_crs EPSG:32643
+swot-reservoir-wse config set pekel_threshold 30
 ```
 
 A supplied CRS string is stored as configuration and is subsequently interpreted by the geospatial processing stack.
@@ -564,21 +409,13 @@ For guidance on changing reservoir-footprint parameters, see [Configuration](con
 Set the Project ID:
 
 ```bash
-swot-wse config set earth_engine_project my-earth-engine-project
+swot-reservoir-wse config set working_crs auto
 ```
 
 Clear it:
 
 ```bash
-swot-wse config set earth_engine_project none
-```
-
-Changing this value does not authenticate Google Earth Engine.
-
-Authentication should normally be configured through:
-
-```bash
-swot-wse auth --earth-engine-only
+swot-reservoir-wse config set working_crs EPSG:32643
 ```
 
 ---
@@ -596,7 +433,7 @@ sources.lakesp
 ## `sources.lakesp.collection`
 
 ```bash
-swot-wse config set sources.lakesp.collection SWOT_L2_HR_LakeSP_Obs_D
+swot-reservoir-wse config set sources.lakesp.collection SWOT_L2_HR_LakeSP_Obs_D
 ```
 
 Changing the collection string does not automatically make an incompatible LakeSP or other SWOT product supported by the package.
@@ -606,7 +443,7 @@ Changing the collection string does not automatically make an incompatible LakeS
 ## `sources.lakesp.search_buffer_degrees`
 
 ```bash
-swot-wse config set sources.lakesp.search_buffer_degrees 0.75
+swot-reservoir-wse config set sources.lakesp.search_buffer_degrees 0.75
 ```
 
 The value cannot be negative.
@@ -618,7 +455,7 @@ The value cannot be negative.
 Restrict the source to selected science cycles:
 
 ```bash
-swot-wse config set sources.lakesp.science_cycles 045,046,047
+swot-reservoir-wse config set sources.lakesp.science_cycles 045,046,047
 ```
 
 Cycle numbers are normalized to three digits.
@@ -626,7 +463,7 @@ Cycle numbers are normalized to three digits.
 For example:
 
 ```bash
-swot-wse config set sources.lakesp.science_cycles 45,46,47
+swot-reservoir-wse config set sources.lakesp.science_cycles 45,46,47
 ```
 
 is stored as:
@@ -644,7 +481,7 @@ The list must contain at least one valid positive cycle number.
 ## `sources.lakesp.mad_threshold`
 
 ```bash
-swot-wse config set sources.lakesp.mad_threshold 2.5
+swot-reservoir-wse config set sources.lakesp.mad_threshold 2.5
 ```
 
 The value must be greater than `0`.
@@ -668,35 +505,35 @@ Default:
 good,suspect,degraded
 ```
 
+Set the accepted classes with:
+
+```bash
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded
+```
+
 Retain only `GOOD` observations:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good
 ```
 
 Retain `GOOD` and `SUSPECT`:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good,suspect
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect
 ```
 
-Retain the default three classes:
+Retain all four classes:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded
-```
-
-Retain all supported classes:
-
-```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded,bad
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded,bad
 ```
 
 At least one valid quality class must be supplied.
 
-Duplicate values are removed automatically.
+Duplicate values are removed when the configuration is saved.
 
-For the meaning and effect of these classes, see [Configuration](configuration.md) and [Outputs](outputs.md).
+The final LakeSP daily `quality_status` is derived from the most frequent retained quality class contributing to that acquisition date. If multiple classes are equally frequent, the poorer quality class is selected.
 
 ---
 
@@ -713,7 +550,7 @@ sources.pixc
 ## `sources.pixc.collection`
 
 ```bash
-swot-wse config set sources.pixc.collection SWOT_L2_HR_PIXC_D
+swot-reservoir-wse config set sources.pixc.collection SWOT_L2_HR_PIXC_D
 ```
 
 ---
@@ -721,7 +558,7 @@ swot-wse config set sources.pixc.collection SWOT_L2_HR_PIXC_D
 ## `sources.pixc.search_buffer_degrees`
 
 ```bash
-swot-wse config set sources.pixc.search_buffer_degrees 0.75
+swot-reservoir-wse config set sources.pixc.search_buffer_degrees 0.75
 ```
 
 The value cannot be negative.
@@ -731,7 +568,7 @@ The value cannot be negative.
 ## `sources.pixc.science_cycles`
 
 ```bash
-swot-wse config set sources.pixc.science_cycles 045,046,047
+swot-reservoir-wse config set sources.pixc.science_cycles 045,046,047
 ```
 
 Cycle numbers use the same normalization rules as LakeSP science cycles.
@@ -741,7 +578,7 @@ Cycle numbers use the same normalization rules as LakeSP science cycles.
 ## `sources.pixc.mad_threshold`
 
 ```bash
-swot-wse config set sources.pixc.mad_threshold 2.5
+swot-reservoir-wse config set sources.pixc.mad_threshold 2.5
 ```
 
 The value must be greater than `0`.
@@ -751,7 +588,7 @@ The value must be greater than `0`.
 ## `sources.pixc.water_classification`
 
 ```bash
-swot-wse config set sources.pixc.water_classification 4
+swot-reservoir-wse config set sources.pixc.water_classification 4
 ```
 
 Default:
@@ -773,13 +610,13 @@ For the scientific meaning of this setting, see [Configuration](configuration.md
 Enable reservoir polygon caching:
 
 ```bash
-swot-wse config set polygon_cache_enabled true
+swot-reservoir-wse config set polygon_cache_enabled true
 ```
 
 Disable it:
 
 ```bash
-swot-wse config set polygon_cache_enabled false
+swot-reservoir-wse config set polygon_cache_enabled false
 ```
 
 ---
@@ -789,13 +626,13 @@ swot-wse config set polygon_cache_enabled false
 Enable persistent LakeSP granule caching:
 
 ```bash
-swot-wse config set lakesp_cache_enabled true
+swot-reservoir-wse config set lakesp_cache_enabled true
 ```
 
 Disable it:
 
 ```bash
-swot-wse config set lakesp_cache_enabled false
+swot-reservoir-wse config set lakesp_cache_enabled false
 ```
 
 PIXC granules are currently processed through temporary working directories and are not retained in a persistent PIXC granule cache.
@@ -805,23 +642,29 @@ PIXC granules are currently processed through temporary working directories and 
 ## `cache_dir`
 
 ```bash
-swot-wse config set cache_dir cache
+swot-reservoir-wse config set cache_dir <path>
 ```
 
 An absolute path can also be supplied:
 
-```powershell
-swot-wse config set cache_dir D:\SWOT\cache
+```bash
+swot-reservoir-wse config set cache_dir swot_cache
 ```
 
 Relative paths are resolved from the working directory.
 
 ---
 
-## `temp_download_dir`
+## Temporary Download Directory
 
 ```bash
-swot-wse config set temp_download_dir downloads/temp
+swot-reservoir-wse config set temp_download_dir <path>
+```
+
+Example:
+
+```bash
+swot-reservoir-wse config set temp_download_dir downloads/temp
 ```
 
 An absolute path can also be supplied.
@@ -833,13 +676,13 @@ An absolute path can also be supplied.
 ## `output_dir`
 
 ```bash
-swot-wse config set output_dir outputs
+swot-reservoir-wse config set output_dir <path>
 ```
 
 Example with an absolute path:
 
-```powershell
-swot-wse config set output_dir D:\SWOT\outputs
+```bash
+swot-reservoir-wse config set output_dir outputs
 ```
 
 Relative paths are resolved from the working directory.
@@ -888,60 +731,33 @@ off
 Examples:
 
 ```bash
-swot-wse config set generate_plot yes
-swot-wse config set polygon_cache_enabled 0
-swot-wse config set lakesp_cache_enabled on
+swot-reservoir-wse config set generate_plot yes
+swot-reservoir-wse config set polygon_cache_enabled 0
+swot-reservoir-wse config set lakesp_cache_enabled on
 ```
 
 ---
 
-## List Values
+# 12. Reset Configuration
 
-List-based configuration values can be supplied as comma-separated values:
-
-```bash
-swot-wse config set sources.lakesp.science_cycles 045,046,047
-```
-
-and:
+Restore the package defaults:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded
+swot-reservoir-wse config reset
 ```
 
-JSON-style lists are also accepted when correctly quoted for the user's shell.
+This resets all configuration values, including:
 
----
+- Earth Engine Project ID;
+- reservoir-footprint settings;
+- worker count;
+- plotting behavior;
+- cache paths;
+- output paths;
+- LakeSP parameters; and
+- PIXC parameters.
 
-## Numeric Values
-
-Examples:
-
-```bash
-swot-wse config set max_workers 4
-swot-wse config set search_radius_m 50000
-swot-wse config set pekel_threshold 20
-swot-wse config set sources.lakesp.mad_threshold 3.0
-swot-wse config set sources.pixc.mad_threshold 3.0
-```
-
----
-
-# 12. `config reset`
-
-Restore all configuration values to package defaults:
-
-```bash
-swot-wse config reset
-```
-
-This includes resetting:
-
-```text
-earth_engine_project
-```
-
-to:
+The Earth Engine Project ID therefore becomes:
 
 ```text
 null
@@ -956,7 +772,7 @@ The operation does **not** remove:
 If authentication information also needs to be removed, use:
 
 ```bash
-swot-wse auth --remove
+swot-reservoir-wse auth --remove
 ```
 
 After resetting, the resulting configuration can be inspected with:
@@ -974,16 +790,16 @@ Inspect or clear persistent cache data.
 ## Syntax
 
 ```bash
-swot-wse cache [option]
+swot-reservoir-wse cache
 ```
 
-Running the command without an option displays a cache summary:
+The command reports:
 
-```bash
-swot-wse cache
-```
+- the number of cached reservoir polygons;
+- the number of cached LakeSP granules; and
+- the active cache location.
 
-Example:
+Example structure:
 
 ```text
 Cache Summary
@@ -1005,7 +821,7 @@ PIXC products are not included because the current PIXC pipeline does not persis
 Remove cached reservoir footprints:
 
 ```bash
-swot-wse cache --clear-polygons
+swot-reservoir-wse cache --clear-polygons
 ```
 
 They will be regenerated when required by a later extraction.
@@ -1017,7 +833,7 @@ They will be regenerated when required by a later extraction.
 Remove cached LakeSP granules:
 
 ```bash
-swot-wse cache --clear-lakesp
+swot-reservoir-wse cache --clear-lakesp
 ```
 
 Required LakeSP products will be downloaded again when necessary.
@@ -1029,7 +845,7 @@ Required LakeSP products will be downloaded again when necessary.
 Remove all persistent cache data currently managed by the cache command:
 
 ```bash
-swot-wse cache --clear-all
+swot-reservoir-wse cache --clear-all
 ```
 
 This currently clears:

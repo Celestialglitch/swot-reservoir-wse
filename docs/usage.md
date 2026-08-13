@@ -1,6 +1,6 @@
 # Usage
 
-This page provides a practical introduction to using **swot-wse** to generate reservoir-specific Water Surface Elevation (WSE) time series from SWOT observations.
+This page provides a practical introduction to using **swot-reservoir-wse** to generate reservoir-specific Water Surface Elevation (WSE) time series from SWOT observations.
 
 The package currently supports two independently selectable observation sources:
 
@@ -16,7 +16,7 @@ For every command and option, see the [Command Reference](command_reference.md).
 A typical workflow consists of:
 
 ```text
-Install swot-wse
+Install swot-reservoir-wse
        │
        ▼
 Configure authentication
@@ -43,7 +43,7 @@ optionally, PNG output
 Before the first extraction, configure the external services required by the package:
 
 ```bash
-swot-wse auth
+swot-reservoir-wse auth
 ```
 
 The package uses:
@@ -56,17 +56,17 @@ Existing valid authentication is reused when possible.
 The services can also be managed separately:
 
 ```bash
-swot-wse auth --earth-engine-only
+swot-reservoir-wse auth --earth-engine-only
 ```
 
 ```bash
-swot-wse auth --earthdata-only
+swot-reservoir-wse auth --earthdata-only
 ```
 
 Force reauthentication with:
 
 ```bash
-swot-wse auth --force
+swot-reservoir-wse auth --force
 ```
 
 For credential removal, Project ID handling, and service-specific options, see [Authentication](authentication.md).
@@ -78,7 +78,7 @@ For credential removal, Project ID handling, and service-specific options, see [
 The extraction command is:
 
 ```bash
-swot-wse extract
+swot-reservoir-wse extract
 ```
 
 A processing run requires:
@@ -92,7 +92,7 @@ A processing run requires:
 The general form is:
 
 ```bash
-swot-wse extract \
+swot-reservoir-wse extract \
     --lat <latitude> \
     --lon <longitude> \
     --start-date YYYY-MM-DD \
@@ -118,7 +118,7 @@ There is no automatic source-selection or fallback mode.
 Generate a LakeSP WSE time series with:
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
 ```
 
 Here:
@@ -132,7 +132,7 @@ identify the supplied dam location.
 
 The coordinates are not treated as a predefined reservoir boundary.
 
-Instead, **swot-wse** derives the corresponding reservoir footprint and uses that footprint to identify relevant SWOT observations.
+Instead, **swot-reservoir-wse** derives the corresponding reservoir footprint and uses that footprint to identify relevant SWOT observations.
 
 ---
 
@@ -203,7 +203,7 @@ The daily time series then undergoes temporal MAD filtering.
 Generate a PIXC WSE time series with:
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
 ```
 
 PIXC is processed independently of LakeSP.
@@ -301,13 +301,13 @@ As a result, PIXC runs can require considerably more:
 When processing PIXC on a machine with limited memory, reducing the worker count can help:
 
 ```bash
-swot-wse config set max_workers 4
+swot-reservoir-wse config set max_workers 4
 ```
 
 or, if necessary:
 
 ```bash
-swot-wse config set max_workers 2
+swot-reservoir-wse config set max_workers 2
 ```
 
 ---
@@ -317,13 +317,13 @@ swot-wse config set max_workers 2
 Display the active configuration with:
 
 ```bash
-swot-wse config show
+swot-reservoir-wse config show
 ```
 
 Change an individual value with:
 
 ```bash
-swot-wse config set <key> <value>
+swot-reservoir-wse config set <key> <value>
 ```
 
 ---
@@ -331,7 +331,7 @@ swot-wse config set <key> <value>
 ## Change Worker Count
 
 ```bash
-swot-wse config set max_workers 4
+swot-reservoir-wse config set max_workers 4
 ```
 
 The worker count affects parallel processing for both LakeSP and PIXC.
@@ -351,19 +351,19 @@ degraded
 Retain only `GOOD`:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good
 ```
 
 Retain `GOOD` and `SUSPECT`:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good,suspect
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect
 ```
 
 Retain all supported classes:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded,bad
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded,bad
 ```
 
 ---
@@ -371,7 +371,7 @@ swot-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded,
 ## Restrict LakeSP Science Cycles
 
 ```bash
-swot-wse config set sources.lakesp.science_cycles 045,046,047
+swot-reservoir-wse config set sources.lakesp.science_cycles 045,046,047
 ```
 
 ---
@@ -379,7 +379,7 @@ swot-wse config set sources.lakesp.science_cycles 045,046,047
 ## Restrict PIXC Science Cycles
 
 ```bash
-swot-wse config set sources.pixc.science_cycles 045,046,047
+swot-reservoir-wse config set sources.pixc.science_cycles 045,046,047
 ```
 
 ---
@@ -387,7 +387,7 @@ swot-wse config set sources.pixc.science_cycles 045,046,047
 ## Change LakeSP MAD Threshold
 
 ```bash
-swot-wse config set sources.lakesp.mad_threshold 2.5
+swot-reservoir-wse config set sources.lakesp.mad_threshold 2.5
 ```
 
 ---
@@ -395,7 +395,7 @@ swot-wse config set sources.lakesp.mad_threshold 2.5
 ## Change PIXC MAD Threshold
 
 ```bash
-swot-wse config set sources.pixc.mad_threshold 2.5
+swot-reservoir-wse config set sources.pixc.mad_threshold 2.5
 ```
 
 LakeSP and PIXC thresholds are independent.
@@ -414,25 +414,25 @@ The package maintains persistent caches for:
 Display the cache summary:
 
 ```bash
-swot-wse cache
+swot-reservoir-wse cache
 ```
 
 Clear reservoir footprints:
 
 ```bash
-swot-wse cache --clear-polygons
+swot-reservoir-wse cache --clear-polygons
 ```
 
 Clear LakeSP granules:
 
 ```bash
-swot-wse cache --clear-lakesp
+swot-reservoir-wse cache --clear-lakesp
 ```
 
 Clear both:
 
 ```bash
-swot-wse cache --clear-all
+swot-reservoir-wse cache --clear-all
 ```
 
 PIXC granules are currently processed in temporary working directories and are not retained in a persistent PIXC granule cache.
@@ -440,11 +440,11 @@ PIXC granules are currently processed in temporary working directories and are n
 Reservoir and LakeSP caching can be controlled independently:
 
 ```bash
-swot-wse config set polygon_cache_enabled false
+swot-reservoir-wse config set polygon_cache_enabled false
 ```
 
 ```bash
-swot-wse config set lakesp_cache_enabled false
+swot-reservoir-wse config set lakesp_cache_enabled false
 ```
 
 ---
@@ -516,7 +516,7 @@ The default output directory is:
 outputs
 ```
 
-relative to the directory from which **swot-wse** is being used.
+relative to the directory from which **swot-reservoir-wse** is being used.
 
 For example:
 
@@ -535,13 +535,13 @@ unless `output_dir` has been changed.
 Inspect the active location with:
 
 ```bash
-swot-wse config show
+swot-reservoir-wse config show
 ```
 
 Change it with:
 
 ```bash
-swot-wse config set output_dir results
+swot-reservoir-wse config set output_dir results
 ```
 
 ---
@@ -551,13 +551,13 @@ swot-wse config set output_dir results
 If only CSV output is required:
 
 ```bash
-swot-wse config set generate_plot false
+swot-reservoir-wse config set generate_plot false
 ```
 
 Re-enable plotting with:
 
 ```bash
-swot-wse config set generate_plot true
+swot-reservoir-wse config set generate_plot true
 ```
 
 ---
@@ -567,15 +567,15 @@ swot-wse config set generate_plot true
 A complete basic LakeSP session may look like:
 
 ```bash
-swot-wse auth
+swot-reservoir-wse auth
 ```
 
 ```bash
-swot-wse config show
+swot-reservoir-wse config show
 ```
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
 ```
 
 The resulting files are written to the configured output directory.
@@ -587,19 +587,19 @@ The resulting files are written to the configured output directory.
 For PIXC:
 
 ```bash
-swot-wse auth
+swot-reservoir-wse auth
 ```
 
 Optionally reduce parallel processing:
 
 ```bash
-swot-wse config set max_workers 4
+swot-reservoir-wse config set max_workers 4
 ```
 
 Then run:
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
 ```
 
 PIXC processing can take longer than LakeSP because the package downloads and processes individual pixel-cloud observations.
@@ -611,13 +611,13 @@ PIXC processing can take longer than LakeSP because the package downloads and pr
 If configuration has been changed during experimentation:
 
 ```bash
-swot-wse config reset
+swot-reservoir-wse config reset
 ```
 
 Inspect the restored configuration:
 
 ```bash
-swot-wse config show
+swot-reservoir-wse config show
 ```
 
 Remember that resetting the configuration also clears the Earth Engine Project ID stored in `config.json`.
@@ -625,7 +625,7 @@ Remember that resetting the configuration also clears the Earth Engine Project I
 If needed, configure authentication again:
 
 ```bash
-swot-wse auth
+swot-reservoir-wse auth
 ```
 
 ---

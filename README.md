@@ -1,6 +1,6 @@
 # SWOT Reservoir WSE
 
-**swot-wse** is a Python package for generating reservoir-specific Water Surface Elevation (WSE) time series from Surface Water and Ocean Topography (SWOT) observations.
+**swot-reservoir-wse** is a Python package for generating reservoir-specific Water Surface Elevation (WSE) time series from Surface Water and Ocean Topography (SWOT) observations.
 
 A user supplies a dam location, a date range, and a SWOT observation source. The package then handles the workflow from reservoir footprint generation to the final quality-controlled reservoir WSE time series.
 
@@ -24,10 +24,10 @@ A processing run requires:
 For example:
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
 ```
 
-From the supplied dam coordinates, **swot-wse** derives the corresponding reservoir footprint, identifies relevant SWOT observations, associates them with the reservoir, applies source-specific screening and aggregation, and generates the final reservoir-specific WSE time series.
+From the supplied dam coordinates, **swot-reservoir-wse** derives the corresponding reservoir footprint, identifies relevant SWOT observations, associates them with the reservoir, applies source-specific screening and aggregation, and generates the final reservoir-specific WSE time series.
 
 LakeSP and PIXC are processed as independent observation sources. The user explicitly selects the product to process; there is no automatic fallback between them.
 
@@ -53,7 +53,7 @@ For the project background and motivation, see the [Introduction](docs/introduct
 
 ## Requirements
 
-Before using **swot-wse**, ensure that the following are available:
+Before using **swot-reservoir-wse**, ensure that the following are available:
 
 - Python 3.10 or later
 - A NASA Earthdata Login account
@@ -165,7 +165,7 @@ Verify the installation:
 Verify the installation:
 
 ```bash
-swot-wse --help
+swot-reservoir-wse --help
 ```
 
 For complete installation and external-service setup instructions, see [Installation](docs/installation.md).
@@ -174,7 +174,7 @@ For complete installation and external-service setup instructions, see [Installa
 
 ## Working Directory
 
-**swot-wse** uses the directory from which the command is run as its runtime working directory.
+**swot-reservoir-wse** uses the directory from which the command is run as its runtime working directory.
 
 With the default configuration, running the package from a directory may create:
 
@@ -203,7 +203,7 @@ Authentication credentials themselves are managed separately:
 Authenticate Google Earth Engine and NASA Earthdata with:
 
 ```bash
-swot-wse auth
+swot-reservoir-wse auth
 ```
 
 Existing valid credentials are reused whenever possible.
@@ -219,30 +219,30 @@ If Earthdata credentials are unavailable, the package requests the Earthdata Log
 The services can also be managed independently:
 
 ```bash
-swot-wse auth --earth-engine-only
-swot-wse auth --earthdata-only
+swot-reservoir-wse auth --earth-engine-only
+swot-reservoir-wse auth --earthdata-only
 ```
 
 Force reauthentication:
 
 ```bash
-swot-wse auth --force
+swot-reservoir-wse auth --force
 ```
 
 Remove authentication information managed directly by the package:
 
 ```bash
-swot-wse auth --remove
+swot-reservoir-wse auth --remove
 ```
 
 Service-specific variants are also available:
 
 ```bash
-swot-wse auth --earth-engine-only --force
-swot-wse auth --earthdata-only --force
+swot-reservoir-wse auth --earth-engine-only --force
+swot-reservoir-wse auth --earthdata-only --force
 
-swot-wse auth --earth-engine-only --remove
-swot-wse auth --earthdata-only --remove
+swot-reservoir-wse auth --earth-engine-only --remove
+swot-reservoir-wse auth --earthdata-only --remove
 ```
 
 For credential storage, removal, reauthentication behaviour, and all authentication options, see [Authentication](docs/authentication.md).
@@ -254,7 +254,7 @@ For credential storage, removal, reauthentication behaviour, and all authenticat
 The general extraction command is:
 
 ```bash
-swot-wse extract --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --end-date YYYY-MM-DD --source <source>
+swot-reservoir-wse extract --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --end-date YYYY-MM-DD --source <source>
 ```
 
 Supported observation sources are:
@@ -269,13 +269,13 @@ The source must be selected explicitly.
 ### LakeSP
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
 ```
 
 ### PIXC
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
 ```
 
 The latitude and longitude specify the dam location. The package uses that location to derive the corresponding reservoir footprint before processing the selected SWOT observations.
@@ -344,16 +344,16 @@ Display all commands:
 Display all commands:
 
 ```bash
-swot-wse --help
+swot-reservoir-wse --help
 ```
 
 Display command-specific help:
 
 ```bash
-swot-wse extract --help
-swot-wse auth --help
-swot-wse config --help
-swot-wse cache --help
+swot-reservoir-wse extract --help
+swot-reservoir-wse auth --help
+swot-reservoir-wse config --help
+swot-reservoir-wse cache --help
 ```
 
 For every command and option, see the [Command Reference](docs/command_reference.md).
@@ -365,49 +365,49 @@ For every command and option, see the [Command Reference](docs/command_reference
 Display the active configuration:
 
 ```bash
-swot-wse config show
+swot-reservoir-wse config show
 ```
 
 Change an individual value:
 
 ```bash
-swot-wse config set <key> <value>
+swot-reservoir-wse config set <key> <value>
 ```
 
 For example:
 
 ```bash
-swot-wse config set max_workers 4
+swot-reservoir-wse config set max_workers 4
 ```
 
 LakeSP-specific settings use dotted keys:
 
 ```bash
-swot-wse config set sources.lakesp.mad_threshold 2.5
+swot-reservoir-wse config set sources.lakesp.mad_threshold 2.5
 ```
 
 For example, change the accepted LakeSP quality classes:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded
 ```
 
 PIXC settings are configured independently:
 
 ```bash
-swot-wse config set sources.pixc.mad_threshold 2.5
+swot-reservoir-wse config set sources.pixc.mad_threshold 2.5
 ```
 
 Restrict PIXC science cycles:
 
 ```bash
-swot-wse config set sources.pixc.science_cycles 045,046,047
+swot-reservoir-wse config set sources.pixc.science_cycles 045,046,047
 ```
 
 Restore all defaults:
 
 ```bash
-swot-wse config reset
+swot-reservoir-wse config reset
 ```
 
 See [Configuration](docs/configuration.md) for every configurable parameter and its effect on processing.
@@ -441,7 +441,7 @@ generate_plot = true
 Disable plotting with:
 
 ```bash
-swot-wse config set generate_plot false
+swot-reservoir-wse config set generate_plot false
 ```
 
 ### LakeSP Output
@@ -487,25 +487,25 @@ The package currently maintains two persistent cache types.
 Display the current cache status:
 
 ```bash
-swot-wse cache
+swot-reservoir-wse cache
 ```
 
 Clear the reservoir polygon cache:
 
 ```bash
-swot-wse cache --clear-polygons
+swot-reservoir-wse cache --clear-polygons
 ```
 
 Clear the LakeSP granule cache:
 
 ```bash
-swot-wse cache --clear-lakesp
+swot-reservoir-wse cache --clear-lakesp
 ```
 
 Clear both:
 
 ```bash
-swot-wse cache --clear-all
+swot-reservoir-wse cache --clear-all
 ```
 
 PIXC granules are currently processed in temporary working directories and are not retained in a persistent PIXC granule cache.
@@ -614,7 +614,7 @@ Open the Google Cloud Console:
 
 Then:
 
-1. Select the project used by **swot-wse**.
+1. Select the project used by **swot-reservoir-wse**.
 2. Open **IAM & Admin → IAM**.
 3. Grant access to the Google account used for Earth Engine.
 4. Assign the **Service Usage Consumer** role where required.
@@ -623,13 +623,13 @@ Then:
 Retry:
 
 ```bash
-swot-wse auth --earth-engine-only
+swot-reservoir-wse auth --earth-engine-only
 ```
 
 If necessary:
 
 ```bash
-swot-wse auth --earth-engine-only --force
+swot-reservoir-wse auth --earth-engine-only --force
 ```
 
 ### NASA Earthdata authentication problems
@@ -637,19 +637,19 @@ swot-wse auth --earth-engine-only --force
 Force Earthdata reauthentication:
 
 ```bash
-swot-wse auth --earthdata-only --force
+swot-reservoir-wse auth --earthdata-only --force
 ```
 
 Remove stored Earthdata credentials:
 
 ```bash
-swot-wse auth --earthdata-only --remove
+swot-reservoir-wse auth --earthdata-only --remove
 ```
 
 Then authenticate again:
 
 ```bash
-swot-wse auth --earthdata-only
+swot-reservoir-wse auth --earthdata-only
 ```
 
 ### PIXC processing uses too much memory
@@ -659,20 +659,20 @@ PIXC processing can be memory-intensive because multiple high-resolution pixel-c
 Reduce the worker count:
 
 ```bash
-swot-wse config set max_workers 4
+swot-reservoir-wse config set max_workers 4
 ```
 
 or, on systems with less available memory:
 
 ```bash
-swot-wse config set max_workers 2
+swot-reservoir-wse config set max_workers 2
 ```
 
 ---
 
 ## Documentation
 
-Complete documentation for **swot-wse** is available on Read the Docs:
+Complete documentation for **swot-reservoir-wse** is available on Read the Docs:
 
 [**https://swot-reservoir-wse.readthedocs.io/**](https://swot-reservoir-wse.readthedocs.io/)
 

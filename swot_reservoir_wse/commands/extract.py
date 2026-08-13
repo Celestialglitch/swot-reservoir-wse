@@ -1,7 +1,7 @@
 import math
 from datetime import datetime
 
-from swot_wse.pipeline import get_wse
+from swot_reservoir_wse.pipeline import get_wse
 
 
 SUPPORTED_SOURCES = (

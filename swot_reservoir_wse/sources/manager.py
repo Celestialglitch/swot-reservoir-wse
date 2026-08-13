@@ -1,5 +1,5 @@
-from swot_wse.sources.lakesp_source import run_lakesp_pipeline
-from swot_wse.sources.pixc_source import run_pixc_pipeline
+from swot_reservoir_wse.sources.lakesp_source import run_lakesp_pipeline
+from swot_reservoir_wse.sources.pixc_source import run_pixc_pipeline
 
 
 SOURCES = {

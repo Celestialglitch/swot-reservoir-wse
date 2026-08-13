@@ -1,6 +1,6 @@
 # Outputs
 
-A successful **swot-wse** extraction generates a reservoir-specific Water Surface Elevation (WSE) time series from the selected SWOT observation source.
+A successful **swot-reservoir-wse** extraction generates a reservoir-specific Water Surface Elevation (WSE) time series from the selected SWOT observation source.
 
 The current release supports two independent processing sources:
 
@@ -112,19 +112,19 @@ The accepted classes can be changed through the configuration system.
 For example, retain only `GOOD` observations:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good
 ```
 
 Retain `GOOD` and `SUSPECT`:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good,suspect
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect
 ```
 
 Retain all supported classes:
 
 ```bash
-swot-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded,bad
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded,bad
 ```
 
 ---
@@ -270,7 +270,7 @@ The default threshold is:
 It can be changed with:
 
 ```bash
-swot-wse config set sources.lakesp.mad_threshold 2.5
+swot-reservoir-wse config set sources.lakesp.mad_threshold 2.5
 ```
 
 Only observations remaining after this stage appear in the final LakeSP CSV and PNG.
@@ -412,7 +412,7 @@ The default PIXC threshold is:
 It can be changed independently of the LakeSP threshold:
 
 ```bash
-swot-wse config set sources.pixc.mad_threshold 2.5
+swot-reservoir-wse config set sources.pixc.mad_threshold 2.5
 ```
 
 ---
@@ -465,7 +465,7 @@ By default:
 output_dir = outputs
 ```
 
-Relative output paths are resolved from the directory in which **swot-wse** is being used.
+Relative output paths are resolved from the directory in which **swot-reservoir-wse** is being used.
 
 For example, if the command is run from:
 
@@ -482,25 +482,25 @@ D:\reservoir-analysis\outputs
 The active setting can be inspected with:
 
 ```bash
-swot-wse config show
+swot-reservoir-wse config show
 ```
 
 Change the output location with:
 
 ```bash
-swot-wse config set output_dir <path>
+swot-reservoir-wse config set output_dir <path>
 ```
 
 For example:
 
 ```bash
-swot-wse config set output_dir results
+swot-reservoir-wse config set output_dir results
 ```
 
 or with an absolute path:
 
 ```bash
-swot-wse config set output_dir D:\SWOT\outputs
+swot-reservoir-wse config set output_dir D:\SWOT\outputs
 ```
 
 ---
@@ -516,13 +516,13 @@ generate_plot
 Enable plots:
 
 ```bash
-swot-wse config set generate_plot true
+swot-reservoir-wse config set generate_plot true
 ```
 
 Disable plots:
 
 ```bash
-swot-wse config set generate_plot false
+swot-reservoir-wse config set generate_plot false
 ```
 
 Disabling plots does not disable CSV generation.

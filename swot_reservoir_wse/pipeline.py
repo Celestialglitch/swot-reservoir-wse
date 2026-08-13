@@ -1,14 +1,14 @@
-from swot_wse.cache.polygon_cache import (
+from swot_reservoir_wse.cache.polygon_cache import (
     load_polygon,
     polygon_exists,
     save_polygon,
 )
-from swot_wse.config import load_config
-from swot_wse.earth_engine import initialize_earth_engine
-from swot_wse.earthdata import initialize_earthdata
-from swot_wse.geometry.reservoir_extractor import extract_reservoir_polygon
-from swot_wse.outputs import save_outputs
-from swot_wse.sources.manager import run_source
+from swot_reservoir_wse.config import load_config
+from swot_reservoir_wse.earth_engine import initialize_earth_engine
+from swot_reservoir_wse.earthdata import initialize_earthdata
+from swot_reservoir_wse.geometry.reservoir_extractor import extract_reservoir_polygon
+from swot_reservoir_wse.outputs import save_outputs
+from swot_reservoir_wse.sources.manager import run_source
 
 
 def get_or_create_polygon(lat, lon):

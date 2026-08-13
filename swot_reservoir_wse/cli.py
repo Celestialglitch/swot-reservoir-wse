@@ -1,16 +1,16 @@
 import argparse
 import warnings
 
-from swot_wse.commands.auth import register_auth_command
-from swot_wse.commands.cache import register_cache_command
-from swot_wse.commands.config import register_config_command
-from swot_wse.commands.extract import register_extract_command
-from swot_wse.config import initialize_directories
+from swot_reservoir_wse.commands.auth import register_auth_command
+from swot_reservoir_wse.commands.cache import register_cache_command
+from swot_reservoir_wse.commands.config import register_config_command
+from swot_reservoir_wse.commands.extract import register_extract_command
+from swot_reservoir_wse.config import initialize_directories
 
 
 def main():
     """
-    Entry point for the swot-wse command-line interface.
+    Entry point for the swot-reservoir-wse command-line interface.
     """
 
     warnings.filterwarnings(
@@ -23,7 +23,7 @@ def main():
     initialize_directories()
 
     parser = argparse.ArgumentParser(
-        prog="swot-wse",
+        prog="swot-reservoir-wse",
         description=(
             "Generate reservoir Water Surface Elevation "
             "time series from SWOT observations."

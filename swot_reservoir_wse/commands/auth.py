@@ -6,7 +6,7 @@ from pathlib import Path
 import earthaccess
 import ee
 
-from swot_wse.config import load_config, save_config
+from swot_reservoir_wse.config import load_config, save_config
 
 
 EARTHDATA_MACHINE = "urs.earthdata.nasa.gov"

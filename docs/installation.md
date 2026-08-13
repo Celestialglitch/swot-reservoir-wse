@@ -1,6 +1,6 @@
 # Installation
 
-This page describes how to install **swot-wse** and prepare the external services required for reservoir WSE processing.
+This page describes how to install **swot-reservoir-wse** and prepare the external services required for reservoir WSE processing.
 
 The package requires:
 
@@ -28,12 +28,12 @@ After creating the account:
 The username and password will later be used by:
 
 ```bash
-swot-wse auth
+swot-reservoir-wse auth
 ```
 
 You do not need to place Earthdata credentials inside the repository or `config.json`.
 
-**swot-wse** stores validated Earthdata credentials in the user's standard netrc credential file.
+**swot-reservoir-wse** stores validated Earthdata credentials in the user's standard netrc credential file.
 
 ---
 
@@ -43,7 +43,7 @@ Register for Google Earth Engine at:
 
 [https://code.earthengine.google.com/](https://code.earthengine.google.com/)
 
-Use the Google account that will also have access to the Google Cloud project used by **swot-wse**.
+Use the Google account that will also have access to the Google Cloud project used by **swot-reservoir-wse**.
 
 Complete the Earth Engine registration and any verification requested by Google.
 
@@ -80,7 +80,7 @@ Project ID     : reservoir-analysis-123
 Project number : 123456789
 ```
 
-the value required by **swot-wse** is:
+the value required by **swot-reservoir-wse** is:
 
 ```text
 reservoir-analysis-123
@@ -186,7 +186,7 @@ python -m pip install --upgrade pip
 
 ---
 
-# 9. Install swot-wse
+# 9. Install swot-reservoir-wse
 
 Install the package from the cloned repository:
 
@@ -208,7 +208,7 @@ The installation automatically installs the Python dependencies declared by the 
 
 # 10. Upgrade an Existing Local Installation
 
-If **swot-wse** has already been installed from the repository and the source code has since been updated, run:
+If **swot-reservoir-wse** has already been installed from the repository and the source code has since been updated, run:
 
 ```bash
 python -m pip install . --upgrade
@@ -229,7 +229,7 @@ An editable installation is useful during development but is not required for no
 Run:
 
 ```bash
-swot-wse --help
+swot-reservoir-wse --help
 ```
 
 A successful installation displays the available command groups, including:
@@ -244,7 +244,7 @@ auth
 Check the extraction command:
 
 ```bash
-swot-wse extract --help
+swot-reservoir-wse extract --help
 ```
 
 The command should show the required arguments:
@@ -268,7 +268,7 @@ pixc
 
 # 12. Choose a Working Directory
 
-**swot-wse** uses the directory from which it is run as the runtime working directory.
+**swot-reservoir-wse** uses the directory from which it is run as the runtime working directory.
 
 You may therefore create a separate directory for an analysis:
 
@@ -276,7 +276,7 @@ You may therefore create a separate directory for an analysis:
 reservoir-analysis/
 ```
 
-and run **swot-wse** from that directory.
+and run **swot-reservoir-wse** from that directory.
 
 With the default configuration, the package may create:
 
@@ -302,7 +302,7 @@ The Python package itself does not need to be located in the working directory a
 From the directory in which you want to run the analysis:
 
 ```bash
-swot-wse auth
+swot-reservoir-wse auth
 ```
 
 If an Earth Engine Project ID has not yet been stored in that directory's configuration, the package prompts:
@@ -339,7 +339,7 @@ For complete authentication behaviour, see [Authentication](authentication.md).
 Run:
 
 ```bash
-swot-wse config show
+swot-reservoir-wse config show
 ```
 
 Verify that:
@@ -367,7 +367,7 @@ These paths are relative to the active working directory unless absolute paths h
 A basic LakeSP extraction can be started with:
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
 ```
 
 A successful run performs reservoir-footprint generation, LakeSP discovery, observation extraction, quality filtering, daily aggregation, MAD filtering, and output generation.
@@ -379,7 +379,7 @@ A successful run performs reservoir-footprint generation, LakeSP discovery, obse
 PIXC can be selected independently:
 
 ```bash
-swot-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
 ```
 
 PIXC processing can require considerably more memory and processing time because high-resolution pixel-cloud data are downloaded and processed directly.
@@ -387,20 +387,20 @@ PIXC processing can require considerably more memory and processing time because
 If memory usage is excessive, reduce the number of parallel workers:
 
 ```bash
-swot-wse config set max_workers 4
+swot-reservoir-wse config set max_workers 4
 ```
 
 or:
 
 ```bash
-swot-wse config set max_workers 2
+swot-reservoir-wse config set max_workers 2
 ```
 
 ---
 
 # Installation Troubleshooting
 
-## `swot-wse` command not found
+## `swot-reservoir-wse` command not found
 
 Confirm that the environment in which the package was installed is active.
 
@@ -419,13 +419,13 @@ source .venv/bin/activate
 Then verify:
 
 ```bash
-python -m pip show swot-wse
+python -m pip show swot-reservoir-wse
 ```
 
 and retry:
 
 ```bash
-swot-wse --help
+swot-reservoir-wse --help
 ```
 
 ---
@@ -441,18 +441,18 @@ Earth Engine project is not configured.
 run:
 
 ```bash
-swot-wse auth
+swot-reservoir-wse auth
 ```
 
 or:
 
 ```bash
-swot-wse auth --earth-engine-only
+swot-reservoir-wse auth --earth-engine-only
 ```
 
 Remember that the Earth Engine Project ID is stored in the `config.json` of the current working directory.
 
-If **swot-wse** is executed from a different directory, that directory may have a different configuration.
+If **swot-reservoir-wse** is executed from a different directory, that directory may have a different configuration.
 
 ---
 
@@ -469,13 +469,13 @@ If Earth Engine reports that the caller does not have permission to use the sele
 Then retry:
 
 ```bash
-swot-wse auth --earth-engine-only
+swot-reservoir-wse auth --earth-engine-only
 ```
 
 If necessary:
 
 ```bash
-swot-wse auth --earth-engine-only --force
+swot-reservoir-wse auth --earth-engine-only --force
 ```
 
 ---
@@ -485,19 +485,19 @@ swot-wse auth --earth-engine-only --force
 Force a fresh Earthdata authentication:
 
 ```bash
-swot-wse auth --earthdata-only --force
+swot-reservoir-wse auth --earthdata-only --force
 ```
 
 To remove the stored Earthdata entry first:
 
 ```bash
-swot-wse auth --earthdata-only --remove
+swot-reservoir-wse auth --earthdata-only --remove
 ```
 
 Then authenticate again:
 
 ```bash
-swot-wse auth --earthdata-only
+swot-reservoir-wse auth --earthdata-only
 ```
 
 ---
@@ -509,7 +509,7 @@ PIXC granules contain large pixel-cloud datasets.
 Reduce parallel processing:
 
 ```bash
-swot-wse config set max_workers 2
+swot-reservoir-wse config set max_workers 2
 ```
 
 A lower worker count reduces the number of PIXC granules being processed simultaneously.

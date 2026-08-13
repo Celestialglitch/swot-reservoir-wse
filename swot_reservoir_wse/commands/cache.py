@@ -1,4 +1,4 @@
-from swot_wse.config import (
+from swot_reservoir_wse.config import (
     CACHE_DIR,
     LAKESP_CACHE_DIR,
     POLYGON_CACHE_DIR,

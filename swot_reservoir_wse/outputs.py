@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.lines import Line2D
 
-from swot_wse.config import load_config
+from swot_reservoir_wse.config import load_config
 
 
 QUALITY_COLORS = {
@@ -20,7 +20,7 @@ def _resolve_output_directory(path):
     Resolve the configured output directory.
 
     Relative paths are resolved from the directory
-    in which the swot-wse command is executed.
+    in which the swot-reservoir-wse command is executed.
     """
 
     path = Path(path).expanduser()

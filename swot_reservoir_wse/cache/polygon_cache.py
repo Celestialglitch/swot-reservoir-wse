@@ -1,7 +1,7 @@
 
 import geopandas as gpd
 
-from swot_wse.config import POLYGON_CACHE_DIR
+from swot_reservoir_wse.config import POLYGON_CACHE_DIR
 
 
 def ensure_cache_exists():

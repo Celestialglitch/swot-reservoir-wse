@@ -24,14 +24,14 @@ def initialize_earthdata():
             "Failed to initialize NASA Earthdata.\n"
             "Please verify your Earthdata credentials.\n"
             "Run:\n\n"
-            "    swot-wse auth --earthdata-only\n"
+            "    swot-reservoir-wse auth --earthdata-only\n"
         ) from exc
 
     if not auth.authenticated:
         raise RuntimeError(
             "NASA Earthdata authentication failed.\n"
             "Run:\n\n"
-            "    swot-wse auth --earthdata-only\n"
+            "    swot-reservoir-wse auth --earthdata-only\n"
         )
 
     _initialized = True

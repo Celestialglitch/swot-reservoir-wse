@@ -1,7 +1,7 @@
 import copy
 import json
 
-from swot_wse.config import (
+from swot_reservoir_wse.config import (
     DEFAULT_CONFIG,
     load_config,
     save_config,

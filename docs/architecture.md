@@ -1,8 +1,22 @@
 # Package Architecture
 
-This document describes the processing architecture of **swot-wse**: how a dam location and observation period are transformed into a reservoir-specific Water Surface Elevation (WSE) time series.
+This document provides a high-level overview of how **swot-reservoir-wse** transforms a user-supplied dam location into a reservoir-specific Water Surface Elevation (WSE) time series using observations from the Surface Water and Ocean Topography (SWOT) mission.
 
-The package supports more than one SWOT observation product. Reservoir identification and final output handling are shared, while the interpretation of SWOT observations is delegated to source-specific processing pipelines.
+The document describes the processing architecture and data flow of the package rather than the organization of individual Python modules.
+
+---
+
+# Architecture Overview
+
+**swot-reservoir-wse** follows a modular observation-source architecture.
+
+The package separates three major responsibilities:
+
+1. identifying the reservoir associated with a supplied dam location;
+2. processing observations from a selected SWOT data product; and
+3. producing a standardized reservoir-level WSE time series.
+
+Reservoir footprint generation and output handling are shared across observation sources, while product-specific discovery, extraction, quality screening, and aggregation are handled by independent source pipelines.
 
 The current release supports:
 

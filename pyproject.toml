@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swot-reservoir-wse"
+name = "swot-reservoir-wse"
 version = "0.3.0"
 
 description = "Generate reservoir-specific Water Surface Elevation (WSE) time series from SWOT LakeSP and PIXC observations."
@@ -59,7 +60,7 @@ dependencies = [
 
 
 [project.scripts]
-swot-reservoir-wse = "swot_wse.cli:main"
+swot-reservoir-wse = "swot_reservoir_wse.cli:main"
 
 
 [tool.setuptools]
@@ -67,7 +68,7 @@ include-package-data = true
 
 
 [tool.setuptools.packages.find]
-include = ["swot_wse*"]
+include = ["swot_reservoir_wse*"]
 exclude = [
     "cache*",
     "data*",

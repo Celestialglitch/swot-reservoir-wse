@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from swot_wse.config import (
+from swot_reservoir_wse.config import (
     RUNTIME_ROOT,
     load_config,
 )

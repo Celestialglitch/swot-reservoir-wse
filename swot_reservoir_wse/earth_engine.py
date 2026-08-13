@@ -1,6 +1,6 @@
 import ee
 
-from swot_wse.config import load_config
+from swot_reservoir_wse.config import load_config
 
 
 _initialized = False
@@ -25,7 +25,7 @@ def initialize_earth_engine():
         raise RuntimeError(
             "Earth Engine project is not configured.\n"
             "Run:\n\n"
-            "    swot-wse auth\n"
+            "    swot-reservoir-wse auth\n"
         )
 
     try:
@@ -35,7 +35,7 @@ def initialize_earth_engine():
         raise RuntimeError(
             "Failed to initialize Google Earth Engine.\n"
             "Please verify your authentication and project ID.\n"
-            "Run 'swot-wse auth' if necessary."
+            "Run 'swot-reservoir-wse auth' if necessary."
         ) from exc
 
     _initialized = True
