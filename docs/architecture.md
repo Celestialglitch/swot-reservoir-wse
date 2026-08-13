@@ -1,209 +1,350 @@
 # Package Architecture
 
-This document provides a high-level overview of how **swot-reservoir-wse** transforms a user-supplied dam location into a reservoir-specific Water Surface Elevation (WSE) time series using observations from the Surface Water and Ocean Topography (SWOT) mission.
+This document describes how **swot-reservoir-wse** turns a dam location and observation period into a reservoir-specific Water Surface Elevation (WSE) time series from Surface Water and Ocean Topography (SWOT) observations.
 
-The document describes the processing architecture and data flow of the package rather than the organization of individual Python modules.
+Unlike the README, which introduces the package from a user's perspective, this page describes the processing system itself: how information moves through the package, which operations are shared between observation sources, where the LakeSP and PIXC pipelines differ, and how individual SWOT observations are reduced to the final reservoir-level time series.
 
----
+The package currently supports two independent SWOT Level-2 Version D observation sources:
 
-# Architecture Overview
+- **Lake Single Pass (LakeSP) Observation Vector Product**
+- **High Rate Pixel Cloud (PIXC) Product**
 
-**swot-reservoir-wse** follows a modular observation-source architecture.
-
-The package separates three major responsibilities:
-
-1. identifying the reservoir associated with a supplied dam location;
-2. processing observations from a selected SWOT data product; and
-3. producing a standardized reservoir-level WSE time series.
-
-Reservoir footprint generation and output handling are shared across observation sources, while product-specific discovery, extraction, quality screening, and aggregation are handled by independent source pipelines.
-
-The current release supports:
-
-- **LakeSP** — SWOT Level 2 Lake Single-Pass Vector Obs Data Product, Version D
-- **PIXC** — SWOT Level 2 Water Mask Pixel Cloud Data Product, Version D
-
-LakeSP and PIXC are independent observation sources. The source is selected explicitly for each extraction; one source is not used automatically as a fallback for another.
+The user selects one of these sources explicitly for each extraction.
 
 ---
 
-# 1. Architecture Overview
+# 1. System Overview
 
-A `swot-wse` extraction can be divided into three major stages:
-
-1. **Reservoir identification**
-2. **Source-specific SWOT processing**
-3. **Output generation**
-
-At a high level:
+An extraction begins with five pieces of information:
 
 ```text
-                         User Input
-              (dam coordinates + date range)
-                              │
-                              ▼
-                    Reservoir Identification
-                              │
-                              ▼
-                     Reservoir Footprint
-                              │
-                              ▼
-                    Selected SWOT Source
-                      ┌───────┴───────┐
-                      │               │
-                      ▼               ▼
-                   LakeSP            PIXC
-                   Source            Source
-                      │               │
-                      ▼               ▼
-               LakeSP Processing   PIXC Processing
-                      │               │
-                      └───────┬───────┘
-                              │
-                              ▼
-                  Reservoir WSE Time Series
-                              │
-                              ▼
-                     Output Generation
-                         CSV / PNG
-```
-
-The reservoir footprint is therefore the boundary between the common spatial-identification stage and the product-specific observation processing stage.
-
-This separation is important because LakeSP and PIXC represent SWOT observations differently.
-
-LakeSP provides vector observations associated with detected water features. PIXC, by contrast, provides geolocated pixel-cloud measurements. Consequently, the two products cannot be processed by the same extraction logic even though both can ultimately be used to estimate reservoir WSE.
-
----
-
-# 2. Extraction Entry Point
-
-A processing run is initiated through:
-
-```bash
-swot-wse extract \
-    --lat <latitude> \
-    --lon <longitude> \
-    --start-date YYYY-MM-DD \
-    --end-date YYYY-MM-DD \
-    --source {lakesp,pixc}
-```
-
-The extraction request therefore defines:
-
-```text
-dam location
-    +
-observation period
-    +
+dam latitude
+dam longitude
+start date
+end date
 observation source
 ```
 
-The latitude and longitude identify the **dam location**, not a pre-existing SWOT lake identifier or reservoir polygon.
+For example:
 
-This is intentional. The package first resolves the supplied location into a reservoir footprint and then uses that footprint as the spatial basis for processing the selected SWOT product.
-
-The observation source is resolved independently from reservoir identification. Adding another source therefore does not require changing how the reservoir itself is located, provided that the new source can operate on the same geographic reservoir footprint.
-
----
-
-# 3. Reservoir Identification
-
-## 3.1 Why a reservoir footprint is required
-
-The user supplies a point:
-
-```text
-(latitude, longitude)
+```bash
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
 ```
 
-but both supported SWOT processing paths require an area describing the reservoir.
+The coordinates identify a **dam**, but the scientific quantity being extracted belongs to the **reservoir water surface**.
 
-The first task is therefore to convert the supplied dam location into a polygon representing the associated surface-water body.
+This distinction determines the first stage of the architecture.
 
-This stage is independent of LakeSP and PIXC.
-
----
-
-## 3.2 Surface-water extraction
-
-Reservoir identification uses the **JRC Global Surface Water** dataset through **Google Earth Engine**.
-
-A search region is constructed around the supplied coordinates. Surface-water occurrence information within this region is thresholded according to the active package configuration and converted into candidate water-body polygons.
-
-Conceptually:
+A dam coordinate is a point:
 
 ```text
-Dam coordinate
-      │
-      ▼
-Local search region
-      │
-      ▼
-JRC surface-water occurrence
-      │
-      ▼
-Occurrence threshold
-      │
-      ▼
-Candidate water polygons
+                     Dam
+                      ●
+                 (lat, lon)
 ```
 
-The extraction is therefore based on observed surface-water occurrence rather than on a built-in reservoir catalogue.
+while SWOT observations must ultimately be associated with the spatial extent of the reservoir:
+
+```text
+                Reservoir
+           ┌─────────────────┐
+          /                   \
+         /                     \
+        |                       |
+        |                 ● Dam |
+         \                     /
+          \___________________/
+```
+
+The package therefore does not use the supplied coordinate as the final spatial query object. It first derives a polygon representing the reservoir associated with that location.
+
+That polygon then becomes the common spatial object used by the selected SWOT processing pipeline.
+
+At the highest level, the architecture is:
+
+```text
+                           User Input
+                               │
+                               │
+              latitude + longitude + date range
+                         + source
+                               │
+                               ▼
+                  ┌─────────────────────────┐
+                  │ Reservoir Identification│
+                  │                         │
+                  │ JRC Global Surface Water│
+                  │ + Google Earth Engine   │
+                  └────────────┬────────────┘
+                               │
+                               ▼
+                      Reservoir Polygon
+                               │
+                               ▼
+                    Observation Source
+                               │
+                    ┌──────────┴──────────┐
+                    │                     │
+                    ▼                     ▼
+             ┌─────────────┐       ┌─────────────┐
+             │   LakeSP    │       │    PIXC     │
+             │  Pipeline   │       │  Pipeline   │
+             └──────┬──────┘       └──────┬──────┘
+                    │                     │
+                    │ reservoir-level     │ pixel-level
+                    │ vector observations │ observations
+                    │                     │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    Daily WSE Observations
+                               │
+                               ▼
+                    Temporal MAD Filtering
+                               │
+                               ▼
+                 Reservoir WSE Time Series
+                               │
+                     ┌─────────┴─────────┐
+                     ▼                   ▼
+                    CSV             optional PNG
+```
+
+The important architectural point is that **LakeSP and PIXC share the reservoir-identification and output infrastructure, but they do not share the same observation-extraction logic**.
+
+The two SWOT products represent water observations differently, so each source has its own discovery, spatial verification, extraction, screening, and aggregation stages.
 
 ---
 
-## 3.3 Polygon selection
+# 2. Common Processing Layer
 
-The generated candidate polygons are evaluated relative to the supplied dam location.
-
-If one or more candidate polygons contain the supplied point, the largest containing polygon is selected.
-
-If the point is not contained by a candidate polygon, the nearest candidate polygon is selected.
-
-This second case is useful because dam coordinates do not necessarily fall directly inside the extracted water polygon. A coordinate may lie on the dam structure, shoreline, or immediately outside the water mask.
-
-The selected geometry is transformed to geographic coordinates (`EPSG:4326`) before it is passed to the observation-source pipeline.
-
----
-
-## 3.4 Reservoir polygon cache
-
-Generating the reservoir polygon requires a Google Earth Engine operation. Repeating the same extraction for the same location would therefore perform unnecessary remote processing.
-
-When polygon caching is enabled, the generated footprint is stored locally.
-
-A later extraction using the same coordinate key can reuse the stored polygon:
+Before the source-specific pipeline begins, both LakeSP and PIXC follow the same initial path:
 
 ```text
 Dam coordinates
       │
       ▼
-Polygon cache
-   ┌──┴───┐
-   │      │
- found   missing
-   │      │
-   │      ▼
-   │   Earth Engine
-   │      │
-   │      ▼
-   │   Generate polygon
-   │      │
-   └──────┤
-          ▼
-   Reservoir footprint
+Reservoir search region
+      │
+      ▼
+JRC surface-water data
+      │
+      ▼
+Candidate water polygons
+      │
+      ▼
+Reservoir selection
+      │
+      ▼
+Reservoir polygon
 ```
 
-The cached polygon is independent of the SWOT source. A polygon generated while processing LakeSP can therefore also be reused during a later PIXC extraction for the same reservoir.
+The result is a geographic polygon describing the reservoir that the package will attempt to observe with SWOT.
 
 ---
 
-# 4. Observation-Source Architecture
+# 3. Reservoir Identification
 
-Once the reservoir footprint has been obtained, the common reservoir-identification stage ends.
+## 3.1 Why Reservoir Identification Is Necessary
 
-Processing is then delegated to the source selected by the user:
+The extraction command accepts a dam latitude and longitude because a dam location is a convenient way for a user to identify a reservoir.
+
+The SWOT products themselves, however, are not queried simply by asking for "the observation at this dam coordinate."
+
+A reservoir can extend many kilometres away from its dam, and valid SWOT measurements may occur throughout that water surface.
+
+The package therefore converts:
+
+```text
+dam coordinate
+```
+
+into:
+
+```text
+reservoir footprint
+```
+
+before searching for reservoir observations.
+
+---
+
+## 3.2 JRC Global Surface Water
+
+Reservoir identification uses the **JRC Global Surface Water** dataset through **Google Earth Engine**.
+
+The relevant runtime parameters include:
+
+```text
+search_radius_m
+pekel_threshold
+working_crs
+```
+
+The default configuration currently uses:
+
+```text
+search_radius_m = 50000
+pekel_threshold = 20
+working_crs = auto
+```
+
+These values are configurable and are described in detail in [Configuration](configuration.md).
+
+---
+
+## 3.3 Constructing the Search Region
+
+The supplied dam coordinate is used as the centre of a search region.
+
+Conceptually:
+
+```text
+                  search region
+          ┌─────────────────────────┐
+          │                         │
+          │        water body       │
+          │      ┌───────────┐      │
+          │      │           │      │
+          │      │      ●    │      │
+          │      │     dam   │      │
+          │      └───────────┘      │
+          │                         │
+          └─────────────────────────┘
+```
+
+The configured `search_radius_m` determines the spatial extent within which candidate surface-water regions are considered.
+
+---
+
+## 3.4 Surface-Water Mask
+
+Within that search region, the JRC Global Surface Water occurrence layer is thresholded using:
+
+```text
+pekel_threshold
+```
+
+The occurrence value represents how frequently a location was identified as surface water in the underlying JRC record.
+
+The threshold converts the occurrence layer into a water/non-water mask for reservoir-footprint extraction.
+
+Conceptually:
+
+```text
+JRC water occurrence
+        │
+        │ occurrence >= threshold
+        ▼
+binary water mask
+        │
+        ▼
+candidate water regions
+```
+
+Changing this threshold can therefore change the geometry identified around the supplied dam location.
+
+---
+
+## 3.5 Candidate Polygon Generation
+
+The selected water mask is converted into candidate water-body geometries.
+
+The package then determines which candidate geometry should represent the reservoir associated with the supplied dam coordinate.
+
+The preferred case is a polygon that contains the dam point.
+
+If multiple candidate polygons contain the point, the largest containing polygon is selected.
+
+Conceptually:
+
+```text
+Candidate polygons
+       │
+       ├── contains dam? ── Yes ──► choose largest containing polygon
+       │
+       └── No
+            │
+            ▼
+       choose nearest candidate polygon
+```
+
+The nearest-polygon behaviour allows the package to handle cases where the supplied dam coordinate does not fall exactly inside the extracted water mask.
+
+---
+
+## 3.6 Working Coordinate Reference System
+
+Some geometric operations require a projected coordinate reference system rather than geographic longitude and latitude.
+
+The package therefore uses the configured:
+
+```text
+working_crs
+```
+
+setting during the relevant spatial operations.
+
+With:
+
+```text
+working_crs = auto
+```
+
+an appropriate projected CRS is selected automatically.
+
+After reservoir identification is complete, the resulting footprint is represented in geographic coordinates for use by the downstream SWOT search and intersection stages.
+
+---
+
+# 4. Reservoir Polygon Cache
+
+Generating the reservoir footprint requires communication with Google Earth Engine and geospatial processing that does not need to be repeated for every execution.
+
+When:
+
+```text
+polygon_cache_enabled = true
+```
+
+the generated reservoir polygon is stored in the persistent reservoir-polygon cache.
+
+The next time the same reservoir location is processed, the package can retrieve the existing geometry instead of generating it again.
+
+The common beginning of the pipeline therefore behaves conceptually as:
+
+```text
+Dam coordinates
+      │
+      ▼
+Check polygon cache
+      │
+      ├── cached ───────────────► load reservoir polygon
+      │
+      └── not cached
+              │
+              ▼
+       Google Earth Engine
+              │
+              ▼
+       generate reservoir
+              │
+              ▼
+         cache polygon
+              │
+              ▼
+       reservoir polygon
+```
+
+This cache is independent of the selected SWOT observation source. The same reservoir footprint can therefore be reused by both LakeSP and PIXC runs.
+
+---
+
+# 5. Source Dispatch
+
+Once a reservoir polygon is available, the common reservoir-identification stage is complete.
+
+The package then dispatches processing to the observation source requested by the user:
 
 ```text
 --source lakesp
@@ -215,138 +356,250 @@ or:
 --source pixc
 ```
 
-The source layer provides a common architectural boundary around product-specific processing.
+The architecture deliberately keeps these pipelines independent.
 
-Each source is responsible for turning:
-
-```text
-reservoir footprint
-+
-date range
-```
-
-into a reservoir-level WSE time series.
-
-What happens inside that operation is source dependent.
-
-This is necessary because the two supported products expose fundamentally different observation structures:
+There is no sequence such as:
 
 ```text
-LakeSP
-    │
-    └── feature/vector observations
-            │
-            └── reservoir association through LakeSP features/lake_id
-
-PIXC
-    │
-    └── geolocated pixel-cloud observations
-            │
-            └── reservoir association through spatial pixel filtering
+try LakeSP
+    ↓
+if unavailable
+    ↓
+try PIXC
 ```
 
-The package therefore shares orchestration where possible without forcing product-specific scientific processing into a single generic algorithm.
+and there is no automatic source-selection mode.
+
+Instead:
+
+```text
+                    Reservoir Polygon
+                           │
+                           ▼
+                    Selected Source
+                           │
+                 ┌─────────┴─────────┐
+                 │                   │
+        source = lakesp       source = pixc
+                 │                   │
+                 ▼                   ▼
+          LakeSP pipeline       PIXC pipeline
+```
+
+This matters scientifically because LakeSP and PIXC are different SWOT data products with different observation structures and different processing requirements.
 
 ---
 
-# 5. LakeSP Processing
+# 6. LakeSP Processing Architecture
 
-The LakeSP source processes SWOT Level 2 Lake Single-Pass vector observations.
+The LakeSP source operates on the SWOT Level-2 Lake Single Pass Observation Vector Product.
 
-Unlike PIXC, LakeSP already contains observations organized around detected water features. The main problem is therefore to determine which LakeSP observations correspond to the reservoir footprint and then screen and aggregate those observations.
-
-The LakeSP processing path can be summarized as:
+The configured collection is:
 
 ```text
-Reservoir footprint
-        │
-        ▼
-Candidate granule search
-        │
-        ▼
-Reservoir intersection
-        │
-        ▼
-Lake identifier discovery
-        │
-        ▼
-Observation extraction
-        │
-        ▼
-Product-quality filtering
-        │
-        ▼
+SWOT_L2_HR_LakeSP_Obs_D
+```
+
+Unlike PIXC, LakeSP already provides vectorized lake observations. The package therefore works primarily with reservoir-associated LakeSP features rather than reconstructing a reservoir WSE directly from individual pixel-cloud measurements.
+
+The LakeSP path is:
+
+```text
+Reservoir polygon
+       │
+       ▼
+Earthdata / CMR search
+       │
+       ▼
+Candidate LakeSP granules
+       │
+       ▼
+Granule download / inspection
+       │
+       ▼
+Spatial intersection with reservoir
+       │
+       ▼
+Associated lake_id values
+       │
+       ▼
+Extract LakeSP observations
+       │
+       ▼
+Partial-observation screening
+       │
+       ▼
+Quality-class screening
+       │
+       ▼
 Daily aggregation
-        │
-        ▼
+       │
+       ▼
+Daily quality assignment
+       │
+       ▼
 Temporal MAD filtering
-        │
-        ▼
-LakeSP WSE time series
+       │
+       ▼
+LakeSP reservoir WSE time series
 ```
 
----
-
-## 5.1 Candidate granule discovery
-
-The reservoir footprint and requested date range are used to search NASA Earthdata for candidate LakeSP products.
-
-The spatial query is constructed from the reservoir extent with the configured LakeSP search buffer.
-
-The initial Earthdata result is deliberately treated as a **candidate set**.
-
-A granule returned by the search is not assumed to contain an observation belonging to the reservoir merely because it satisfies the broad spatial query.
-
-Configured SWOT science cycles can also be used to restrict the candidate set before further processing.
+Each stage serves a separate purpose.
 
 ---
 
-## 5.2 Reservoir intersection and `lake_id` discovery
+# 7. LakeSP Product Search
 
-Candidate LakeSP products are inspected to determine whether their observation geometries intersect the actual reservoir footprint.
+The package first searches NASA Earthdata for LakeSP products that could contain observations of the target reservoir during the requested period.
 
-For intersecting observations, the corresponding LakeSP `lake_id` values are collected.
+The search is constrained by:
 
-These identifiers establish the association between the geographic reservoir derived earlier and the feature-level observations contained in LakeSP.
+- the requested start and end dates;
+- the spatial region surrounding the reservoir;
+- the configured LakeSP collection;
+- the configured science-cycle selection.
 
-This gives the LakeSP branch two distinct spatial stages:
+Relevant configuration includes:
 
 ```text
-Earthdata spatial search
-        │
-        ▼
-Candidate granules
-        │
-        ▼
-Actual polygon intersection
-        │
-        ▼
-Relevant lake_id values
+sources.lakesp.collection
+sources.lakesp.search_buffer_degrees
+sources.lakesp.science_cycles
 ```
 
-The first stage limits the amount of data that must be examined. The second establishes the actual reservoir association.
+The reservoir bounds are expanded by the configured search buffer before the Earthdata query.
+
+This first search intentionally produces **candidate granules**.
+
+A candidate returned by the metadata search is not yet assumed to contain a valid observation of the target reservoir.
+
+That distinction is important:
+
+```text
+Earthdata search result
+        ≠
+confirmed reservoir observation
+```
+
+The metadata search narrows the amount of data that must be inspected. Actual reservoir association is established later.
 
 ---
 
-## 5.3 Observation extraction
+# 8. LakeSP Granule Discovery and Spatial Verification
 
-After the relevant `lake_id` values have been identified, LakeSP observations associated with those identifiers are extracted from the verified products.
+Candidate LakeSP products are inspected to determine whether their observations actually intersect the generated reservoir polygon.
 
-The extracted records contain the variables required by the subsequent filtering and aggregation stages, including WSE and LakeSP quality information.
+Conceptually:
 
-Multiple observations may be available for the same acquisition date.
+```text
+Candidate LakeSP granule
+          │
+          ▼
+Read observation geometry
+          │
+          ▼
+Does an observation intersect
+the reservoir polygon?
+          │
+      ┌───┴───┐
+      │       │
+     No      Yes
+      │       │
+ discard     ▼
+          retain association
+                │
+                ▼
+            lake_id
+```
 
-At this point, the records are still individual LakeSP observations rather than the final daily reservoir time series.
+The relevant `lake_id` values are collected from intersecting observations.
+
+These identifiers provide the connection between the generated reservoir geometry and the LakeSP observation records subsequently extracted from the products.
+
+This two-stage design prevents a broad metadata search from being treated as proof that a granule actually contains the target reservoir.
 
 ---
 
-## 5.4 LakeSP quality screening
+# 9. LakeSP Granule Reuse
 
-LakeSP observations are screened before daily aggregation.
+LakeSP products can be retained in a persistent granule cache when:
 
-The processing first removes partial observations and then applies the configured LakeSP quality classes.
+```text
+lakesp_cache_enabled = true
+```
 
-The package recognizes the LakeSP quality categories:
+This is separate from the reservoir polygon cache.
+
+The two caches therefore serve different purposes:
+
+```text
+Reservoir polygon cache
+        │
+        └── avoids regenerating reservoir geometry
+
+LakeSP granule cache
+        │
+        └── avoids downloading the same LakeSP products again
+```
+
+When a required LakeSP granule is already cached, the local copy can be reused during subsequent processing.
+
+---
+
+# 10. LakeSP Observation Extraction
+
+Once reservoir-associated LakeSP observations have been identified, the package extracts the fields required for downstream processing.
+
+The extraction stage produces observation records containing information including:
+
+```text
+lake_id
+time_str
+wse
+wse_u
+quality_f
+partial_f
+```
+
+At this point, the data still represent individual LakeSP observation records.
+
+They have not yet become the final reservoir time series.
+
+The next stages determine which observations are usable and how multiple observations from the same acquisition date should be represented.
+
+---
+
+# 11. LakeSP Partial-Observation Screening
+
+LakeSP observations can indicate that the observed lake geometry is only partial.
+
+The package excludes observations marked as partial before daily WSE aggregation.
+
+Conceptually:
+
+```text
+LakeSP observation
+       │
+       ▼
+partial_f
+       │
+   ┌───┴────┐
+   │        │
+partial   accepted
+   │        │
+remove      ▼
+        quality screening
+```
+
+This prevents incomplete observations from contributing to the final reservoir-level daily estimate.
+
+---
+
+# 12. LakeSP Quality Screening
+
+LakeSP observations are then evaluated according to their configured quality classes.
+
+The package exposes four quality classes:
 
 ```text
 GOOD
@@ -355,460 +608,893 @@ DEGRADED
 BAD
 ```
 
-The set of accepted classes is configurable.
-
-This allows the scientific screening policy to be changed without modifying the extraction implementation itself.
-
-Only observations that pass the active screening policy proceed to daily aggregation.
-
----
-
-## 5.5 Daily aggregation
-
-Several accepted LakeSP records can correspond to the same acquisition date.
-
-These observations are grouped by date and reduced to a representative reservoir-level observation.
-
-The daily WSE is calculated using the median of the accepted WSE measurements for that date.
-
-A representative daily quality status is also assigned from the quality information of the observations contributing to the daily value.
-
-The result of this stage is no longer a collection of individual LakeSP feature records. It is a chronological series of reservoir-level daily observations.
-
----
-
-## 5.6 Temporal outlier filtering
-
-The daily LakeSP WSE series is finally screened for temporal outliers using a Median Absolute Deviation (MAD)-based filter.
-
-For the daily WSE values \(x_i\), the median of the series is:
+The accepted classes are controlled through:
 
 ```text
-m = median(x)
+sources.lakesp.accepted_quality_flags
 ```
 
-and the Median Absolute Deviation is:
+The default configuration retains:
 
 ```text
-MAD = median(|x_i - m|)
+good
+suspect
+degraded
 ```
 
-The package evaluates the modified deviation score:
+and excludes:
 
 ```text
-modified_z = 0.6745 × |x_i - m| / MAD
+bad
 ```
 
-An observation is retained when its modified deviation score does not exceed the configured LakeSP MAD threshold.
+This behaviour is configurable because users may require different quality restrictions for different analyses.
 
-The result is the final LakeSP-derived reservoir WSE time series.
+For example:
 
-The threshold is configurable because the temporal screening criterion can affect which observations remain in the scientific output.
-
----
-
-# 6. PIXC Processing
-
-The PIXC source processes SWOT Level 2 Water Mask Pixel Cloud observations.
-
-PIXC requires a substantially different extraction strategy from LakeSP.
-
-Rather than associating the reservoir with existing feature-level lake observations, the package works directly with geolocated PIXC measurements and determines which pixels belong to the reservoir footprint.
-
-The PIXC processing path is:
-
-```text
-Reservoir footprint
-        │
-        ▼
-Candidate granule search
-        │
-        ▼
-CMR footprint verification
-        │
-        ▼
-Granule download
-        │
-        ▼
-Pixel extraction
-        │
-        ▼
-Reservoir spatial filtering
-        │
-        ▼
-Pixel-quality screening
-        │
-        ▼
-Pixel WSE calculation
-        │
-        ▼
-Daily aggregation
-        │
-        ▼
-Temporal MAD filtering
-        │
-        ▼
-PIXC WSE time series
+```bash
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect
 ```
 
----
+restricts processing to `GOOD` and `SUSPECT` observations.
 
-## 6.1 Candidate PIXC discovery
-
-NASA Earthdata is queried for PIXC products covering the requested observation period and reservoir region.
-
-As with LakeSP, the search result is treated as a candidate set rather than as proof that every returned product contains measurements relevant to the reservoir.
-
-Configured science-cycle restrictions can be applied during this stage.
+Observations belonging to classes not permitted by the active configuration are removed before daily aggregation.
 
 ---
 
-## 6.2 Footprint verification
+# 13. LakeSP Daily Aggregation
 
-PIXC products can be large, making unnecessary downloads expensive in both time and storage.
+Multiple accepted LakeSP records can contribute observations on the same acquisition date.
 
-Candidate granules are therefore checked using their CMR spatial metadata before the full product is processed.
+The package therefore reduces the retained records into a daily reservoir-level representation.
 
-Only candidates whose reported footprint intersects the reservoir are retained for subsequent processing.
-
-This creates an inexpensive rejection stage before the more costly download and NetCDF processing stages:
-
-```text
-Earthdata results
-       │
-       ▼
-CMR footprint
-intersection test
-   ┌───┴────┐
-   │        │
-reject    retain
-            │
-            ▼
-         download
-```
-
----
-
-## 6.3 PIXC product extraction
-
-Verified PIXC products are downloaded and processed individually.
-
-The required measurements are read from the PIXC `pixel_cloud` group. These include pixel coordinates, height information, classification information, quality information, and geoid height required by the extraction pipeline. :contentReference[oaicite:1]{index=1}
-
-Because PIXC contains large numbers of observations, spatial rejection is performed in stages rather than immediately constructing geometry for every pixel in the product.
-
----
-
-## 6.4 Reservoir spatial filtering
-
-The reservoir polygon bounds are first used as a coarse geographic filter.
-
-Pixels outside the reservoir bounding box can be rejected using their coordinates without performing more expensive geometric operations.
-
-The remaining candidate pixels are then tested against the actual reservoir polygon.
+For each acquisition date, the representative WSE is calculated from the retained observations using the daily median.
 
 Conceptually:
 
 ```text
-All PIXC pixels
-       │
-       ▼
-Reservoir bounding-box filter
-       │
-       ▼
-Candidate reservoir pixels
-       │
-       ▼
-Point-in-polygon filtering
-       │
-       ▼
-Pixels inside reservoir
+2026-02-01
+    │
+    ├── observation 1 ── WSE
+    ├── observation 2 ── WSE
+    └── observation 3 ── WSE
+              │
+              ▼
+          daily median
+              │
+              ▼
+       representative WSE
+       for 2026-02-01
 ```
 
-The bounding-box stage is therefore an optimization; the reservoir polygon remains the actual spatial criterion used to determine reservoir membership.
-
-This two-stage strategy avoids unnecessary geometry construction and point-in-polygon operations for pixels that are clearly outside the reservoir.
+The result is no longer a collection of individual LakeSP records. It is a sequence of reservoir-level daily observations.
 
 ---
 
-## 6.5 PIXC quality screening
+# 14. LakeSP Daily Quality Status
 
-Spatial membership alone does not imply that a PIXC observation should contribute to the reservoir WSE estimate.
+A representative quality status is also assigned to each acquisition date.
 
-The retained pixels are therefore screened using PIXC classification and classification-quality information.
+The daily status is determined from the retained quality classes contributing to that date.
 
-The current processing selects the configured water classes and rejects pixels whose relevant quality information does not satisfy the active PIXC screening policy.
+The most frequent retained class becomes the daily quality status.
 
-This stage is separate from spatial filtering:
+If multiple classes occur equally often, the poorer quality class is selected.
+
+The final daily LakeSP observation therefore contains:
 
 ```text
-Inside reservoir
-      ≠
-Accepted WSE observation
+date
+wse_median
+quality_status
 ```
 
-A pixel must satisfy both the spatial criterion and the configured product-quality criteria before it contributes to daily WSE aggregation.
+This preserves a quality indication alongside the representative daily WSE rather than discarding quality information during aggregation.
 
 ---
 
-## 6.6 Pixel-level WSE
+# 15. LakeSP Temporal Outlier Filtering
 
-For accepted PIXC pixels, reservoir WSE is calculated from the PIXC height and geoid variables.
+Daily aggregation addresses multiple observations within an acquisition date, but a time series can still contain individual dates whose WSE is inconsistent with the rest of the reservoir record.
 
-The current processing uses:
+The LakeSP pipeline therefore applies a temporal Median Absolute Deviation (MAD) filtering stage.
+
+The threshold is configured through:
+
+```text
+sources.lakesp.mad_threshold
+```
+
+with a default value of:
+
+```text
+3.0
+```
+
+Conceptually:
+
+```text
+daily LakeSP observations
+          │
+          ▼
+       median WSE
+          │
+          ▼
+absolute deviations
+          │
+          ▼
+median absolute deviation
+          │
+          ▼
+identify temporal outliers
+          │
+          ▼
+filtered LakeSP time series
+```
+
+The purpose of this stage is different from LakeSP product-quality screening.
+
+Product-quality screening asks:
+
+```text
+Does the SWOT product flag indicate that this observation should be retained?
+```
+
+Temporal filtering asks:
+
+```text
+Is this daily WSE statistically inconsistent with the reservoir's resulting time series?
+```
+
+These are therefore separate stages of the pipeline.
+
+---
+
+# 16. PIXC Processing Architecture
+
+The PIXC source operates on the SWOT Level-2 High Rate Pixel Cloud Product.
+
+The configured collection is:
+
+```text
+SWOT_L2_HR_PIXC_D
+```
+
+PIXC differs fundamentally from LakeSP.
+
+LakeSP provides vectorized lake observations containing reservoir-level quantities that can be associated with the target reservoir.
+
+PIXC provides geolocated pixel-cloud measurements.
+
+The package must therefore determine which PIXC pixels belong to the reservoir, screen those pixels, calculate their WSE values, and aggregate them into a reservoir-level observation.
+
+The PIXC path is:
+
+```text
+Reservoir polygon
+       │
+       ▼
+Earthdata / CMR search
+       │
+       ▼
+Candidate PIXC granules
+       │
+       ▼
+CMR footprint verification
+       │
+       ▼
+Verified PIXC granules
+       │
+       ▼
+Download PIXC NetCDF product
+       │
+       ▼
+Read pixel-cloud variables
+       │
+       ▼
+Spatial reservoir filtering
+       │
+       ▼
+Water/classification-quality screening
+       │
+       ▼
+Compute pixel WSE
+       │
+       ▼
+Daily pixel aggregation
+       │
+       ▼
+Temporal MAD filtering
+       │
+       ▼
+PIXC reservoir WSE time series
+```
+
+The additional pixel-level processing is the principal reason PIXC extraction can require considerably more memory, disk I/O, and processing time than LakeSP.
+
+---
+
+# 17. PIXC Product Search
+
+PIXC discovery begins with a NASA Earthdata search constrained by:
+
+- the requested observation period;
+- the spatial search region;
+- the configured PIXC collection;
+- the configured science cycles.
+
+Relevant configuration includes:
+
+```text
+sources.pixc.collection
+sources.pixc.search_buffer_degrees
+sources.pixc.science_cycles
+```
+
+As with LakeSP, the search result is treated as a set of candidate products rather than proof that each granule contains usable measurements of the target reservoir.
+
+---
+
+# 18. PIXC Footprint Verification
+
+Before downloading and processing the full pixel-cloud product, candidate PIXC granules are checked using their CMR spatial metadata.
+
+The candidate footprint is compared with the target reservoir polygon.
+
+Conceptually:
+
+```text
+Candidate PIXC granule
+          │
+          ▼
+CMR spatial footprint
+          │
+          ▼
+Intersects reservoir?
+          │
+      ┌───┴───┐
+      │       │
+     No      Yes
+      │       │
+ discard      ▼
+          download PIXC
+```
+
+This provides an early spatial rejection stage.
+
+PIXC files can be large, so eliminating irrelevant candidates before full product processing avoids unnecessary downloads and pixel-level work.
+
+---
+
+# 19. PIXC Product Processing
+
+Verified PIXC products are downloaded into temporary processing workspaces.
+
+Unlike LakeSP granules, PIXC products are not currently maintained in a persistent PIXC granule cache.
+
+Their lifecycle is therefore conceptually:
+
+```text
+verified candidate
+       │
+       ▼
+temporary download
+       │
+       ▼
+NetCDF processing
+       │
+       ▼
+extract usable pixels
+       │
+       ▼
+temporary product removed
+```
+
+The temporary workspace location is controlled by:
+
+```text
+temp_download_dir
+```
+
+---
+
+# 20. Reservoir-Level Pixel Selection
+
+A PIXC granule contains measurements over an area considerably broader than the target reservoir.
+
+The package therefore uses the reservoir polygon to retain only pixel-cloud observations spatially associated with the target water body.
+
+Conceptually:
+
+```text
+             PIXC pixels
+
+     ·    ·     ·      ·     ·
+        ·   ┌───────────┐
+     ·      │ · · · · · │    ·
+            │ · · · · · │
+       ·    │ · · · · · │  ·
+            └───────────┘
+      ·        reservoir      ·
+
+
+                 │
+                 ▼
+
+       retain pixels spatially
+       associated with reservoir
+
+                 │
+                 ▼
+
+             · · · · ·
+             · · · · ·
+             · · · · ·
+```
+
+Pixels outside the reservoir geometry do not contribute to the reservoir WSE estimate.
+
+---
+
+# 21. PIXC Classification and Quality Screening
+
+Spatial membership alone does not make a PIXC pixel suitable for WSE estimation.
+
+The PIXC source therefore applies product-specific screening to the selected pixels.
+
+The configured water classification is controlled through:
+
+```text
+sources.pixc.water_classification
+```
+
+whose current default is:
+
+```text
+4
+```
+
+Only pixels satisfying the configured classification and the pipeline's classification-quality requirements are retained for aggregation.
+
+The stages are therefore distinct:
+
+```text
+all PIXC pixels
+       │
+       ▼
+inside reservoir?
+       │
+       ▼
+required water classification?
+       │
+       ▼
+classification quality acceptable?
+       │
+       ▼
+usable reservoir pixels
+```
+
+This is fundamentally different from the LakeSP quality path because the PIXC source is screening individual pixel-cloud measurements rather than already-vectorized lake observations.
+
+---
+
+# 22. PIXC Pixel WSE
+
+For each retained PIXC pixel, the package calculates the WSE used by the reservoir aggregation as:
 
 ```text
 WSE = height - geoid
 ```
 
-The resulting value represents the pixel water-surface elevation relative to the geoid rather than the ellipsoidal height stored directly in the PIXC height measurement. :contentReference[oaicite:2]{index=2}
+where the corresponding PIXC height and geoid quantities are used for the accepted pixel.
 
-At this point the dataset still consists of many individual pixel-level WSE observations.
+The output of this stage is therefore a collection of usable reservoir pixels, each with an associated WSE value.
+
+Conceptually:
+
+```text
+Pixel 1 ──► WSE₁
+Pixel 2 ──► WSE₂
+Pixel 3 ──► WSE₃
+   ...
+Pixel n ──► WSEₙ
+```
+
+These pixel-level measurements must still be reduced to a representative reservoir observation.
 
 ---
 
-## 6.7 Daily reservoir aggregation
+# 23. PIXC Daily Aggregation
 
 Accepted PIXC pixels are grouped by acquisition date.
 
-For each date, the median of the accepted pixel WSE values is used as the representative reservoir WSE. :contentReference[oaicite:3]{index=3}
+The pixel WSE values contributing to a date are aggregated to obtain the representative reservoir WSE for that acquisition.
 
-The PIXC pipeline also derives summary statistics describing the accepted pixel population. These statistics are retained in the PIXC output so that the daily WSE value is accompanied by information about the observations from which it was calculated.
+The PIXC aggregation stage also retains summary information describing the accepted pixel population.
 
-This stage performs the key reduction:
+The resulting daily records include the representative WSE together with statistics such as:
 
 ```text
-many accepted PIXC pixels
-             │
-             ▼
-       one acquisition date
-             │
-             ▼
-representative reservoir WSE
+mean WSE
+WSE spread
+accepted pixel count
+mean water fraction
+mean phase-noise standard deviation
+```
+
+The exact output schema is documented in [Outputs](outputs.md).
+
+This conversion is the key transition in the PIXC pipeline:
+
+```text
+many individual pixel measurements
+                │
+                ▼
+one reservoir-level observation
+per acquisition date
 ```
 
 ---
 
-## 6.8 Temporal outlier filtering
+# 24. PIXC Temporal Outlier Filtering
 
-The resulting sequence of daily PIXC observations is screened using a MAD-based temporal filter.
+After daily aggregation, the PIXC reservoir observations pass through a temporal Median Absolute Deviation filtering stage.
 
-The purpose of this stage is different from pixel-level quality screening.
+The threshold is controlled through:
 
-Pixel screening operates **within an acquisition** and determines which PIXC measurements are eligible to contribute to that day's estimate.
+```text
+sources.pixc.mad_threshold
+```
 
-Temporal filtering operates **between daily reservoir observations** and identifies daily WSE values that deviate strongly from the overall temporal series.
+with the default:
 
-The remaining observations form the final PIXC-derived reservoir WSE record. :contentReference[oaicite:4]{index=4}
+```text
+3.0
+```
+
+As in the LakeSP pipeline, this stage operates on the resulting reservoir time series rather than on individual raw measurements.
+
+The sequence is therefore:
+
+```text
+pixel-level screening
+        │
+        ▼
+daily reservoir aggregation
+        │
+        ▼
+temporal MAD filtering
+        │
+        ▼
+final PIXC time series
+```
 
 ---
 
-# 7. Why LakeSP and PIXC Remain Separate
+# 25. LakeSP and PIXC Compared
 
-Although both pipelines eventually produce reservoir WSE observations, merging their internal processing would hide important differences between the products.
+The two source pipelines solve the same final problem but begin from different observation representations.
 
-The association problem alone is fundamentally different:
+| Stage | LakeSP | PIXC |
+| --- | --- | --- |
+| Input product | Lake observation vector product | High-rate pixel cloud |
+| Earthdata search | Yes | Yes |
+| Science-cycle filtering | Yes | Yes |
+| Reservoir spatial verification | Lake observation intersection | CMR footprint followed by pixel-level spatial filtering |
+| Fundamental observation unit | LakeSP observation record | PIXC pixel |
+| Reservoir association | Intersecting observations and `lake_id` | Pixel position relative to reservoir polygon |
+| Product-level screening | Partial and LakeSP quality information | Water classification and classification-quality screening |
+| WSE before daily aggregation | Product WSE observation | `height - geoid` for retained pixels |
+| Daily aggregation | Across retained LakeSP observations | Across retained PIXC pixels |
+| Temporal MAD filtering | Yes | Yes |
+| Persistent product cache | Yes | No |
+| Relative computational cost | Lower | Generally higher |
 
-```text
-LakeSP
-Reservoir polygon
-      │
-      ▼
-Intersect LakeSP features
-      │
-      ▼
-Identify lake_id
-      │
-      ▼
-Extract feature WSE
-```
+The architectural separation is therefore intentional.
 
-versus:
-
-```text
-PIXC
-Reservoir polygon
-      │
-      ▼
-Filter geolocated pixels
-      │
-      ▼
-Apply pixel quality criteria
-      │
-      ▼
-Calculate pixel WSE
-      │
-      ▼
-Aggregate pixels
-```
-
-The source abstraction therefore standardizes **where the pipelines connect to the rest of the package**, not the scientific processing inside each source.
-
-This allows source-specific processing to evolve independently while preserving a common extraction interface.
-
-It also provides the architectural basis for supporting additional SWOT observation products in the future without placing product-specific logic directly inside the top-level extraction workflow.
+Treating PIXC merely as another filename format for the LakeSP pipeline would be incorrect because the two products require fundamentally different reservoir-association and aggregation procedures.
 
 ---
 
-# 8. Shared Output Stage
+# 26. Concurrency
 
-Both source pipelines return a reservoir-level time series to the common output layer.
+Some granule-level work can be performed concurrently.
 
-The output layer is responsible for writing the processed result rather than deciding how the observations were scientifically derived.
+The maximum worker count is controlled through:
 
-Output filenames include the source name so that LakeSP and PIXC extractions for the same reservoir remain distinct.
+```text
+max_workers
+```
 
-For example:
+The default is derived from the available CPU count.
+
+Conceptually:
+
+```text
+candidate granules
+      │
+      ├────► worker 1
+      ├────► worker 2
+      ├────► worker 3
+      └────► worker n
+                 │
+                 ▼
+           collected results
+```
+
+Concurrency is particularly important for product discovery and granule processing over longer observation periods.
+
+It must, however, be considered differently for PIXC.
+
+PIXC granules contain high-resolution pixel-cloud data, so processing several granules simultaneously can substantially increase memory use.
+
+For systems with limited memory, `max_workers` can therefore be reduced:
+
+```bash
+swot-reservoir-wse config set max_workers 2
+```
+
+---
+
+# 27. Output Layer
+
+Both source pipelines eventually produce reservoir-level daily observations.
+
+The output layer converts those observations into persistent user-facing products.
+
+Every successful extraction generates a CSV file.
+
+When:
+
+```text
+generate_plot = true
+```
+
+a PNG visualization is generated as well.
+
+The output directory is controlled by:
+
+```text
+output_dir
+```
+
+and filenames include the dam coordinates and selected observation source.
+
+For LakeSP:
 
 ```text
 19.69000_73.34000_lakesp_wse.csv
 19.69000_73.34000_lakesp_wse.png
+```
 
+For PIXC:
+
+```text
 19.69000_73.34000_pixc_wse.csv
 19.69000_73.34000_pixc_wse.png
 ```
 
-The exact output schema is source dependent because the two processing pipelines retain different metadata and summary information.
+The source name is included because LakeSP and PIXC are independent processing products. Running both sources for the same reservoir therefore produces separate time series rather than silently combining their observations.
 
-See [Outputs](outputs.md) for the complete output schemas.
-
----
-
-# 9. Caching and Temporary Data
-
-The package distinguishes between data that are useful across multiple executions and data required only during a single processing run.
-
-## Persistent data
-
-The current persistent cache includes:
-
-```text
-cache/
-├── reservoir_polygons/
-└── lakesp_granules/
-```
-
-Reservoir polygons can be reused by either source.
-
-LakeSP granules are retained so that previously downloaded products can be reused when the same data are required again.
-
-## Temporary data
-
-PIXC products are currently processed through temporary working directories rather than a persistent PIXC granule cache.
-
-Temporary download and extraction data are therefore separate from persistent cache state.
-
-This distinction is particularly relevant for PIXC because individual products can be substantially larger than LakeSP vector products.
+For field-level output documentation, see [Outputs](outputs.md).
 
 ---
 
-# 10. Configuration Boundaries
+# 28. Configuration in the Architecture
 
-The configuration system follows the same separation used by the processing architecture.
+Configuration is loaded before processing and controls behaviour throughout the pipeline.
 
-Settings that affect the package as a whole remain at the common configuration level, while product-specific settings are grouped under their respective source:
+The architecture can therefore be viewed as two inputs entering the processing system:
 
 ```text
-sources.lakesp.*
-sources.pixc.*
+                    User Request
+                         │
+                         │
+                         ▼
+                   Processing Run
+                         ▲
+                         │
+                  Active config.json
 ```
 
-This prevents LakeSP processing parameters from implicitly affecting PIXC processing and vice versa.
-
-Examples of source-specific concerns include:
+Configuration affects multiple stages:
 
 ```text
+Reservoir identification
+    ├── search_radius_m
+    ├── pekel_threshold
+    └── working_crs
+
+Execution
+    ├── max_workers
+    └── generate_plot
+
+Caching
+    ├── polygon_cache_enabled
+    ├── lakesp_cache_enabled
+    └── cache_dir
+
 LakeSP
-├── collection
-├── science cycles
-├── search buffer
-├── accepted quality classes
-└── MAD threshold
+    ├── collection
+    ├── search_buffer_degrees
+    ├── science_cycles
+    ├── accepted_quality_flags
+    └── mad_threshold
 
 PIXC
-├── collection
-├── science cycles
-├── search parameters
-├── accepted water classifications
-├── quality screening
-└── MAD threshold
+    ├── collection
+    ├── search_buffer_degrees
+    ├── science_cycles
+    ├── water_classification
+    └── mad_threshold
+
+Filesystem
+    ├── output_dir
+    └── temp_download_dir
 ```
 
-The architecture document intentionally does not enumerate configuration defaults because those values may change independently of the processing design.
-
-See [Configuration](configuration.md) for the active parameters and defaults.
+The scientific meaning and validation rules for these parameters are documented in [Configuration](configuration.md).
 
 ---
 
-# 11. Failure Boundaries
+# 29. Authentication in the Architecture
 
-The pipeline distinguishes between a processing failure and the absence of usable observations.
-
-For example, any of the following can legitimately produce no WSE time series:
+Authentication is configured separately from extraction, but two processing stages depend on authenticated services.
 
 ```text
-no reservoir footprint identified
-no candidate SWOT products found
-no product intersects the reservoir
-no LakeSP observations survive screening
-no PIXC pixels satisfy the spatial/quality criteria
-no daily observations survive temporal filtering
+Google Earth Engine credentials
+            │
+            ▼
+Reservoir footprint generation
+
+
+NASA Earthdata credentials
+            │
+            ▼
+LakeSP / PIXC discovery and access
 ```
 
-These cases describe valid outcomes of the requested extraction rather than necessarily indicating a software error.
+Normal extraction does not intentionally begin an interactive authentication procedure.
 
-By contrast, failures involving authentication, inaccessible external services, invalid configuration, malformed products, or unexpected processing exceptions represent operational errors.
+The required credentials are expected to have been configured beforehand using:
 
-Keeping these cases separate is important for both command-line behaviour and programmatic use of the package.
+```bash
+swot-reservoir-wse auth
+```
+
+This separation allows extraction commands to behave predictably in terminals, scripts, and repeatable processing workflows.
+
+For credential handling and storage, see [Authentication](authentication.md).
 
 ---
 
-# 12. Architectural Summary
+# 30. End-to-End LakeSP Data Flow
 
-The package is organized around one central principle:
-
-> **Reservoir identification is shared; interpretation of SWOT observations belongs to the selected source.**
-
-The complete data flow is therefore:
+The complete LakeSP path can now be represented as:
 
 ```text
 User
  │
- ├── dam latitude
- ├── dam longitude
- ├── start date
- ├── end date
- └── source
-      │
-      ▼
-Reservoir footprint
-(JRC Global Surface Water / Earth Engine)
-      │
-      ▼
-Source selection
- ┌────┴─────────────────────┐
- │                          │
- ▼                          ▼
-LakeSP                     PIXC
- │                          │
- ├─ candidate search        ├─ candidate search
- ├─ intersection            ├─ footprint verification
- ├─ lake_id association     ├─ product download
- ├─ observation extraction  ├─ pixel extraction
- ├─ quality screening       ├─ spatial filtering
- ├─ daily aggregation       ├─ quality screening
- └─ temporal filtering      ├─ pixel WSE calculation
-                            ├─ daily aggregation
-                            └─ temporal filtering
- │                          │
- └────────────┬─────────────┘
-              ▼
-      Reservoir WSE result
-              │
-              ▼
-         Output layer
-          ├── CSV
-          └── PNG
+ │ latitude, longitude
+ │ start date, end date
+ │ source = lakesp
+ ▼
+Load configuration
+ │
+ ▼
+Check reservoir polygon cache
+ │
+ ├── hit ─────────────────────────────┐
+ │                                    │
+ └── miss                             │
+      │                               │
+      ▼                               │
+ Google Earth Engine                  │
+      │                               │
+ JRC Global Surface Water             │
+      │                               │
+ water occurrence threshold           │
+      │                               │
+ candidate water polygons             │
+      │                               │
+ reservoir selection                  │
+      │                               │
+      └──────────► reservoir polygon ◄─┘
+                         │
+                         ▼
+                Earthdata LakeSP search
+                         │
+                         ▼
+                 candidate granules
+                         │
+                         ▼
+              inspect observation geometry
+                         │
+                         ▼
+                reservoir intersection
+                         │
+                         ▼
+                  associated lake_id
+                         │
+                         ▼
+                extract observations
+                         │
+                         ▼
+                 remove partial data
+                         │
+                         ▼
+                quality-class screening
+                         │
+                         ▼
+                   daily median WSE
+                         │
+                         ▼
+                 daily quality status
+                         │
+                         ▼
+                temporal MAD filtering
+                         │
+                         ▼
+                 final LakeSP series
+                         │
+                ┌────────┴────────┐
+                ▼                 ▼
+               CSV           optional PNG
 ```
 
-The result is a single user-facing extraction interface over multiple independent SWOT observation pipelines, with shared reservoir identification, configuration infrastructure, caching, authentication, and output handling.
+---
+
+# 31. End-to-End PIXC Data Flow
+
+The complete PIXC path is:
+
+```text
+User
+ │
+ │ latitude, longitude
+ │ start date, end date
+ │ source = pixc
+ ▼
+Load configuration
+ │
+ ▼
+Check reservoir polygon cache
+ │
+ ├── hit ─────────────────────────────┐
+ │                                    │
+ └── miss                             │
+      │                               │
+      ▼                               │
+ Google Earth Engine                  │
+      │                               │
+ JRC Global Surface Water             │
+      │                               │
+ water occurrence threshold           │
+      │                               │
+ candidate water polygons             │
+      │                               │
+ reservoir selection                  │
+      │                               │
+      └──────────► reservoir polygon ◄─┘
+                         │
+                         ▼
+                 Earthdata PIXC search
+                         │
+                         ▼
+                  candidate granules
+                         │
+                         ▼
+                CMR footprint check
+                         │
+                         ▼
+                  verified granules
+                         │
+                         ▼
+               temporary PIXC download
+                         │
+                         ▼
+                   read NetCDF data
+                         │
+                         ▼
+               reservoir pixel selection
+                         │
+                         ▼
+                 classification screening
+                         │
+                         ▼
+              classification-quality check
+                         │
+                         ▼
+                  retained water pixels
+                         │
+                         ▼
+                 WSE = height - geoid
+                         │
+                         ▼
+                  daily aggregation
+                         │
+                         ▼
+                temporal MAD filtering
+                         │
+                         ▼
+                  final PIXC series
+                         │
+                ┌────────┴────────┐
+                ▼                 ▼
+               CSV           optional PNG
+```
+
+---
+
+# 32. Architectural Boundaries
+
+The package can ultimately be understood as four cooperating layers:
+
+```text
+┌──────────────────────────────────────────────────────┐
+│                    CLI / User Layer                  │
+│                                                      │
+│     extract       auth       config       cache      │
+└──────────────────────────┬───────────────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────┐
+│              Common Processing Layer                 │
+│                                                      │
+│ configuration     reservoir identification           │
+│ authentication    caching                            │
+└──────────────────────────┬───────────────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────┐
+│                Observation Sources                   │
+│                                                      │
+│        LakeSP                    PIXC                 │
+│                                                      │
+│ search                     search                    │
+│ discovery                  footprint verification    │
+│ extraction                 pixel extraction          │
+│ quality filtering          pixel screening           │
+│ daily aggregation          daily aggregation         │
+│ MAD filtering              MAD filtering             │
+└──────────────────────────┬───────────────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────┐
+│                     Output Layer                     │
+│                                                      │
+│                 CSV          PNG                     │
+└──────────────────────────────────────────────────────┘
+```
+
+This separation is what allows **swot-reservoir-wse** to support multiple SWOT observation products without forcing product-specific assumptions into the common reservoir-identification or output components.
+
+A future observation source can follow the same overall contract:
+
+```text
+reservoir polygon
+      +
+requested period
+      ↓
+source-specific processing
+      ↓
+reservoir-level WSE observations
+```
+
+while implementing its own product-specific discovery, extraction, screening, and aggregation logic.
+
+---
+
+# Related Documentation
+
+For installation and external-service setup, see [Installation](installation.md).
+
+For authentication and credential handling, see [Authentication](authentication.md).
+
+For configurable processing parameters, see [Configuration](configuration.md).
+
+For command syntax and options, see [Command Reference](command_reference.md).
+
+For generated CSV fields and plots, see [Outputs](outputs.md).
+
+For a practical first-use walkthrough, see [Usage](usage.md).
