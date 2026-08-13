@@ -266,7 +266,7 @@ Consequently, reservoir association, quality assessment, and WSE aggregation are
 
 ---
 
-# 4. SWOT LakeSP Processing
+## 4. SWOT LakeSP Processing
 
 The LakeSP pipeline processes reservoir observations from the SWOT Level 2 Lake Single-Pass vector product.
 
@@ -289,7 +289,7 @@ LakeSP WSE Time Series
 
 ---
 
-## 4.1 LakeSP Granule Identification
+### 4.1 LakeSP Granule Identification
 
 The LakeSP archive contains granules containing observations acquired over many locations and mission cycles.
 
@@ -339,7 +339,7 @@ Candidate LakeSP Granules
 
 ---
 
-## 4.2 Reservoir Polygon Association
+### 4.2 Reservoir Polygon Association
 
 A candidate LakeSP granule may contain observations for many unrelated inland water bodies.
 
@@ -374,7 +374,7 @@ This step transforms a granule-centred product containing many water bodies into
 
 ---
 
-## 4.3 LakeSP Observation Extraction
+### 4.3 LakeSP Observation Extraction
 
 Verified `lake_id` values are used to extract observations associated with the selected reservoir.
 
@@ -397,7 +397,7 @@ The observations must therefore undergo quality assessment before they can be co
 
 ---
 
-## 4.4 LakeSP WSE Quality Control and Aggregation
+### 4.4 LakeSP WSE Quality Control and Aggregation
 
 LakeSP observations pass through a multi-stage processing sequence.
 
@@ -424,7 +424,7 @@ Temporal MAD Filtering
 Final LakeSP WSE Series
 ```
 
-### Partial-Observation Screening
+#### Partial-Observation Screening
 
 Observations identified as partial are excluded before daily aggregation.
 
@@ -436,7 +436,7 @@ This prevents observations representing incomplete water-body coverage from cont
 
 ---
 
-### Quality-Class Screening
+#### Quality-Class Screening
 
 The remaining observations are screened using the LakeSP quality information.
 
@@ -461,7 +461,7 @@ The quality policy can therefore be tightened or relaxed without modifying the s
 
 ---
 
-### Daily WSE Aggregation
+#### Daily WSE Aggregation
 
 Multiple accepted observations may occur on a single acquisition date.
 
@@ -493,7 +493,7 @@ reservoir-level daily observation
 
 ---
 
-### Daily Quality Assignment
+#### Daily Quality Assignment
 
 A representative quality status is retained for each daily LakeSP observation.
 
@@ -511,7 +511,7 @@ quality_status
 
 ---
 
-### Temporal MAD Filtering
+#### Temporal MAD Filtering
 
 The daily sequence is finally screened for temporal outliers using the Median Absolute Deviation ( MAD)
 
@@ -544,7 +544,7 @@ The remaining daily observations form the final LakeSP-derived reservoir WSE tim
 
 ---
 
-## 4.5 LakeSP Granule Cache
+### 4.5 LakeSP Granule Cache
 
 LakeSP granules may be retained locally when:
 
@@ -566,7 +566,7 @@ LakeSP Granule Cache
 
 ---
 
-# 5. SWOT PIXC Processing
+## 5. SWOT PIXC Processing
 
 The PIXC pipeline processes the SWOT Level 2 Water Mask Pixel Cloud product.
 
@@ -595,7 +595,7 @@ PIXC WSE Time Series
 
 ---
 
-## 5.1 PIXC Granule Identification
+### 5.1 PIXC Granule Identification
 
 The first PIXC stage identifies products whose spatial coverage may contain the reservoir during the requested period.
 
@@ -620,7 +620,7 @@ The returned products remain candidate granules until their spatial metadata are
 
 ---
 
-### CMR Footprint Verification
+#### CMR Footprint Verification
 
 The spatial footprint of each candidate PIXC granule is obtained from CMR metadata and compared with the reservoir footprint.
 
@@ -647,7 +647,7 @@ This early spatial rejection is particularly useful for PIXC because full pixel-
 
 ---
 
-## 5.2 Reservoir Pixel Extraction and WSE Computation
+### 5.2 Reservoir Pixel Extraction and WSE Computation
 
 Verified PIXC products are downloaded into temporary processing workspaces and opened as NetCDF data.
 
@@ -668,7 +668,7 @@ together with additional variables used in the resulting statistics.
 
 ---
 
-### Bounding-Box Prefilter
+#### Bounding-Box Prefilter
 
 Before performing point-in-polygon processing, PIXC pixels are first screened using the geographic bounds of the reservoir.
 
@@ -686,7 +686,7 @@ This inexpensive first step eliminates pixels that are clearly outside the targe
 
 ---
 
-### Exact Reservoir Intersection
+#### Exact Reservoir Intersection
 
 The remaining candidate pixels are converted to geographic point geometries and tested against the reservoir footprint.
 
@@ -711,7 +711,7 @@ Only pixels spatially associated with the reservoir polygon continue through the
 
 ---
 
-### Pixel WSE Computation
+#### Pixel WSE Computation
 
 PIXC pixel heights are referenced to the WGS84 ellipsoid.
 
@@ -735,7 +735,7 @@ These measurements still need to undergo PIXC-specific quality control before re
 
 ---
 
-## 5.3 PIXC Quality Control and WSE Aggregation
+### 5.3 PIXC Quality Control and WSE Aggregation
 
 The PIXC processing branch applies its own screening procedure.
 
@@ -767,7 +767,7 @@ Final PIXC WSE Series
 
 ---
 
-### Water Classification
+#### Water Classification
 
 The retained water class is controlled by:
 
@@ -785,7 +785,7 @@ Only pixels matching the configured classification enter the subsequent quality 
 
 ---
 
-### Classification-Quality Screening
+#### Classification-Quality Screening
 
 PIXC observations also contain the `classification_qual` bitmask.
 
@@ -795,7 +795,7 @@ This screening operates at the **pixel level**, in contrast to the observation-l
 
 ---
 
-### Daily WSE Aggregation
+#### Daily WSE Aggregation
 
 After spatial and quality screening, all accepted PIXC pixels from the same acquisition date are combined into a reservoir-level observation.
 
@@ -824,14 +824,14 @@ The complete output schema is described in [Outputs](outputs.md).
 
 ---
 
-### Temporal MAD Filtering
+#### Temporal MAD Filtering
 
 The resulting daily PIXC WSE sequence is subjected to temporal Median Absolute Deviation filtering.
 
 The threshold is configured independently through:
 
 ```text
-sources.pixc.mad_threshold
+mad_threshold
 ```
 
 The complete PIXC reduction is therefore:
@@ -860,7 +860,7 @@ Final PIXC WSE Time Series
 
 ---
 
-## 5.4 PIXC Temporary Data Lifecycle
+### 5.4 PIXC Temporary Data Lifecycle
 
 Since, the pipeline operates directly on high-resolution pixel-cloud products, PIXC processing can require more memory, disk activity, and processing time than LakeSP processing.
 
@@ -895,7 +895,7 @@ temp_download_dir
 
 ---
 
-# 6. Reservoir WSE Time Series Construction
+## 6. Reservoir WSE Time Series Construction
 
 The final product of either source pipeline is a chronological sequence of reservoir-level WSE observations.
 
@@ -909,7 +909,7 @@ Each successful extraction is written independently through the common output la
 
 ---
 
-# 7. LakeSP and PIXC Processing Compared
+## 7. LakeSP and PIXC Processing Compared
 
 The architectural difference between the two sources can be summarized directly.
 
@@ -935,7 +935,7 @@ The two pipelines share a common spatial target—the reservoir footprint—but 
 
 ---
 
-# 8. Output Generation
+## 8. Output Generation
 
 Both source pipelines use the same output interface.
 
@@ -973,7 +973,7 @@ For field definitions and plotting behaviour, see [Outputs](outputs.md).
 
 ---
 
-# 9. Runtime Configuration
+## 9. Runtime Configuration
 
 Processing behaviour is controlled by the active `config.json`.
 
@@ -1019,7 +1019,7 @@ For detailed parameter descriptions, see [Configuration](configuration.md).
 
 ---
 
-# 10. Authentication
+## 10. Authentication
 
 Two authenticated external services are used by the processing system.
 
@@ -1048,7 +1048,7 @@ For credential storage and authentication behaviour, see [Authentication](authen
 
 ---
 
-# 11. Parallel Processing
+## 11. Parallel Processing
 
 Granule-level processing can be performed concurrently.
 
@@ -1079,7 +1079,7 @@ A lower worker count can therefore be configured when necessary:
 
 ---
 
-# 12. Complete LakeSP Data Flow
+## 12. Complete LakeSP Data Flow
 
 ```text
 User Input
@@ -1152,7 +1152,7 @@ Reservoir Polygon Cache
 
 ---
 
-# 13. Complete PIXC Data Flow
+## 13. Complete PIXC Data Flow
 
 ```text
 User Input
@@ -1234,7 +1234,7 @@ Reservoir Polygon Cache
 
 ---
 
-# 14. Architectural Summary
+## 14. Architectural Summary
 
 The package can be viewed as four cooperating layers:
 
