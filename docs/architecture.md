@@ -15,7 +15,7 @@ For this reason, **swot-reservoir-wse** shares reservoir identification, configu
 
 ---
 
-## 1. Processing Model
+## Processing Model
 
 Every extraction requires:
 
@@ -79,7 +79,7 @@ The two source branches remain independent throughout observation processing.
 
 ---
 
-## 2. Reservoir Footprint Generation
+## Reservoir Footprint Generation
 
 The extraction interface accepts a latitude and longitude representing the dam.
 
@@ -89,7 +89,7 @@ However, the required WSE belongs to the water body behind the dam, not to that 
 
 Therefore, The package first generates a polygon representing the reservoir associated with the supplied dam coordinates.
 
-### 2.1 Surface-Water Search Region
+### Surface-Water Search Region
 
 Reservoir footprint generation uses the **Joint Research Centre (JRC) Global Surface Water** dataset through **Google Earth Engine**.
 
@@ -134,7 +134,7 @@ Candidate Water-Body Polygons
 
 ---
 
-### 2.2 Reservoir Polygon Selection
+### Reservoir Polygon Selection
 
 Several water bodies may exist within the search region.
 
@@ -169,7 +169,7 @@ The second case accounts for situations in which the recorded dam location lies 
 
 ---
 
-### 2.3 Projected Geometry Coordinate System
+### Projected Geometry Coordinate System
 
 Area and distance calculations are performed in a projected coordinate reference system.
 
@@ -191,7 +191,7 @@ After geometric selection is complete, the reservoir footprint is returned in ge
 
 ---
 
-### 2.4 Reservoir Polygon Cache
+### Reservoir Polygon Cache
 
 Reservoir footprint generation does not need to be repeated for every run.
 
@@ -228,7 +228,7 @@ The cached footprint is independent of the SWOT source and can therefore be reus
 
 ---
 
-## 3. Observation-Source Selection
+## Observation-Source Selection
 
 Once the reservoir footprint has been obtained, the common spatial-identification stage is complete.
 
@@ -266,7 +266,7 @@ Consequently, reservoir association, quality assessment, and WSE aggregation are
 
 ---
 
-## 4. SWOT LakeSP Processing
+## SWOT LakeSP Processing
 
 The LakeSP pipeline processes reservoir observations from the SWOT Level 2 Lake Single-Pass vector product.
 
@@ -289,7 +289,7 @@ LakeSP WSE Time Series
 
 ---
 
-### 4.1 LakeSP Granule Identification
+### LakeSP Granule Identification
 
 The LakeSP archive contains granules containing observations acquired over many locations and mission cycles.
 
@@ -339,7 +339,7 @@ Candidate LakeSP Granules
 
 ---
 
-### 4.2 Reservoir Polygon Association
+### Reservoir Polygon Association
 
 A candidate LakeSP granule may contain observations for many unrelated inland water bodies.
 
@@ -374,7 +374,7 @@ This step transforms a granule-centred product containing many water bodies into
 
 ---
 
-### 4.3 LakeSP Observation Extraction
+### LakeSP Observation Extraction
 
 Verified `lake_id` values are used to extract observations associated with the selected reservoir.
 
@@ -397,7 +397,7 @@ The observations must therefore undergo quality assessment before they can be co
 
 ---
 
-### 4.4 LakeSP WSE Quality Control and Aggregation
+### LakeSP WSE Quality Control and Aggregation
 
 LakeSP observations pass through a multi-stage processing sequence.
 
@@ -544,7 +544,7 @@ The remaining daily observations form the final LakeSP-derived reservoir WSE tim
 
 ---
 
-### 4.5 LakeSP Granule Cache
+### LakeSP Granule Cache
 
 LakeSP granules may be retained locally when:
 
@@ -566,7 +566,7 @@ LakeSP Granule Cache
 
 ---
 
-## 5. SWOT PIXC Processing
+## SWOT PIXC Processing
 
 The PIXC pipeline processes the SWOT Level 2 Water Mask Pixel Cloud product.
 
@@ -595,7 +595,7 @@ PIXC WSE Time Series
 
 ---
 
-### 5.1 PIXC Granule Identification
+### PIXC Granule Identification
 
 The first PIXC stage identifies products whose spatial coverage may contain the reservoir during the requested period.
 
@@ -647,7 +647,7 @@ This early spatial rejection is particularly useful for PIXC because full pixel-
 
 ---
 
-### 5.2 Reservoir Pixel Extraction and WSE Computation
+### Reservoir Pixel Extraction and WSE Computation
 
 Verified PIXC products are downloaded into temporary processing workspaces and opened as NetCDF data.
 
@@ -735,7 +735,7 @@ These measurements still need to undergo PIXC-specific quality control before re
 
 ---
 
-### 5.3 PIXC Quality Control and WSE Aggregation
+### PIXC Quality Control and WSE Aggregation
 
 The PIXC processing branch applies its own screening procedure.
 
@@ -860,7 +860,7 @@ Final PIXC WSE Time Series
 
 ---
 
-### 5.4 PIXC Temporary Data Lifecycle
+### PIXC Temporary Data Lifecycle
 
 Since, the pipeline operates directly on high-resolution pixel-cloud products, PIXC processing can require more memory, disk activity, and processing time than LakeSP processing.
 
@@ -895,7 +895,7 @@ temp_download_dir
 
 ---
 
-## 6. Reservoir WSE Time Series Construction
+## Reservoir WSE Time Series Construction
 
 The final product of either source pipeline is a chronological sequence of reservoir-level WSE observations.
 
@@ -909,7 +909,7 @@ Each successful extraction is written independently through the common output la
 
 ---
 
-## 7. LakeSP and PIXC Processing Compared
+## LakeSP and PIXC Processing Compared
 
 The architectural difference between the two sources can be summarized directly.
 
@@ -935,7 +935,7 @@ The two pipelines share a common spatial target—the reservoir footprint—but 
 
 ---
 
-## 8. Output Generation
+## Output Generation
 
 Both source pipelines use the same output interface.
 
@@ -973,7 +973,7 @@ For field definitions and plotting behaviour, see [Outputs](outputs.md).
 
 ---
 
-## 9. Runtime Configuration
+## Runtime Configuration
 
 Processing behaviour is controlled by the active `config.json`.
 
@@ -1019,7 +1019,7 @@ For detailed parameter descriptions, see [Configuration](configuration.md).
 
 ---
 
-## 10. Authentication
+## Authentication
 
 Two authenticated external services are used by the processing system.
 
@@ -1048,7 +1048,7 @@ For credential storage and authentication behaviour, see [Authentication](authen
 
 ---
 
-## 11. Parallel Processing
+## Parallel Processing
 
 Granule-level processing can be performed concurrently.
 
@@ -1079,7 +1079,7 @@ A lower worker count can therefore be configured when necessary:
 
 ---
 
-## 12. Complete LakeSP Data Flow
+## Complete LakeSP Data Flow
 
 ```text
 User Input
@@ -1152,7 +1152,7 @@ Reservoir Polygon Cache
 
 ---
 
-## 13. Complete PIXC Data Flow
+## Complete PIXC Data Flow
 
 ```text
 User Input
@@ -1234,7 +1234,7 @@ Reservoir Polygon Cache
 
 ---
 
-## 14. Architectural Summary
+## Architectural Summary
 
 The package can be viewed as four cooperating layers:
 
