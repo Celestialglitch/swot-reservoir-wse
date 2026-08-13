@@ -1,161 +1,202 @@
 # Authentication
 
-**swot-wse** uses two external services that require authentication:
+**swot-wse** accesses two external services during processing:
 
-- **Google Earth Engine** for reservoir footprint generation using the JRC Global Surface Water dataset.
-- **NASA Earthdata** for discovering and accessing SWOT observation products.
+- **Google Earth Engine (GEE)** — used to derive reservoir footprints from the JRC Global Surface Water dataset.
+- **NASA Earthdata** — used to discover and retrieve SWOT observation products.
 
-Authentication for both services is managed through the `swot-wse auth` command.
-
----
-
-# Authenticate Both Services
-
-Run:
+Authentication for both services is configured through:
 
 ```bash
 swot-wse auth
 ```
 
-The package checks authentication for Google Earth Engine and NASA Earthdata.
+Authentication is normally required only during initial setup or when credentials or accounts need to be changed.
 
-Existing credentials are reused when they are available and valid. If valid credentials cannot be reused, the corresponding authentication procedure is started.
+---
+
+## Before You Begin
+
+You will need:
+
+1. a Google account with access to Google Earth Engine;
+2. a Google Cloud project configured for Earth Engine; and
+3. a NASA Earthdata Login account.
+
+Account creation and Earth Engine project setup are covered in [Installation](installation.md).
+
+Once those accounts are available, **swot-wse** can configure access from the command line.
+
+---
+
+## Authenticate
+
+To configure both Google Earth Engine and NASA Earthdata, run:
+
+```bash
+swot-wse auth
+```
+
+The command checks each service independently.
+
+Existing credentials are reused when possible. If authentication cannot be established from existing credentials, **swot-wse** starts the appropriate authentication procedure.
+
+You can also configure either service separately:
+
+```bash
+swot-wse auth --earth-engine-only
+swot-wse auth --earthdata-only
+```
 
 ---
 
 # Google Earth Engine
 
-Google Earth Engine authentication requires both:
+Google Earth Engine requires two separate pieces of information:
 
-1. valid Google Earth Engine credentials; and
-2. a Google Cloud Project ID with access to Earth Engine.
+- Google-managed Earth Engine authentication credentials;
+- a Google Cloud **Project ID** authorized for Earth Engine use.
 
-The Project ID used by **swot-wse** is stored in the package runtime configuration.
+These should not be confused with each other.
 
-## Standard Authentication
+The authentication credentials establish which Google account is being used. The Project ID identifies the Google Cloud project through which Earth Engine requests are made.
 
-To manage only Google Earth Engine authentication, run:
+**swot-wse** stores the selected Project ID in its working-directory configuration. Google manages the authentication credentials themselves.
+
+---
+
+## Configure Earth Engine
+
+Run:
 
 ```bash
 swot-wse auth --earth-engine-only
 ```
 
-If an Earth Engine Project ID has not already been configured, the package prompts for one:
+If no Earth Engine Project ID is configured, you will be prompted for one:
 
 ```text
 Google Earth Engine project ID:
 ```
 
-If valid Earth Engine credentials are already available, they are reused.
+Enter the **Project ID**, not the project name or project number.
 
-Otherwise, the Google Earth Engine authentication flow is started. After successful authentication, the selected Project ID is saved in `config.json` and reused during future executions from the same working directory.
-
-A Project ID can also be supplied directly:
+You can provide it directly instead:
 
 ```bash
-swot-wse auth --earth-engine-only --project-id my-earth-engine-project
+swot-wse auth --earth-engine-only --project-id my-project-id
 ```
+
+The package first attempts to initialize Earth Engine using the available Google credentials. If authentication is required, the standard Earth Engine authentication flow is started.
+
+After successful initialization, the Project ID is saved in the active `config.json` and reused for subsequent runs from that working directory.
 
 ---
 
-## Force Earth Engine Reauthentication
+## Change Account or Project
 
-To explicitly start a new Google Earth Engine authentication flow, run:
+To explicitly run the Earth Engine authentication flow again:
 
 ```bash
 swot-wse auth --earth-engine-only --force
 ```
 
-A Project ID may also be supplied:
+This is useful when changing the Google account used for Earth Engine.
+
+A different project can be selected at the same time:
 
 ```bash
-swot-wse auth --earth-engine-only --force --project-id another-earth-engine-project
+swot-wse auth --earth-engine-only --force --project-id another-project-id
 ```
 
-This can be used when changing the authenticated Google account or switching to another Earth Engine project.
-
-After successful initialization, the selected Project ID is stored in the active `config.json`.
+The successfully initialized Project ID becomes the Earth Engine project stored in the active configuration.
 
 ---
 
-## Remove the Stored Earth Engine Project
+## Remove the Configured Project
 
-Run:
+To remove the Earth Engine Project ID stored by **swot-wse**:
 
 ```bash
 swot-wse auth --earth-engine-only --remove
 ```
 
-This sets the Earth Engine Project ID stored by **swot-wse** to `null`.
+This clears the Project ID from the active `config.json`.
 
-The command does **not** delete Google-managed OAuth credentials. Those credentials are managed by the Google Earth Engine authentication system rather than by **swot-wse**.
+It does **not** delete Google-managed OAuth credentials.
 
-Consequently, running the authentication command again may still reuse existing Google credentials if they remain valid.
+As a result, authenticating again may still reuse the previously authenticated Google account. The `--remove` operation only removes authentication information that **swot-wse** manages itself.
 
 ---
 
 # NASA Earthdata
 
-NASA Earthdata credentials are stored in the standard user-level netrc credential file.
+Access to SWOT products requires a NASA Earthdata Login account.
 
-**swot-wse** uses the Earthdata Login machine entry:
+**swot-wse** uses the standard netrc mechanism supported by Earthdata tooling and stores credentials under the machine entry:
 
 ```text
 urs.earthdata.nasa.gov
 ```
 
-## Standard Authentication
+---
 
-To manage only NASA Earthdata authentication, run:
+## Configure Earthdata
+
+Run:
 
 ```bash
 swot-wse auth --earthdata-only
 ```
 
-If stored Earthdata credentials are found, the package first attempts to validate and reuse them.
+If an Earthdata entry already exists, **swot-wse** attempts to validate and reuse it.
 
-If valid credentials are unavailable, the package prompts for an Earthdata Login username and password:
+Otherwise, you will be prompted for your Earthdata Login credentials:
 
 ```text
 Earthdata Login username:
 Earthdata password:
 ```
 
-The password is entered through a non-echoing password prompt and is not displayed in the terminal.
+Password input is hidden while typing.
 
-The supplied credentials are validated before being written to the netrc file.
-
-After storage, the package verifies that the saved credentials can be reused successfully.
+Credentials are validated before they are stored. After writing the netrc entry, **swot-wse** verifies that the stored credentials can be used successfully.
 
 ---
 
-## Earthdata Credential Location
+## Credential File
 
-On Windows, the credentials are stored in:
+Earthdata credentials are stored in the user's standard netrc file.
+
+### Windows
 
 ```text
 %USERPROFILE%\_netrc
 ```
 
-On Linux and macOS, they are stored in:
+### Linux and macOS
 
 ```text
 ~/.netrc
 ```
 
-On POSIX systems, **swot-wse** restricts the credential file permissions to:
+On POSIX systems, **swot-wse** sets the credential file permissions to:
 
 ```text
 0600
 ```
 
-This limits access to the current user.
+so that the file is readable and writable only by its owner.
+
+> **Security note**
+>
+> Netrc stores credentials as plain text. Do not use persistent netrc credentials on a shared or untrusted machine.
 
 ---
 
-## Force Earthdata Reauthentication
+## Replace Earthdata Credentials
 
-To remove the existing Earthdata entry and authenticate again, run:
+To discard the existing Earthdata entry and authenticate again:
 
 ```bash
 swot-wse auth --earthdata-only --force
@@ -163,112 +204,139 @@ swot-wse auth --earthdata-only --force
 
 The existing `urs.earthdata.nasa.gov` entry is removed before new credentials are requested.
 
-The new credentials are validated and, if authentication succeeds, stored in the user's netrc file.
+The replacement credentials are validated before being written to the netrc file.
 
-This is useful when changing Earthdata accounts or replacing credentials that are no longer valid.
+Use this when changing Earthdata accounts or replacing invalid credentials.
 
 ---
 
 ## Remove Earthdata Credentials
 
-Run:
+To remove the Earthdata credentials stored by **swot-wse**:
 
 ```bash
 swot-wse auth --earthdata-only --remove
 ```
 
-This removes the `urs.earthdata.nasa.gov` credential entry from the user's netrc file.
+Only the entry for:
 
-Other machine entries in the same file are preserved.
+```text
+urs.earthdata.nasa.gov
+```
 
-If no Earthdata credentials are present, the package reports that no stored credentials were found.
-
-> **Security**
->
-> Netrc files contain credentials in plain text. Do not use persistent Earthdata credential storage on shared or untrusted systems.
+is removed. Other machine entries in the same netrc file are preserved.
 
 ---
 
-# Reauthenticate Both Services
+# Reauthentication
 
-To force reauthentication for both services, run:
+To force authentication for both services:
 
 ```bash
 swot-wse auth --force
 ```
 
-For Google Earth Engine, this explicitly starts a new Earth Engine authentication flow.
+For Earth Engine, this starts a new Earth Engine authentication flow.
 
-For NASA Earthdata, the existing Earthdata netrc entry is removed and the package requests new credentials.
+For Earthdata, the existing Earthdata netrc entry is removed and replacement credentials are requested.
 
-If an Earth Engine Project ID is already stored in `config.json`, it is reused unless another Project ID is supplied.
-
-A different Earth Engine Project ID can therefore be selected while reauthenticating both services:
+If an Earth Engine Project ID is already configured, it continues to be used unless another one is supplied:
 
 ```bash
-swot-wse auth --force --project-id another-earth-engine-project
+swot-wse auth --force --project-id another-project-id
 ```
 
 ---
 
-# Remove Stored Authentication Information
+# Removing Authentication Information
 
-To remove authentication information managed directly by **swot-wse** for both services, run:
+To remove authentication information managed directly by **swot-wse**:
 
 ```bash
 swot-wse auth --remove
 ```
 
-This performs two operations:
+This:
 
-- sets the Google Earth Engine Project ID in `config.json` to `null`;
-- removes the `urs.earthdata.nasa.gov` credentials from the user's netrc file.
+- removes the Earth Engine Project ID from the active `config.json`;
+- removes the `urs.earthdata.nasa.gov` entry from the user's netrc file.
 
-Google Earth Engine OAuth credentials managed by Google's authentication system are **not** deleted.
+It does **not** remove Google-managed Earth Engine OAuth credentials.
 
----
+This distinction is important because the three pieces of authentication state are stored and managed differently:
 
-# Authentication Options
-
-| Option | Description |
-| --- | --- |
-| `--project-id <project-id>` | Supplies the Google Earth Engine Project ID directly. |
-| `--force` | Forces reauthentication instead of reusing existing credentials. |
-| `--remove` | Removes authentication information managed directly by **swot-wse**. |
-| `--earth-engine-only` | Applies the requested authentication operation only to Google Earth Engine. |
-| `--earthdata-only` | Applies the requested authentication operation only to NASA Earthdata. |
-
-`--force` and `--remove` are mutually exclusive.
-
-`--earth-engine-only` and `--earthdata-only` are also mutually exclusive.
-
-`--project-id` cannot be used together with `--earthdata-only`.
-
----
-
-# Authentication During Processing
-
-Authentication setup and normal data processing are intentionally separated.
-
-During reservoir processing:
-
-- Google Earth Engine initialization uses the Project ID stored in the active configuration and existing Earth Engine credentials.
-- NASA Earthdata initialization attempts to authenticate using the Earthdata credentials stored in the user's netrc file.
-
-If the required authentication is unavailable or invalid, processing stops with an error directing the user to run the appropriate `swot-wse auth` command.
-
-This avoids unexpectedly starting an interactive authentication flow in the middle of an extraction run.
-
----
-
-# Credential Storage Summary
-
-| Information | Storage Location | Managed by `swot-wse auth --remove` |
+| Information | Stored in | Removed by `swot-wse auth --remove` |
 | --- | --- | --- |
 | Earth Engine Project ID | Working-directory `config.json` | Yes |
-| Earth Engine OAuth credentials | Google/Earth Engine authentication system | No |
+| Earth Engine authentication credentials | Google/Earth Engine authentication system | No |
 | Earthdata username and password | User netrc file | Yes |
 
-The Earth Engine Project ID is configuration information rather than a password or authentication token. Nevertheless, `config.json` is runtime-specific and should not be committed to the repository.
+The Earth Engine Project ID is configuration rather than a secret. The runtime `config.json` should nevertheless remain local to the working directory and should not be committed to the repository.
 
-For the complete command-line interface, see the [Command Reference](command_reference.md).
+---
+
+# Command Options
+
+The `auth` command supports:
+
+| Option | Purpose |
+| --- | --- |
+| `--project-id <project-id>` | Specify the Google Cloud Project ID used for Earth Engine |
+| `--force` | Authenticate again instead of reusing the current authentication state |
+| `--remove` | Remove authentication information managed by **swot-wse** |
+| `--earth-engine-only` | Apply the operation only to Google Earth Engine |
+| `--earthdata-only` | Apply the operation only to NASA Earthdata |
+
+Some combinations are intentionally invalid:
+
+```text
+--force              + --remove
+--earth-engine-only  + --earthdata-only
+--earthdata-only     + --project-id
+```
+
+For the complete CLI syntax, see the [Command Reference](command_reference.md).
+
+---
+
+# Authentication During Extraction
+
+The `auth` command is responsible for interactive authentication. Extraction is not.
+
+When:
+
+```bash
+swot-wse extract ...
+```
+
+is executed, the package attempts to initialize the external service required by the selected processing path using the authentication state already available on the system.
+
+For Google Earth Engine, this means using:
+
+```text
+stored Project ID
+        +
+existing Earth Engine credentials
+```
+
+For NASA Earthdata, this means using:
+
+```text
+stored netrc credentials
+```
+
+If authentication cannot be established, extraction stops and reports the authentication problem rather than launching an interactive login procedure in the middle of processing.
+
+The user can then repair the relevant authentication state explicitly:
+
+```bash
+swot-wse auth --earth-engine-only
+```
+
+or:
+
+```bash
+swot-wse auth --earthdata-only
+```
+
+This separation keeps extraction commands predictable and makes **swot-wse** suitable for scripts and other non-interactive workflows.
