@@ -9,12 +9,12 @@ The current release supports the SWOT Level-2 Lake Single Pass (LakeSP) Vector D
 :caption: Documentation
 
 introduction
-installation
-usage
-configuration
-authentication
-command_reference
 architecture
+configuration
+command_reference
+installation
+authentication
+usage
 outputs
 contributing
 ```
