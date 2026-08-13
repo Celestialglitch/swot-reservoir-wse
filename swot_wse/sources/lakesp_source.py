@@ -1,5 +1,6 @@
-import pandas as pd
 from concurrent.futures import ThreadPoolExecutor
+
+import pandas as pd
 from tqdm import tqdm
 
 from swot_wse.config import load_config
@@ -13,11 +14,11 @@ def _remove_temporary_granules(
     verified_granules,
 ):
     """
-    Remove LakeSP granules created for a non-cached run.
+    Remove LakeSP granules created during
+    a non-cached run.
     """
 
     for granule in verified_granules:
-
         if not granule.get(
             "temporary",
             False,
@@ -25,7 +26,7 @@ def _remove_temporary_granules(
             continue
 
         granule["zip"].unlink(
-            missing_ok=True,
+            missing_ok=True
         )
 
 
@@ -41,27 +42,19 @@ def run_lakesp_pipeline(
     config = load_config()
     max_workers = config["max_workers"]
 
-    # -------------------------------------------------
-    # Stage 1
-    # Candidate search
-    # -------------------------------------------------
-
-    candidate_granules = search_lakesp_granules(
-        polygon,
-        start_date,
-        end_date,
+    candidate_granules = (
+        search_lakesp_granules(
+            polygon,
+            start_date,
+            end_date,
+        )
     )
 
     if not candidate_granules:
-
-        print("No LakeSP granules found.")
-
+        print(
+            "\nNo LakeSP granules found."
+        )
         return None
-
-    # -------------------------------------------------
-    # Stage 2
-    # Spatial verification
-    # -------------------------------------------------
 
     verified_granules = discover_granules(
         candidate_granules,
@@ -70,20 +63,10 @@ def run_lakesp_pipeline(
     )
 
     if not verified_granules:
-
-        print("\nNo LakeSP intersections found.")
-
+        print(
+            "\nNo LakeSP intersections found."
+        )
         return None
-
-    print(
-        f"\nLakeSP intersections found : "
-        f"{len(verified_granules)}"
-    )
-
-    # -------------------------------------------------
-    # Stage 3
-    # Observation extraction
-    # -------------------------------------------------
 
     jobs = [
         (
@@ -96,11 +79,9 @@ def run_lakesp_pipeline(
     extracted = []
 
     try:
-
         with ThreadPoolExecutor(
             max_workers=max_workers,
         ) as executor:
-
             for observations in tqdm(
                 executor.map(
                     process_granule,
@@ -109,23 +90,20 @@ def run_lakesp_pipeline(
                 total=len(jobs),
                 desc="Extracting WSE",
             ):
-
                 if observations is not None:
-
                     extracted.append(
                         observations
                     )
 
     finally:
-
         _remove_temporary_granules(
             verified_granules
         )
 
     if not extracted:
-
-        print("\nNot enough observations.")
-
+        print(
+            "\nNo usable LakeSP observations found."
+        )
         return None
 
     raw_df = (
@@ -144,54 +122,38 @@ def run_lakesp_pipeline(
         .reset_index(drop=True)
     )
 
-    raw_observation_count = len(raw_df)
-
-    # -------------------------------------------------
-    # Stage 4
-    # Filtering
-    # -------------------------------------------------
+    raw_observation_count = len(
+        raw_df
+    )
 
     clean_df = filter_timeseries(
         raw_df
     )
 
     if clean_df is None or clean_df.empty:
-
         print(
             "\nNo observations remained "
             "after filtering."
         )
-
         return None
 
     return {
-
         "source": "LakeSP",
-
         "timeseries": clean_df,
-
         "summary": {
-
             "verified_granules": len(
                 verified_granules
             ),
-
             "raw_observations": (
                 raw_observation_count
             ),
-
             "final_observations": len(
                 clean_df
             ),
-
         },
-
         "metadata": {
-
             "verified_granules": (
                 verified_granules
             ),
-
         },
-
     }

@@ -1,37 +1,31 @@
-
 from swot_wse.cache.polygon_cache import (
-    polygon_exists,
     load_polygon,
+    polygon_exists,
     save_polygon,
 )
 from swot_wse.config import load_config
 from swot_wse.earth_engine import initialize_earth_engine
+from swot_wse.earthdata import initialize_earthdata
 from swot_wse.geometry.reservoir_extractor import extract_reservoir_polygon
-from swot_wse.sources.manager import run_source
 from swot_wse.outputs import save_outputs
+from swot_wse.sources.manager import run_source
 
 
 def get_or_create_polygon(lat, lon):
     """
-    Load the cached reservoir polygon or extract it.
+    Load a cached reservoir footprint when available,
+    otherwise generate one from the supplied dam location.
     """
 
     config = load_config()
-
-    polygon_cache_enabled = config[
-        "polygon_cache_enabled"
-    ]
+    polygon_cache_enabled = config["polygon_cache_enabled"]
 
     if (
         polygon_cache_enabled
         and polygon_exists(lat, lon)
     ):
         print("Loaded cached reservoir polygon.")
-
-        return load_polygon(
-            lat,
-            lon,
-        )
+        return load_polygon(lat, lon)
 
     initialize_earth_engine()
 
@@ -45,7 +39,6 @@ def get_or_create_polygon(lat, lon):
             f"\nNo reservoir polygon found at "
             f"lat={lat}, lon={lon}."
         )
-
         return None
 
     if polygon_cache_enabled:
@@ -58,21 +51,20 @@ def get_or_create_polygon(lat, lon):
     return polygon
 
 
+
 def get_wse(
     lat,
     lon,
     start_date,
     end_date,
-    source="auto",
+    source,
 ):
     """
-    Generate WSE time series for the given reservoir location and date range.
+    Generate a reservoir-specific WSE time series
+    using the selected SWOT observation product.
     """
 
-    source = source.lower()
-
-    if source == "auto":
-        source = "lakesp"
+    source = str(source).strip().lower()
 
     polygon = get_or_create_polygon(
         lat,
@@ -81,6 +73,8 @@ def get_wse(
 
     if polygon is None:
         return None
+
+    initialize_earthdata()
 
     print(
         f"\nRunning {source.upper()} pipeline..."
@@ -94,29 +88,25 @@ def get_wse(
     )
 
     if result is None:
-        print("\nNo usable observations found.")
-
+        print(
+            f"\nNo usable {source.upper()} observations "
+            "found for the requested reservoir and date range."
+        )
         return None
 
+    timeseries = result["timeseries"]
+
     save_outputs(
-        result["timeseries"],
+        timeseries,
         lat,
         lon,
+        source=result["source"],
     )
 
-    summary = result["summary"]
-
-    print("\n========== SUMMARY ==========")
-    print(f"Source              : {result['source']}")
-    print(f"Verified Granules   : {summary['verified_granules']}")
-    print(f"Raw Observations    : {summary['raw_observations']}")
-    print(f"Final Observations  : {summary['final_observations']}")
-    print("=============================\n")
-
     print(
-        result["timeseries"].to_string(
+        timeseries.to_string(
             index=False,
         )
     )
 
-    return result["timeseries"]
+    return timeseries

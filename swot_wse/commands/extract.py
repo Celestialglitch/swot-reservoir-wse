@@ -1,72 +1,75 @@
-
 import math
 from datetime import datetime
 
 from swot_wse.pipeline import get_wse
 
 
-def register_polygon_command(subparsers):
+SUPPORTED_SOURCES = (
+    "lakesp",
+    "pixc",
+)
+
+
+def register_extract_command(subparsers):
     """
     Register the reservoir WSE extraction command.
     """
 
     parser = subparsers.add_parser(
-        "polygon",
-        help="Extract reservoir WSE time series.",
+        "extract",
+        help="Generate a reservoir WSE time series.",
         description=(
-            "Extract reservoir Water Surface Elevation "
-            "(WSE) time series from SWOT observations."
+            "Generate a reservoir-specific Water Surface "
+            "Elevation (WSE) time series from the selected "
+            "SWOT observation product."
         ),
     )
 
     parser.add_argument(
         "--lat",
-        metavar="",
         type=float,
         required=True,
-        help="Reservoir latitude.",
+        help="Latitude of the dam location.",
     )
 
     parser.add_argument(
         "--lon",
-        metavar="",
         type=float,
         required=True,
-        help="Reservoir longitude.",
+        help="Longitude of the dam location.",
     )
 
     parser.add_argument(
         "--start-date",
-        metavar="",
         required=True,
         help="Start date in YYYY-MM-DD format.",
     )
 
     parser.add_argument(
         "--end-date",
-        metavar="",
         required=True,
         help="End date in YYYY-MM-DD format.",
     )
 
     parser.add_argument(
         "--source",
-        metavar="",
-        default="auto",
+        choices=SUPPORTED_SOURCES,
+        required=True,
         help=(
-            "SWOT observation source. "
-            "By default, the package selects the source automatically."
+            "SWOT observation source to process. "
+            "Supported values: lakesp, pixc."
         ),
     )
 
     parser.set_defaults(
-        func=run_polygon_command
+        func=run_extract_command
     )
 
 
-def run_polygon_command(args):
+def run_extract_command(args):
     """
-    Execute the polygon command.
+    Validate command arguments and execute
+    reservoir WSE generation.
     """
 
     if not math.isfinite(args.lat):
@@ -94,7 +97,6 @@ def run_polygon_command(args):
         return
 
     try:
-
         start = datetime.strptime(
             args.start_date,
             "%Y-%m-%d",
@@ -105,17 +107,16 @@ def run_polygon_command(args):
             "%Y-%m-%d",
         )
 
-        if start > end:
-            raise ValueError(
-                "Start date must not be after end date."
-            )
-
-    except ValueError as exc:
-
+    except ValueError:
         print(
-            f"\nError: {exc}"
+            "\nError: Dates must use YYYY-MM-DD format."
         )
+        return
 
+    if start > end:
+        print(
+            "\nError: Start date must not be after end date."
+        )
         return
 
     get_wse(

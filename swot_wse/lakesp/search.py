@@ -1,29 +1,7 @@
 import earthaccess
 
 from swot_wse.config import load_config
-
-
-CONFIG = load_config()
-
-SEARCH_BUFFER_DEGREES = CONFIG["sources"]["lakesp"]["search_buffer_degrees"]
-COLLECTION = CONFIG["sources"]["lakesp"]["collection"]
-SCIENCE_PHASE_CYCLES = set(CONFIG["sources"]["lakesp"]["science_cycles"])
-
-_logged_in = False
-
-
-def login():
-    """
-    Authenticate with NASA Earthdata once per session.
-    """
-
-    global _logged_in
-
-    if _logged_in:
-        return
-
-    earthaccess.login(strategy="interactive")
-    _logged_in = True
+from swot_wse.earthdata import initialize_earthdata
 
 
 def _granule_filename(granule):
@@ -32,7 +10,6 @@ def _granule_filename(granule):
     """
 
     try:
-
         links = granule.data_links()
 
         if not links:
@@ -46,13 +23,13 @@ def _granule_filename(granule):
 
 def _cycle_from_filename(filename):
     """
-    Extract SWOT science cycle from a LakeSP filename.
+    Extract the SWOT science cycle from a LakeSP filename.
     """
 
     try:
         return filename.split("_")[5]
 
-    except Exception:
+    except (AttributeError, IndexError):
         return None
 
 
@@ -65,45 +42,71 @@ def search_lakesp_granules(
     Search NASA CMR for candidate LakeSP granules.
     """
 
-    login()
+    initialize_earthdata()
 
-    xmin, ymin, xmax, ymax = polygon.total_bounds
+    config = load_config()
+    lakesp_config = config["sources"]["lakesp"]
+
+    search_buffer_degrees = (
+        lakesp_config["search_buffer_degrees"]
+    )
+
+    collection = lakesp_config["collection"]
+
+    science_cycles = set(
+        lakesp_config["science_cycles"]
+    )
+
+    xmin, ymin, xmax, ymax = (
+        polygon.total_bounds
+    )
 
     bbox = (
-        xmin - SEARCH_BUFFER_DEGREES,
-        ymin - SEARCH_BUFFER_DEGREES,
-        xmax + SEARCH_BUFFER_DEGREES,
-        ymax + SEARCH_BUFFER_DEGREES,
+        xmin - search_buffer_degrees,
+        ymin - search_buffer_degrees,
+        xmax + search_buffer_degrees,
+        ymax + search_buffer_degrees,
     )
 
     raw_granules = earthaccess.search_data(
-        short_name=COLLECTION,
+        short_name=collection,
         bounding_box=bbox,
-        temporal=(start_date, end_date),
+        temporal=(
+            start_date,
+            end_date,
+        ),
         count=-1,
     )
 
     unique = {}
 
     for granule in raw_granules:
-
-        filename = _granule_filename(granule)
+        filename = _granule_filename(
+            granule
+        )
 
         if filename is None:
             continue
 
-        cycle = _cycle_from_filename(filename)
+        cycle = _cycle_from_filename(
+            filename
+        )
 
-        if cycle not in SCIENCE_PHASE_CYCLES:
+        if cycle not in science_cycles:
             continue
 
-        unique[filename] = granule
+        unique[
+            filename
+        ] = granule
 
     granules = sorted(
         unique.values(),
         key=_granule_filename,
     )
 
-    print(f"Candidate LakeSP granules : {len(granules)}")
+    print(
+        f"Candidate LakeSP granules : "
+        f"{len(granules)}"
+    )
 
     return granules

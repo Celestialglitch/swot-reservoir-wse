@@ -1,15 +1,12 @@
 import getpass
+import netrc
 import os
 from pathlib import Path
-import netrc
 
 import earthaccess
 import ee
 
-from swot_wse.config import (
-    load_config,
-    save_config,
-)
+from swot_wse.config import load_config, save_config
 
 
 EARTHDATA_MACHINE = "urs.earthdata.nasa.gov"
@@ -63,35 +60,27 @@ def register_auth_command(subparsers):
     service_group.add_argument(
         "--earth-engine-only",
         action="store_true",
-        help=(
-            "Manage only Google Earth Engine "
-            "authentication."
-        ),
+        help="Manage only Google Earth Engine authentication.",
     )
 
     service_group.add_argument(
         "--earthdata-only",
         action="store_true",
-        help=(
-            "Manage only NASA Earthdata "
-            "authentication."
-        ),
+        help="Manage only NASA Earthdata authentication.",
     )
 
-    parser.set_defaults(
-        func=run_auth,
-    )
-
-
-# -------------------------------------------------
-# NASA Earthdata credential storage
-# -------------------------------------------------
+    parser.set_defaults(func=run_auth)
 
 
 def _netrc_path():
     """
-    Return the platform-appropriate netrc path.
+    Return the netrc path used for Earthdata credentials.
     """
+
+    override = os.environ.get("NETRC")
+
+    if override:
+        return Path(override).expanduser().resolve()
 
     home = Path.home()
 
@@ -103,8 +92,7 @@ def _netrc_path():
 
 def _earthdata_credentials_exist():
     """
-    Check whether Earthdata credentials are stored
-    in the user's netrc file.
+    Check whether stored Earthdata credentials exist.
     """
 
     path = _netrc_path()
@@ -113,31 +101,21 @@ def _earthdata_credentials_exist():
         return False
 
     try:
-
-        credentials = netrc.netrc(
-            str(path)
-        )
+        credentials = netrc.netrc(str(path))
 
         return (
-            credentials.authenticators(
-                EARTHDATA_MACHINE
-            )
+            credentials.authenticators(EARTHDATA_MACHINE)
             is not None
         )
 
-    except (
-        netrc.NetrcParseError,
-        OSError,
-    ):
+    except (netrc.NetrcParseError, OSError):
         return False
 
 
-def _remove_machine_entry(
-    path,
-    machine,
-):
+def _remove_machine_entry(path, machine):
     """
-    Remove one machine entry from a netrc file.
+    Remove a machine entry written in the standard
+    block format used by this package.
 
     Other machine entries are preserved.
     """
@@ -146,30 +124,23 @@ def _remove_machine_entry(
         return False
 
     try:
-
         lines = path.read_text(
             encoding="utf-8",
         ).splitlines()
 
     except OSError as exc:
-
         raise RuntimeError(
-            f"Could not read credential file: "
-            f"{path}"
+            f"Could not read credential file: {path}"
         ) from exc
 
     cleaned = []
-
     index = 0
     removed = False
 
     while index < len(lines):
-
-        line = lines[index]
-        stripped = line.strip()
+        stripped = lines[index].strip()
 
         if stripped.startswith("machine "):
-
             parts = stripped.split()
 
             current_machine = (
@@ -179,19 +150,15 @@ def _remove_machine_entry(
             )
 
             if current_machine == machine:
-
                 removed = True
                 index += 1
 
                 while index < len(lines):
+                    next_line = lines[index].strip()
 
-                    next_line = (
-                        lines[index]
-                        .strip()
-                    )
-
-                    if next_line.startswith(
-                        "machine "
+                    if (
+                        next_line.startswith("machine ")
+                        or next_line.startswith("default ")
                     ):
                         break
 
@@ -199,38 +166,26 @@ def _remove_machine_entry(
 
                 continue
 
-        cleaned.append(
-            line
-        )
-
+        cleaned.append(lines[index])
         index += 1
 
     if not removed:
         return False
 
-    remaining = (
-        "\n".join(cleaned)
-        .strip()
-    )
+    remaining = "\n".join(cleaned).strip()
 
     try:
-
         if remaining:
-
             path.write_text(
                 remaining + "\n",
                 encoding="utf-8",
             )
-
         else:
-
             path.unlink()
 
     except OSError as exc:
-
         raise RuntimeError(
-            f"Could not update credential file: "
-            f"{path}"
+            f"Could not update credential file: {path}"
         ) from exc
 
     return True
@@ -249,13 +204,10 @@ def _remove_earthdata_credentials():
     )
 
     if removed:
-
         print(
             "\nNASA Earthdata credentials removed."
         )
-
     else:
-
         print(
             "\nNo stored NASA Earthdata "
             "credentials were found."
@@ -278,8 +230,6 @@ def _save_earthdata_credentials(
         exist_ok=True,
     )
 
-    # Remove an older Earthdata entry first
-    # while preserving credentials for other services.
     _remove_machine_entry(
         path,
         EARTHDATA_MACHINE,
@@ -292,30 +242,17 @@ def _save_earthdata_credentials(
     )
 
     try:
-
         if path.exists():
+            existing = path.read_text(
+                encoding="utf-8",
+            ).rstrip()
 
-            existing = (
-                path.read_text(
-                    encoding="utf-8",
-                )
-                .rstrip()
+            content = (
+                existing + "\n\n" + entry
+                if existing
+                else entry
             )
-
-            if existing:
-
-                content = (
-                    existing
-                    + "\n\n"
-                    + entry
-                )
-
-            else:
-
-                content = entry
-
         else:
-
             content = entry
 
         path.write_text(
@@ -323,15 +260,10 @@ def _save_earthdata_credentials(
             encoding="utf-8",
         )
 
-        # Restrict permissions on POSIX systems.
         if os.name != "nt":
-
-            path.chmod(
-                0o600
-            )
+            path.chmod(0o600)
 
     except OSError as exc:
-
         raise RuntimeError(
             "Earthdata authentication succeeded, "
             "but the credentials could not be saved."
@@ -344,13 +276,12 @@ def _validate_earthdata_credentials(
 ):
     """
     Validate Earthdata credentials without
-    persisting them through earthaccess.
+    persisting them.
     """
 
     old_username = os.environ.get(
         "EARTHDATA_USERNAME"
     )
-
     old_password = os.environ.get(
         "EARTHDATA_PASSWORD"
     )
@@ -364,51 +295,39 @@ def _validate_earthdata_credentials(
     ] = password
 
     try:
-
         auth = earthaccess.login(
             strategy="environment",
             persist=False,
         )
 
-        return bool(
-            auth.authenticated
-        )
+        return bool(auth.authenticated)
 
     except Exception:
         return False
 
     finally:
-
         if old_username is None:
-
             os.environ.pop(
                 "EARTHDATA_USERNAME",
                 None,
             )
-
         else:
-
             os.environ[
                 "EARTHDATA_USERNAME"
             ] = old_username
 
         if old_password is None:
-
             os.environ.pop(
                 "EARTHDATA_PASSWORD",
                 None,
             )
-
         else:
-
             os.environ[
                 "EARTHDATA_PASSWORD"
             ] = old_password
 
 
-def _authenticate_earthdata(
-    force=False,
-):
+def _authenticate_earthdata(force=False):
     """
     Authenticate NASA Earthdata Login.
     """
@@ -417,21 +336,17 @@ def _authenticate_earthdata(
         not force
         and _earthdata_credentials_exist()
     ):
-
         try:
-
             auth = earthaccess.login(
                 strategy="netrc",
                 persist=False,
             )
 
             if auth.authenticated:
-
                 print(
                     "\nExisting NASA Earthdata "
                     "credentials found."
                 )
-
                 return
 
         except Exception:
@@ -441,10 +356,6 @@ def _authenticate_earthdata(
             "\nStored NASA Earthdata credentials "
             "are no longer valid."
         )
-
-    if force:
-
-        _remove_earthdata_credentials()
 
     print(
         "\nStarting NASA Earthdata "
@@ -456,7 +367,6 @@ def _authenticate_earthdata(
     ).strip()
 
     if not username:
-
         raise RuntimeError(
             "Earthdata username cannot be empty."
         )
@@ -466,33 +376,27 @@ def _authenticate_earthdata(
     )
 
     if not password:
-
         raise RuntimeError(
             "Earthdata password cannot be empty."
         )
 
-    authenticated = (
-        _validate_earthdata_credentials(
-            username,
-            password,
-        )
-    )
-
-    if not authenticated:
-
+    if not _validate_earthdata_credentials(
+        username,
+        password,
+    ):
         raise RuntimeError(
             "NASA Earthdata authentication failed. "
             "Please verify your username and password."
         )
 
+    # The old credential is replaced only after
+    # the new credential has been validated.
     _save_earthdata_credentials(
         username,
         password,
     )
 
-    # Verify the persisted credentials as well.
     try:
-
         auth = earthaccess.login(
             strategy="netrc",
             persist=False,
@@ -502,9 +406,6 @@ def _authenticate_earthdata(
             raise RuntimeError
 
     except Exception as exc:
-
-        _remove_earthdata_credentials()
-
         raise RuntimeError(
             "NASA Earthdata credentials were validated "
             "but could not be reused from the stored "
@@ -514,16 +415,9 @@ def _authenticate_earthdata(
     print(
         "\nNASA Earthdata authentication successful."
     )
-
     print(
-        f"Credentials saved to: "
-        f"{_netrc_path()}"
+        f"Credentials saved to: {_netrc_path()}"
     )
-
-
-# -------------------------------------------------
-# Google Earth Engine authentication
-# -------------------------------------------------
 
 
 def _authenticate_earth_engine(
@@ -534,33 +428,28 @@ def _authenticate_earth_engine(
     Authenticate and initialize Google Earth Engine.
     """
 
-    if not project:
+    if isinstance(project, str):
+        project = project.strip()
 
+    if not project:
         project = input(
             "Google Earth Engine project ID: "
         ).strip()
 
     if not project:
-
         raise RuntimeError(
             "Google Earth Engine project ID "
             "cannot be empty."
         )
 
     if force:
-
         print(
             "\nStarting new Google Earth Engine "
             "authentication...\n"
         )
 
-        ee.Authenticate(
-            force=True,
-        )
-
-        ee.Initialize(
-            project=project,
-        )
+        ee.Authenticate(force=True)
+        ee.Initialize(project=project)
 
         print(
             "\nGoogle Earth Engine "
@@ -570,40 +459,30 @@ def _authenticate_earth_engine(
         return project
 
     try:
+        ee.Initialize(project=project)
 
-        ee.Initialize(
-            project=project,
+    except Exception:
+        print(
+            "\nNo valid Google Earth Engine "
+            "credentials found."
+        )
+        print(
+            "Starting authentication...\n"
         )
 
+        ee.Authenticate()
+        ee.Initialize(project=project)
+
+        print(
+            "\nGoogle Earth Engine "
+            "authentication successful."
+        )
+
+    else:
         print(
             "\nExisting Google Earth Engine "
             "credentials found."
         )
-
-        return project
-
-    except Exception:
-        pass
-
-    print(
-        "\nNo valid Google Earth Engine "
-        "credentials found."
-    )
-
-    print(
-        "Starting authentication...\n"
-    )
-
-    ee.Authenticate()
-
-    ee.Initialize(
-        project=project,
-    )
-
-    print(
-        "\nGoogle Earth Engine "
-        "authentication successful."
-    )
 
     return project
 
@@ -617,24 +496,14 @@ def _remove_earth_engine_configuration():
     """
 
     config = load_config()
+    config["earth_engine_project"] = None
 
-    config[
-        "earth_engine_project"
-    ] = None
-
-    save_config(
-        config
-    )
+    save_config(config)
 
     print(
         "\nStored Google Earth Engine "
         "Project ID removed."
     )
-
-
-# -------------------------------------------------
-# Main authentication command
-# -------------------------------------------------
 
 
 def run_auth(args):
@@ -647,7 +516,6 @@ def run_auth(args):
         args.earthdata_only
         and args.project_id is not None
     ):
-
         raise RuntimeError(
             "--project-id cannot be used with "
             "--earthdata-only."
@@ -656,68 +524,40 @@ def run_auth(args):
     manage_earth_engine = (
         not args.earthdata_only
     )
-
     manage_earthdata = (
         not args.earth_engine_only
     )
 
-    # ---------------------------------------------
-    # Remove authentication
-    # ---------------------------------------------
-
     if args.remove:
-
         if manage_earth_engine:
-
             _remove_earth_engine_configuration()
 
         if manage_earthdata:
-
             _remove_earthdata_credentials()
 
         return
 
-    # ---------------------------------------------
-    # Google Earth Engine
-    # ---------------------------------------------
-
     if manage_earth_engine:
-
         config = load_config()
 
         project = (
             args.project_id
-            or config[
-                "earth_engine_project"
-            ]
+            or config["earth_engine_project"]
         )
 
-        project = (
-            _authenticate_earth_engine(
-                project=project,
-                force=args.force,
-            )
+        project = _authenticate_earth_engine(
+            project=project,
+            force=args.force,
         )
 
-        config[
-            "earth_engine_project"
-        ] = project
-
-        save_config(
-            config
-        )
+        config["earth_engine_project"] = project
+        save_config(config)
 
         print(
-            f"Saved Earth Engine project: "
-            f"{project}"
+            f"Saved Earth Engine project: {project}"
         )
 
-    # ---------------------------------------------
-    # NASA Earthdata
-    # ---------------------------------------------
-
     if manage_earthdata:
-
         _authenticate_earthdata(
             force=args.force,
         )

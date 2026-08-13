@@ -1,21 +1,11 @@
 import argparse
+import warnings
 
-from swot_wse.config import (
-    initialize_directories,
-)
-
-from swot_wse.commands.auth import (
-    register_auth_command,
-)
-from swot_wse.commands.cache import (
-    register_cache_command,
-)
-from swot_wse.commands.config import (
-    register_config_command,
-)
-from swot_wse.commands.polygon import (
-    register_polygon_command,
-)
+from swot_wse.commands.auth import register_auth_command
+from swot_wse.commands.cache import register_cache_command
+from swot_wse.commands.config import register_config_command
+from swot_wse.commands.extract import register_extract_command
+from swot_wse.config import initialize_directories
 
 
 def main():
@@ -23,13 +13,20 @@ def main():
     Entry point for the swot-wse command-line interface.
     """
 
+    warnings.filterwarnings(
+    "ignore",
+    category=FutureWarning,
+    module=r"earthaccess(\..*)?$",
+    )
+
+    
     initialize_directories()
 
     parser = argparse.ArgumentParser(
         prog="swot-wse",
         description=(
-            "Reservoir Water Surface Elevation "
-            "toolkit built on SWOT observations."
+            "Generate reservoir Water Surface Elevation "
+            "time series from SWOT observations."
         ),
     )
 
@@ -38,28 +35,25 @@ def main():
         required=True,
     )
 
-    register_polygon_command(
-        subparsers
-    )
-
-    register_config_command(
-        subparsers
-    )
-
-    register_cache_command(
-        subparsers
-    )
-
-    register_auth_command(
-        subparsers
-    )
+    register_extract_command(subparsers)
+    register_config_command(subparsers)
+    register_cache_command(subparsers)
+    register_auth_command(subparsers)
 
     args = parser.parse_args()
 
-    args.func(
+    try:
+
+        args.func(
         args
     )
 
+    except RuntimeError as exc:
+
+        parser.exit(
+        status=1,
+        message=f"\nError: {exc}\n",
+    )
 
 if __name__ == "__main__":
     main()

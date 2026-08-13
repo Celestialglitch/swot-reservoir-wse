@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import shutil
 import tempfile
@@ -7,9 +6,6 @@ import zipfile
 import geopandas as gpd
 
 from swot_wse.config import load_config
-
-
-CONFIG = load_config()
 
 
 OUTPUT_COLUMNS = [
@@ -22,7 +18,9 @@ OUTPUT_COLUMNS = [
 ]
 
 
-def find_observation_shapefile(folder: Path):
+def find_observation_shapefile(
+    folder: Path,
+):
     """
     Locate the LakeSP observation shapefile.
     """
@@ -35,7 +33,6 @@ def find_observation_shapefile(folder: Path):
         return None
 
     for shp in shapefiles:
-
         name = shp.name.lower()
 
         if (
@@ -49,7 +46,10 @@ def find_observation_shapefile(folder: Path):
     return shapefiles[0]
 
 
-def has_match(value, valid_ids):
+def has_match(
+    value,
+    valid_ids,
+):
     """
     Check whether a semicolon-separated lake_id field
     contains one of the required IDs.
@@ -60,7 +60,8 @@ def has_match(value, valid_ids):
 
     return any(
         lake_id.strip() in valid_ids
-        for lake_id in str(value).split(";")
+        for lake_id
+        in str(value).split(";")
     )
 
 
@@ -70,19 +71,26 @@ def _load_matching_observations(
     geometry=True,
 ):
     """
-    Extract one cached LakeSP granule and
-    return matching observations.
+    Extract one LakeSP granule and return
+    observations matching the required lake IDs.
     """
 
     if not zip_path.exists():
         raise FileNotFoundError(
-            f"LakeSP granule not found: {zip_path}"
+            f"LakeSP granule not found: "
+            f"{zip_path}"
         )
 
-    valid_ids = set(valid_ids)
+    valid_ids = set(
+        valid_ids
+    )
+
+    config = load_config()
 
     temp_root = Path(
-        CONFIG["temp_download_dir"]
+        config[
+            "temp_download_dir"
+        ]
     )
 
     temp_root.mkdir(
@@ -97,47 +105,60 @@ def _load_matching_observations(
     )
 
     try:
+        with zipfile.ZipFile(
+            zip_path
+        ) as archive:
+            archive.extractall(
+                workdir
+            )
 
-        with zipfile.ZipFile(zip_path) as zf:
-            zf.extractall(workdir)
-
-        shp = find_observation_shapefile(
-            workdir
+        shapefile = (
+            find_observation_shapefile(
+                workdir
+            )
         )
 
-        if shp is None:
+        if shapefile is None:
             return None
 
-        df = gpd.read_file(
-            shp,
+        dataframe = gpd.read_file(
+            shapefile,
             ignore_geometry=not geometry,
         )
 
-        if df.empty:
+        if dataframe.empty:
             return None
 
         missing_columns = [
             column
             for column in OUTPUT_COLUMNS
-            if column not in df.columns
+            if column not in dataframe.columns
         ]
 
         if missing_columns:
             raise RuntimeError(
                 "Missing required LakeSP fields: "
-                + ", ".join(missing_columns)
+                + ", ".join(
+                    missing_columns
+                )
             )
 
         if geometry:
+            if dataframe.crs is None:
+                raise RuntimeError(
+                    "LakeSP observation shapefile "
+                    f"has no CRS: {shapefile.name}"
+                )
 
-            if df.crs is None:
-                df = df.set_crs("EPSG:4326")
+            if dataframe.crs.to_epsg() != 4326:
+                dataframe = (
+                    dataframe.to_crs(
+                        "EPSG:4326"
+                    )
+                )
 
-            elif df.crs.to_epsg() != 4326:
-                df = df.to_crs("EPSG:4326")
-
-        df = df[
-            df["lake_id"].apply(
+        dataframe = dataframe[
+            dataframe["lake_id"].apply(
                 lambda value: has_match(
                     value,
                     valid_ids,
@@ -145,13 +166,12 @@ def _load_matching_observations(
             )
         ]
 
-        if df.empty:
+        if dataframe.empty:
             return None
 
-        return df
+        return dataframe
 
     finally:
-
         shutil.rmtree(
             workdir,
             ignore_errors=True,
@@ -163,7 +183,7 @@ def extract_granule(
     lake_ids,
 ):
     """
-    Extract and filter one cached LakeSP granule.
+    Extract and filter one LakeSP granule.
     """
 
     lakes = _load_matching_observations(
@@ -175,8 +195,10 @@ def extract_granule(
     if lakes is None:
         return None
 
-    lakes = (
-        lakes[OUTPUT_COLUMNS]
+    return (
+        lakes[
+            OUTPUT_COLUMNS
+        ]
         .drop_duplicates(
             subset=[
                 "lake_id",
@@ -185,38 +207,40 @@ def extract_granule(
             ]
         )
         .reset_index(
-            drop=True,
+            drop=True
         )
     )
-
-    return lakes
 
 
 def process_granule(job):
     """
-    Process one cached LakeSP granule.
+    Process one LakeSP granule.
 
     Parameters
     ----------
     job : tuple
-        (zip_path, lake_ids)
+        Pair containing the ZIP path
+        and associated lake IDs.
     """
 
     zip_path, lake_ids = job
 
     try:
-
-        observations = _load_matching_observations(
-            zip_path,
-            lake_ids,
-            geometry=False,
+        observations = (
+            _load_matching_observations(
+                zip_path,
+                lake_ids,
+                geometry=False,
+            )
         )
 
         if observations is None:
             return None
 
         return (
-            observations[OUTPUT_COLUMNS]
+            observations[
+                OUTPUT_COLUMNS
+            ]
             .drop_duplicates(
                 subset=[
                     "lake_id",
@@ -224,13 +248,21 @@ def process_granule(job):
                     "wse",
                 ]
             )
-            .reset_index(drop=True)
+            .reset_index(
+                drop=True
+            )
         )
 
-    except Exception as exc:
-
+    except (
+        FileNotFoundError,
+        zipfile.BadZipFile,
+        OSError,
+        RuntimeError,
+        KeyError,
+    ) as exc:
         print(
-            f"Error processing {zip_path.name}: {exc}"
+            f"Error processing "
+            f"{zip_path.name}: {exc}"
         )
 
         return None

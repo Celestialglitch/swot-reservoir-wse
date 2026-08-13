@@ -1,9 +1,10 @@
-
 import shutil
 import tempfile
-import warnings
 import zipfile
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import (
+    ThreadPoolExecutor,
+    as_completed,
+)
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -17,33 +18,9 @@ from swot_wse.config import (
 )
 
 
-warnings.filterwarnings(
-    "ignore",
-    category=FutureWarning,
-)
-
-
-def has_match(value, valid_ids):
-    """
-    Check whether a semicolon-separated lake_id field
-    contains one of the required lake IDs.
-    """
-
-    if value is None:
-        return False
-
-    ids = (
-        str(value)
-        .split(";")
-    )
-
-    return any(
-        lake_id.strip() in valid_ids
-        for lake_id in ids
-    )
-
-
-def find_observation_shapefile(folder: Path):
+def find_observation_shapefile(
+    folder: Path,
+):
     """
     Locate the LakeSP observation shapefile.
     """
@@ -56,7 +33,6 @@ def find_observation_shapefile(folder: Path):
         return None
 
     for shp in shapefiles:
-
         name = shp.name.lower()
 
         if (
@@ -76,14 +52,15 @@ def _granule_filename(granule):
     """
 
     try:
-
         links = granule.data_links()
 
         if not links:
             return None
 
         return Path(
-            urlparse(links[0]).path
+            urlparse(
+                links[0]
+            ).path
         ).name
 
     except Exception:
@@ -112,7 +89,6 @@ def _process_granule(
     )
 
     if lakesp_cache_enabled:
-
         LAKESP_CACHE_DIR.mkdir(
             parents=True,
             exist_ok=True,
@@ -127,9 +103,10 @@ def _process_granule(
     temporary = False
 
     try:
-
-        granule_filename = _granule_filename(
-            granule
+        granule_filename = (
+            _granule_filename(
+                granule
+            )
         )
 
         cached_zip = None
@@ -138,22 +115,18 @@ def _process_granule(
             lakesp_cache_enabled
             and granule_filename is not None
         ):
-
             candidate = (
                 LAKESP_CACHE_DIR
                 / granule_filename
             )
 
             if candidate.is_file():
-
                 cached_zip = candidate
 
         if cached_zip is not None:
-
             zip_file = cached_zip
 
         else:
-
             downloaded = earthaccess.download(
                 [granule],
                 local_path=workdir,
@@ -167,29 +140,36 @@ def _process_granule(
             )
 
         extract_dir = (
-            workdir / "extract"
+            workdir
+            / "extract"
         )
 
         extract_dir.mkdir()
 
-        with zipfile.ZipFile(zip_file) as zf:
-            zf.extractall(extract_dir)
+        with zipfile.ZipFile(
+            zip_file
+        ) as archive:
+            archive.extractall(
+                extract_dir
+            )
 
-        shp = find_observation_shapefile(
-            extract_dir
+        shapefile = (
+            find_observation_shapefile(
+                extract_dir
+            )
         )
 
-        if shp is None:
+        if shapefile is None:
             return None
 
         observations = gpd.read_file(
-            shp
+            shapefile
         )
 
         if observations.crs is None:
             raise RuntimeError(
-                f"Observation shapefile has no CRS: "
-                f"{shp.name}"
+                "Observation shapefile has no CRS: "
+                f"{shapefile.name}"
             )
 
         if polygon.crs is None:
@@ -203,11 +183,15 @@ def _process_granule(
             )
         )
 
+        reservoir_geometry = (
+            polygon_for_intersection
+            .geometry
+            .iloc[0]
+        )
+
         hits = observations[
             observations.intersects(
-                polygon_for_intersection
-                .geometry
-                .iloc[0]
+                reservoir_geometry
             )
         ]
 
@@ -216,21 +200,25 @@ def _process_granule(
 
         lake_ids = set()
 
-        for value in hits["lake_id"].dropna():
-
-            for lake_id in str(value).split(";"):
-
-                lake_id = lake_id.strip()
+        for value in hits[
+            "lake_id"
+        ].dropna():
+            for lake_id in str(
+                value
+            ).split(";"):
+                lake_id = (
+                    lake_id.strip()
+                )
 
                 if lake_id:
-                    lake_ids.add(lake_id)
+                    lake_ids.add(
+                        lake_id
+                    )
 
         if cached_zip is not None:
-
             final_zip = cached_zip
 
         elif lakesp_cache_enabled:
-
             final_zip = (
                 LAKESP_CACHE_DIR
                 / zip_file.name
@@ -245,10 +233,12 @@ def _process_granule(
             )
 
         else:
-
             final_zip = (
                 temp_root
-                / f"{workdir.name}_{zip_file.name}"
+                / (
+                    f"{workdir.name}_"
+                    f"{zip_file.name}"
+                )
             )
 
             shutil.move(
@@ -262,7 +252,9 @@ def _process_granule(
             "granule": granule,
             "zip": final_zip,
             "hits": len(hits),
-            "lake_ids": sorted(lake_ids),
+            "lake_ids": sorted(
+                lake_ids
+            ),
             "temporary": temporary,
         }
 
@@ -272,16 +264,14 @@ def _process_granule(
         RuntimeError,
         KeyError,
     ) as exc:
-
         print(
-            f"\nError processing LakeSP granule: "
-            f"{exc}"
+            "\nError processing "
+            f"LakeSP granule: {exc}"
         )
 
         return None
 
     finally:
-
         shutil.rmtree(
             workdir,
             ignore_errors=True,
@@ -301,21 +291,21 @@ def discover_granules(
     config = load_config()
 
     if max_workers is None:
+        max_workers = (
+            config["max_workers"]
+        )
 
-        max_workers = config[
-            "max_workers"
+    lakesp_cache_enabled = (
+        config[
+            "lakesp_cache_enabled"
         ]
-
-    lakesp_cache_enabled = config[
-        "lakesp_cache_enabled"
-    ]
+    )
 
     discovered = []
 
     with ThreadPoolExecutor(
         max_workers=max_workers,
     ) as executor:
-
         futures = [
             executor.submit(
                 _process_granule,
@@ -332,11 +322,9 @@ def discover_granules(
             desc="Checking LakeSP granules",
             leave=False,
         ):
-
             result = future.result()
 
             if result is not None:
-
                 discovered.append(
                     result
                 )

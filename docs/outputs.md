@@ -1,273 +1,491 @@
 # Outputs
 
-A successful **swot-reservoir-wse** run generates a reservoir-specific Water Surface Elevation (WSE) time series from the accepted SWOT observations.
+A successful **swot-wse** extraction generates a reservoir-specific Water Surface Elevation (WSE) time series from the selected SWOT observation source.
 
-The current LakeSP workflow produces two output products:
+The current release supports two independent processing sources:
 
-- a CSV file containing the processed WSE time series
-- a PNG visualization of the time series when plot generation is enabled
+- **LakeSP**
+- **PIXC**
+
+Both sources generate a CSV time series. When plot generation is enabled, a PNG visualization is generated alongside the CSV.
+
+Because LakeSP and PIXC contain different source-level information, their CSV schemas are not identical.
 
 ---
 
-# Water Surface Elevation Time Series
+# Output Files
 
-The CSV output contains one record for each accepted acquisition date.
+Output filenames contain:
 
-The current output contains the following fields:
+- the supplied latitude;
+- the supplied longitude;
+- the selected SWOT source; and
+- the output type.
 
-| Field            | Description                                                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------------- |
-| `date`           | Date of the SWOT observation.                                                                     |
-| `wse_median`     | Representative Water Surface Elevation for the reservoir on that date, expressed in metres.       |
-| `quality_status` | Quality classification assigned to the daily WSE value from the contributing LakeSP observations. |
+For example, a LakeSP run may generate:
 
-An example output is:
+```text
+19.69000_73.34000_lakesp_wse.csv
+19.69000_73.34000_lakesp_wse.png
+```
+
+while a PIXC run for the same location may generate:
+
+```text
+19.69000_73.34000_pixc_wse.csv
+19.69000_73.34000_pixc_wse.png
+```
+
+This allows outputs produced from different SWOT products to coexist without overwriting one another.
+
+---
+
+# LakeSP Output
+
+The LakeSP CSV contains one record for each acquisition date remaining after quality screening, daily aggregation, and temporal outlier filtering.
+
+The final LakeSP output contains:
+
+| Field | Description |
+| --- | --- |
+| `date` | Acquisition date associated with the daily reservoir observation. |
+| `wse_median` | Median WSE of the retained LakeSP observations contributing to that date, in metres. |
+| `quality_status` | Package-derived representative quality class for the daily observation. |
+
+An illustrative output is:
 
 ```text
 date,wse_median,quality_status
-2026-01-27,622.438,GOOD
-2026-02-16,622.711,SUSPECT
-2026-03-09,623.052,GOOD
-2026-03-30,623.487,GOOD
+2026-01-27 00:00:00+00:00,130.0410,SUSPECT
+2026-02-09 00:00:00+00:00,129.4380,SUSPECT
+2026-03-02 00:00:00+00:00,129.0610,SUSPECT
+2026-07-05 00:00:00+00:00,126.3205,DEGRADED
 ```
 
-The values shown above are illustrative. Actual observations depend on the supplied dam location, requested date range and available SWOT observations.
+The values above are illustrative. Actual results depend on the supplied location, date range, active quality configuration, and available SWOT observations.
 
 ---
 
-# How the Daily WSE is Obtained
+# LakeSP Observation Screening
 
-A single SWOT acquisition can contain more than one LakeSP observation associated with the reservoir.
+Before daily aggregation, reservoir-associated LakeSP observations are screened using the LakeSP product fields used by the package.
 
-The package therefore does not necessarily treat every intersecting LakeSP polygon as a separate point in the final time series.
-
-Before daily aggregation, LakeSP observations are screened using the quality information provided with the product.
-
-The current LakeSP workflow retains observations satisfying:
+Partial observations are removed:
 
 ```text
 partial_f = 0
 ```
 
-and:
+must be satisfied.
+
+The remaining observations are filtered according to:
 
 ```text
-quality_f = 0 or 1
+sources.lakesp.accepted_quality_flags
 ```
 
-Observations representing partial coverage or observations outside the accepted quality classes are removed.
+The supported quality classes are:
 
-The remaining observations are grouped by acquisition date. The median WSE of the accepted observations is then used as the representative reservoir WSE for that date.
+```text
+good
+suspect
+degraded
+bad
+```
+
+The default configuration retains:
+
+```text
+good
+suspect
+degraded
+```
+
+and excludes:
+
+```text
+bad
+```
+
+The accepted classes can be changed through the configuration system.
+
+For example, retain only `GOOD` observations:
+
+```bash
+swot-wse config set sources.lakesp.accepted_quality_flags good
+```
+
+Retain `GOOD` and `SUSPECT`:
+
+```bash
+swot-wse config set sources.lakesp.accepted_quality_flags good,suspect
+```
+
+Retain all supported classes:
+
+```bash
+swot-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded,bad
+```
+
+---
+
+# LakeSP Daily WSE
+
+A single acquisition date can contain more than one retained LakeSP observation associated with the reservoir.
+
+The package therefore groups observations by acquisition date and calculates:
+
+```text
+wse_median = median of retained WSE observations on that date
+```
 
 Conceptually:
 
 ```text
-Accepted LakeSP observations
-            ↓
-Group observations by acquisition date
-            ↓
-Calculate median WSE for each date
-            ↓
-Daily reservoir WSE
+Reservoir-associated LakeSP observations
+                  │
+                  ▼
+          Remove partial data
+                  │
+                  ▼
+       Apply configured quality
+             class filter
+                  │
+                  ▼
+       Group by acquisition date
+                  │
+                  ▼
+          Calculate median WSE
+                  │
+                  ▼
+          Daily reservoir WSE
 ```
 
-The resulting value is stored in the `wse_median` field.
+The resulting value is written to:
+
+```text
+wse_median
+```
 
 ---
 
-# Quality Status
+# LakeSP Daily Quality Status
 
-Each daily WSE value is assigned a `quality_status` based on the quality classes of the LakeSP observations contributing to that date.
+The `quality_status` field is a **package-derived daily status**. It is not a new quality flag contained directly in the original SWOT product.
 
-The current workflow uses the LakeSP `quality_f` values:
+The package uses the retained LakeSP quality classes contributing to each acquisition date.
 
-| LakeSP `quality_f` | Interpretation used by the package |
-| -----------------: | ---------------------------------- |
-|                `0` | Good                               |
-|                `1` | Suspect                            |
+The mapping used by the current implementation is:
 
-For every acquisition date, the package counts the number of accepted good and suspect observations.
+| LakeSP quality value | Package label |
+| ---: | --- |
+| `0` | `GOOD` |
+| `1` | `SUSPECT` |
+| `2` | `DEGRADED` |
+| `3` | `BAD` |
 
-The daily quality status is assigned as follows:
-
-```text
-n_good >= n_suspect  →  GOOD
-n_good <  n_suspect  →  SUSPECT
-```
-
-Therefore, `GOOD` and `SUSPECT` describe the quality composition of the observations contributing to the **daily aggregated WSE value**. They are not new quality flags supplied directly by the SWOT LakeSP product.
-
-## `GOOD`
-
-A daily value is classified as:
-
-```text
-GOOD
-```
-
-when the number of contributing observations with `quality_f = 0` is greater than or equal to the number with `quality_f = 1`.
+The most frequent retained quality class on a date becomes the daily `quality_status`.
 
 For example:
 
 ```text
-Good observations     : 3
-Suspect observations  : 1
+GOOD      : 3
+SUSPECT   : 1
+DEGRADED  : 0
 
 quality_status = GOOD
 ```
 
-A tie is also classified as `GOOD`.
+If multiple classes have the same frequency, the poorer quality class is selected.
+
+The ordering used for tie resolution is:
 
 ```text
-Good observations     : 2
-Suspect observations  : 2
-
-quality_status = GOOD
+GOOD < SUSPECT < DEGRADED < BAD
 ```
-
-## `SUSPECT`
-
-A daily value is classified as:
-
-```text
-SUSPECT
-```
-
-when observations with `quality_f = 1` outnumber observations with `quality_f = 0`.
 
 For example:
 
 ```text
-Good observations     : 1
-Suspect observations  : 3
+GOOD      : 2
+SUSPECT   : 2
 
 quality_status = SUSPECT
 ```
 
-A `SUSPECT` value is retained in the time series unless it is subsequently removed by the temporal outlier filtering stage.
+and:
+
+```text
+SUSPECT   : 1
+DEGRADED  : 1
+
+quality_status = DEGRADED
+```
+
+Only classes that passed the configured observation-level quality filter can contribute to the daily status.
 
 ---
 
-# Temporal Outlier Filtering
+# LakeSP Temporal Outlier Filtering
 
-After the daily WSE values have been calculated, the resulting time series undergoes an additional temporal screening step using the **Median Absolute Deviation (MAD)**.
+After daily WSE aggregation, the LakeSP time series undergoes temporal screening using the **Median Absolute Deviation (MAD)**.
 
-For a set of daily WSE values \(x_1, x_2, \ldots, x_n\), the median is first calculated:
+For daily WSE values:
 
-\[
-\tilde{x} = \operatorname{median}(x)
-\]
+```text
+x1, x2, ..., xn
+```
 
-The Median Absolute Deviation is then:
+the median is:
 
-\[
-MAD = \operatorname{median}(|x_i-\tilde{x}|)
-\]
+```text
+median(WSE)
+```
 
-For each daily WSE value, the package calculates a modified Z-score:
+The Median Absolute Deviation is:
 
-\[
-z_i =
-\frac{0.6745 |x_i-\tilde{x}|}{MAD}
-\]
+```text
+MAD = median(|WSE - median(WSE)|)
+```
+
+The modified Z-score is:
+
+```text
+modified_z =
+0.6745 × |WSE - median(WSE)| / MAD
+```
 
 A daily observation is retained when:
 
-\[
-z_i \leq T
-\]
-
-where \(T\) is the configured MAD threshold.
-
-The default value is:
-
 ```text
-sources.lakesp.mad_threshold = 3.0
+modified_z <= sources.lakesp.mad_threshold
 ```
 
-It can be changed using:
+The default threshold is:
+
+```text
+3.0
+```
+
+It can be changed with:
 
 ```bash
 swot-wse config set sources.lakesp.mad_threshold 2.5
 ```
 
-Only daily observations remaining after this stage are included in the final WSE time series.
+Only observations remaining after this stage appear in the final LakeSP CSV and PNG.
 
 ---
 
-# Processing Sequence
+# LakeSP Processing Sequence
 
-For the LakeSP workflow, the observations appearing in the final CSV have therefore passed through the following sequence:
+The final LakeSP output therefore follows:
 
 ```text
 Reservoir-associated LakeSP observations
-                  ↓
-Remove partial observations
-                  ↓
-Retain good and suspect quality classes
-                  ↓
-Group observations by acquisition date
-                  ↓
-Calculate daily median WSE
-                  ↓
-Assign GOOD or SUSPECT quality status
-                  ↓
-Apply MAD-based temporal outlier filtering
-                  ↓
-Final reservoir WSE time series
+                  │
+                  ▼
+       Remove partial observations
+                  │
+                  ▼
+    Apply configured quality classes
+                  │
+                  ▼
+       Group by acquisition date
+                  │
+                  ▼
+        Calculate median WSE
+                  │
+                  ▼
+   Derive representative quality status
+                  │
+                  ▼
+       Apply temporal MAD filter
+                  │
+                  ▼
+        Final LakeSP time series
 ```
 
 ---
 
-# WSE Plot
+# LakeSP Plot
 
-When plot generation is enabled, the package also creates a PNG visualization of the final reservoir WSE time series.
+When plotting is enabled, LakeSP observations are displayed using quality-dependent circular markers.
 
-Plot generation is controlled by:
+The current visualization uses:
+
+| Quality status | Marker colour |
+| --- | --- |
+| `GOOD` | Green |
+| `SUSPECT` | Orange |
+| `DEGRADED` | Red |
+| `BAD` | Black |
+
+The daily observations are connected by a grey line to show the temporal progression of reservoir WSE.
+
+The quality-status legend is placed outside the plotting area so that it does not cover the data.
+
+The legend lists all supported LakeSP quality classes. A class does not need to be present in a particular time series for its meaning to remain visible in the figure.
+
+---
+
+# PIXC Output
+
+The PIXC pipeline operates on reservoir-intersecting PIXC water pixels and produces one aggregated reservoir observation per acquisition date.
+
+The final PIXC CSV contains:
+
+| Field | Description |
+| --- | --- |
+| `date` | Acquisition date of the aggregated PIXC observation. |
+| `wse_median` | Median WSE of accepted reservoir pixels on that date. |
+| `wse_mean` | Mean WSE of accepted reservoir pixels. |
+| `wse_std` | Standard deviation of accepted pixel WSE values. |
+| `wse_min` | Minimum accepted pixel WSE. |
+| `wse_max` | Maximum accepted pixel WSE. |
+| `pixel_count` | Number of accepted PIXC pixels contributing to the daily observation. |
+| `mean_water_frac` | Mean `water_frac` value of the retained pixels. |
+| `mean_phase_noise` | Mean `phase_noise_std` value of the retained pixels. |
+
+An illustrative PIXC output is:
 
 ```text
-generate_plot
+date,wse_median,wse_mean,wse_std,wse_min,wse_max,pixel_count,mean_water_frac,mean_phase_noise
+2026-02-09,129.480713,129.512650,1.017850,121.815918,163.244461,10024,0.956371,0.027555
+2026-03-02,129.146469,129.168106,0.615328,123.090378,165.105972,10641,0.982236,0.027686
+2026-03-09,128.553986,128.561295,0.275325,125.510323,132.760345,9780,0.997505,0.035850
 ```
 
-It can be enabled using:
+Actual values depend on the reservoir, observation period, available PIXC granules, and active processing configuration.
+
+---
+
+# PIXC Water Surface Elevation
+
+For every accepted PIXC reservoir pixel, the package calculates:
+
+```text
+WSE = height - geoid
+```
+
+Only pixels that pass the reservoir-intersection, water-classification, quality-bit, and finite-value checks contribute to daily aggregation.
+
+The accepted pixels are grouped by acquisition date.
+
+The median pixel WSE becomes the representative reservoir WSE:
+
+```text
+wse_median
+```
+
+Additional statistics are retained in the CSV to provide information about the distribution and quantity of contributing PIXC pixels.
+
+---
+
+# PIXC Temporal Outlier Filtering
+
+After daily PIXC aggregation, the `wse_median` series undergoes temporal MAD filtering.
+
+The same modified Z-score formulation used for LakeSP is applied:
+
+```text
+MAD = median(|WSE - median(WSE)|)
+```
+
+```text
+modified_z =
+0.6745 × |WSE - median(WSE)| / MAD
+```
+
+A daily observation is retained when:
+
+```text
+modified_z <= sources.pixc.mad_threshold
+```
+
+The default PIXC threshold is:
+
+```text
+3.0
+```
+
+It can be changed independently of the LakeSP threshold:
 
 ```bash
-swot-wse config set generate_plot true
+swot-wse config set sources.pixc.mad_threshold 2.5
 ```
 
-or disabled using:
+---
 
-```bash
-swot-wse config set generate_plot false
+# PIXC Processing Sequence
+
+```text
+Reservoir-intersecting PIXC pixels
+                  │
+                  ▼
+      Retain configured water class
+                  │
+                  ▼
+   Apply classification-quality filter
+                  │
+                  ▼
+         Remove invalid values
+                  │
+                  ▼
+          Calculate pixel WSE
+                  │
+                  ▼
+       Group by acquisition date
+                  │
+                  ▼
+   Calculate daily WSE statistics
+                  │
+                  ▼
+       Apply temporal MAD filter
+                  │
+                  ▼
+         Final PIXC time series
 ```
 
-The visualization represents the accepted reservoir WSE observations across the requested observation period.
+---
 
-When documenting or demonstrating package output, an example containing both `GOOD` and `SUSPECT` observations is useful because it illustrates the quality information retained in the final time series.
+# PIXC Plot
+
+When plotting is enabled, the package produces a PNG time-series visualization of the final PIXC `wse_median` values.
+
+PIXC does not use the LakeSP `quality_status` field, so the quality-coloured LakeSP marker scheme is not applied to PIXC plots.
 
 ---
 
 # Output Location
 
-By default, generated outputs are stored in the package's user-level runtime directory:
+By default:
 
 ```text
-~/.swot_wse/outputs/
+output_dir = outputs
 ```
 
-On Windows, this normally corresponds to:
+Relative output paths are resolved from the directory in which **swot-wse** is being used.
+
+For example, if the command is run from:
 
 ```text
-C:\Users\<username>\.swot_wse\outputs\
+D:\reservoir-analysis
 ```
 
-The active output directory can be checked using:
+the default output location is:
+
+```text
+D:\reservoir-analysis\outputs
+```
+
+The active setting can be inspected with:
 
 ```bash
 swot-wse config show
 ```
 
-The output location can be changed using:
+Change the output location with:
 
 ```bash
 swot-wse config set output_dir <path>
@@ -276,23 +494,56 @@ swot-wse config set output_dir <path>
 For example:
 
 ```bash
+swot-wse config set output_dir results
+```
+
+or with an absolute path:
+
+```bash
 swot-wse config set output_dir D:\SWOT\outputs
 ```
 
-Subsequent outputs will then be written to the configured directory.
+---
+
+# Plot Generation
+
+Plot generation is controlled by:
+
+```text
+generate_plot
+```
+
+Enable plots:
+
+```bash
+swot-wse config set generate_plot true
+```
+
+Disable plots:
+
+```bash
+swot-wse config set generate_plot false
+```
+
+Disabling plots does not disable CSV generation.
 
 ---
 
 # Related Configuration
 
-The main configuration parameters affecting the generated outputs are:
+The main configuration parameters affecting final outputs include:
 
-| Parameter                      | Purpose                                                     |
-| ------------------------------ | ----------------------------------------------------------- |
-| `generate_plot`                | Enables or disables PNG plot generation.                    |
-| `output_dir`                   | Determines where generated output files are stored.         |
-| `sources.lakesp.mad_threshold` | Controls the threshold used for temporal outlier filtering. |
+| Parameter | Purpose |
+| --- | --- |
+| `generate_plot` | Enables or disables PNG generation. |
+| `output_dir` | Controls where output files are written. |
+| `sources.lakesp.accepted_quality_flags` | Controls which LakeSP quality classes contribute to processing. |
+| `sources.lakesp.mad_threshold` | Controls LakeSP temporal outlier filtering. |
+| `sources.pixc.water_classification` | Controls which PIXC classification value is retained. |
+| `sources.pixc.mad_threshold` | Controls PIXC temporal outlier filtering. |
 
-For a complete explanation of package configuration, see the [Configuration](configuration.md) documentation.
+For complete configuration details, see [Configuration](configuration.md).
 
-For the commands used to modify these values, see the [Command Reference](command_reference.md).
+For the commands used to modify these parameters, see the [Command Reference](command_reference.md).
+
+For the complete processing design, see [Package Architecture](architecture.md).

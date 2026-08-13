@@ -1,29 +1,36 @@
 from swot_wse.sources.lakesp_source import run_lakesp_pipeline
+from swot_wse.sources.pixc_source import run_pixc_pipeline
 
 
 SOURCES = {
     "lakesp": run_lakesp_pipeline,
+    "pixc": run_pixc_pipeline,
 }
 
 
-def run_source(source, polygon, start_date, end_date):
+def run_source(
+    source,
+    polygon,
+    start_date,
+    end_date,
+):
     """
-    Execute any SWOT science product source.
-
-    Parameters
-    ----------
-    source : Source name.
-    polygon : Reservoir footprint.
-    start_date : Start date (YYYY-MM-DD).
-    end_date : End date (YYYY-MM-DD).
-
+    Execute the selected SWOT observation source.
     """
-    source = source.lower()
 
-    try:
-        runner = SOURCES[source]
-    except KeyError:
-        raise ValueError(f"Unsupported source: {source}")
+    source = str(source).strip().lower()
+
+    if source not in SOURCES:
+        supported_sources = ", ".join(
+            sorted(SOURCES)
+        )
+
+        raise ValueError(
+            f"Unsupported source: {source}. "
+            f"Supported sources: {supported_sources}"
+        )
+
+    runner = SOURCES[source]
 
     return runner(
         polygon=polygon,

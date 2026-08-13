@@ -1,4 +1,3 @@
-
 import ee
 import geemap
 import geopandas as gpd
@@ -22,7 +21,9 @@ def extract_reservoir_polygon(
     using the JRC Global Surface Water dataset.
     """
 
-    point = ee.Geometry.Point([lon, lat])
+    point = ee.Geometry.Point(
+        [lon, lat]
+    )
 
     search_area = point.buffer(
         SEARCH_RADIUS_M
@@ -65,8 +66,9 @@ def extract_reservoir_polygon(
         WORKING_CRS is None
         or str(WORKING_CRS).lower() == "auto"
     ):
-
-        working_crs = gdf.estimate_utm_crs()
+        working_crs = (
+            gdf.estimate_utm_crs()
+        )
 
         if working_crs is None:
             raise RuntimeError(
@@ -75,7 +77,6 @@ def extract_reservoir_polygon(
             )
 
     else:
-
         working_crs = WORKING_CRS
 
     gdf = gdf.to_crs(
@@ -90,7 +91,9 @@ def extract_reservoir_polygon(
             ),
             crs="EPSG:4326",
         )
-        .to_crs(working_crs)
+        .to_crs(
+            working_crs
+        )
         .geometry.iloc[0]
     )
 
@@ -99,11 +102,12 @@ def extract_reservoir_polygon(
     )
 
     containing = gdf[
-        gdf.geometry.contains(dam)
+        gdf.geometry.contains(
+            dam
+        )
     ]
 
     if not containing.empty:
-
         selected = (
             containing
             .sort_values(
@@ -114,12 +118,12 @@ def extract_reservoir_polygon(
             .copy()
         )
 
-        selected["selection_method"] = (
-            "DAM_INSIDE_POLYGON"
-        )
+        selected[
+            "selection_method"
+        ] = "DAM_INSIDE_POLYGON"
 
         print(
-            f"Selected containing polygon "
+            "Selected containing polygon "
             f"({selected.area_m2.iloc[0]:,.0f} m²)"
         )
 
@@ -128,19 +132,23 @@ def extract_reservoir_polygon(
         )
 
     gdf["distance_m"] = (
-        gdf.geometry.distance(dam)
+        gdf.geometry.distance(
+            dam
+        )
     )
 
     selected = (
         gdf
-        .sort_values("distance_m")
+        .sort_values(
+            "distance_m"
+        )
         .head(1)
         .copy()
     )
 
-    selected["selection_method"] = (
-        "NEAREST_POLYGON"
-    )
+    selected[
+        "selection_method"
+    ] = "NEAREST_POLYGON"
 
     print(
         "Nearest polygon selected "

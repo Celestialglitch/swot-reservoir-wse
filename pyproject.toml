@@ -1,4 +1,3 @@
-
 [build-system]
 requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -6,9 +5,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swot-wse"
-version = "0.2.0"
+version = "0.3.0"
 
-description = "Python package for extracting reservoir Water Surface Elevation (WSE) time series from SWOT Level 2 LakeSP Vector Data Product."
+description = "Generate reservoir-specific Water Surface Elevation (WSE) time series from SWOT LakeSP and PIXC observations."
 
 readme = "README.md"
 requires-python = ">=3.10"
@@ -21,13 +20,15 @@ authors = [
 ]
 
 keywords = [
-    "Reservoir",
-    "Water Surface Elevation",
+    "reservoir",
+    "water surface elevation",
     "SWOT",
     "LakeSP",
-    "Remote Sensing",
-    "Hydrology",
-    "Earth Observation"
+    "PIXC",
+    "pixel cloud",
+    "remote sensing",
+    "hydrology",
+    "earth observation"
 ]
 
 classifiers = [
@@ -51,7 +52,9 @@ dependencies = [
     "tqdm",
     "fiona",
     "pyproj",
-    "shapely"
+    "shapely",
+    "xarray",
+    "h5netcdf"
 ]
 
 
