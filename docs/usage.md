@@ -355,7 +355,7 @@ Similarly, previously downloaded LakeSP products can be reused when LakeSP cachi
 
 PIXC products are currently processed through temporary workspaces and are not retained in a persistent PIXC granule cache.
 
-Cache contents should normally be cleared only when there is a specific reason to force regeneration or redownload.
+Cache contents can be cleared only when there is a specific reason to force regeneration or redownload.
 
 For example:
 
@@ -496,8 +496,6 @@ swot-reservoir-wse config set output_dir results
 swot-reservoir-wse config set generate_plot false
 ```
 
-These settings can materially affect processing behaviour and, for scientific parameters such as quality selection and MAD thresholds, the resulting WSE time series.
-
 Their definitions and effects are documented in [Configuration](configuration.md).
 
 ---
@@ -536,7 +534,7 @@ swot-reservoir-wse auth
 
 ## 15. Command Help
 
-The CLI provides built-in help at every major command level.
+The CLI provides built-in help commands at every major command level.
 
 Display the available commands:
 
