@@ -15,7 +15,7 @@ The package keeps authentication setup separate from normal extraction. Once the
 
 ---
 
-# Before Authentication
+## Before Authentication
 
 Before running the authentication command, the corresponding accounts must already exist.
 
@@ -33,7 +33,7 @@ Account creation and external-service setup are covered in [Installation](instal
 
 ---
 
-# Authenticate Both Services
+## Authenticate Both Services
 
 For a normal first-time setup, run:
 
@@ -49,7 +49,7 @@ In most cases, this is the only authentication command required before the first
 
 ---
 
-# Google Earth Engine
+## Google Earth Engine
 
 Google Earth Engine requires two separate pieces of information:
 
@@ -62,7 +62,7 @@ The OAuth authentication state is managed by the Google Earth Engine authenticat
 
 ---
 
-## Authenticate Earth Engine Only
+### Authenticate Earth Engine Only
 
 To configure only Google Earth Engine, run:
 
@@ -84,7 +84,7 @@ After Earth Engine has been initialized successfully, the Project ID is stored i
 
 ---
 
-## Supply the Project ID Directly
+### Supply the Project ID Directly
 
 The Project ID can be supplied directly instead of entering it interactively:
 
@@ -108,7 +108,7 @@ After successful initialization, the selected Project ID becomes the active Eart
 
 ---
 
-## Force Earth Engine Reauthentication
+### Force Earth Engine Reauthentication
 
 To explicitly start a new Earth Engine authentication flow:
 
@@ -133,7 +133,7 @@ After successful initialization, the selected Project ID is stored in the active
 
 ---
 
-## Remove the Stored Earth Engine Project
+### Remove the Stored Earth Engine Project
 
 To remove the Earth Engine Project ID stored by **swot-reservoir-wse**:
 
@@ -165,7 +165,7 @@ Because the Google credentials are not deleted, a later authentication command m
 
 ---
 
-# NASA Earthdata
+## NASA Earthdata
 
 NASA Earthdata authentication is used when searching for and accessing SWOT products.
 
@@ -179,7 +179,7 @@ urs.earthdata.nasa.gov
 
 ---
 
-## Authenticate Earthdata Only
+### Authenticate Earthdata Only
 
 To configure only NASA Earthdata authentication:
 
@@ -204,7 +204,7 @@ After storage, the package verifies that the saved credentials can subsequently 
 
 ---
 
-## Earthdata Credential Location
+### Earthdata Credential Location
 
 On Windows, the netrc file is:
 
@@ -244,7 +244,7 @@ which limits access to the current user.
 
 ---
 
-## Force Earthdata Reauthentication
+### Force Earthdata Reauthentication
 
 To discard the currently stored Earthdata entry and authenticate again:
 
@@ -266,7 +266,7 @@ This is useful when changing Earthdata accounts or replacing credentials that ar
 
 ---
 
-## Remove Earthdata Credentials
+### Remove Earthdata Credentials
 
 To remove the Earthdata credentials managed by the package:
 
@@ -288,7 +288,7 @@ If no corresponding Earthdata credentials are present, the package reports that 
 
 ---
 
-# Force Reauthentication for Both Services
+## Force Reauthentication for Both Services
 
 To explicitly reauthenticate both Google Earth Engine and NASA Earthdata:
 
@@ -310,7 +310,7 @@ swot-reservoir-wse auth --force --project-id another-earth-engine-project
 
 ---
 
-# Remove Authentication Information
+## Remove Authentication Information
 
 To remove the authentication information managed directly by **swot-reservoir-wse** for both services:
 
@@ -335,7 +335,7 @@ The resulting state is therefore:
 
 ---
 
-# Authentication Options
+## Authentication Options
 
 The `auth` command supports the following options:
 
@@ -361,7 +361,7 @@ For the complete CLI syntax, see the [Command Reference](command_reference.md).
 
 ---
 
-# Authentication During Extraction
+## Authentication During Extraction
 
 Interactive authentication and data processing are intentionally separated.
 
@@ -394,7 +394,7 @@ swot-reservoir-wse auth --earthdata-only
 
 ---
 
-# Authentication and Working Directories
+## Authentication and Working Directories
 
 The Earth Engine Project ID and Earthdata credentials have different scopes.
 
@@ -424,7 +424,7 @@ This means that creating a new **swot-reservoir-wse** working directory may requ
 
 ---
 
-# Credential Storage Summary
+## Credential Storage Summary
 
 | Information | Storage | Scope | Removed by `swot-reservoir-wse auth --remove` |
 | --- | --- | --- | :---: |
@@ -438,7 +438,7 @@ The runtime `config.json` may contain environment-specific configuration and sho
 
 ---
 
-# Common Authentication Commands
+## Common Authentication Commands
 
 For normal first-time setup:
 
