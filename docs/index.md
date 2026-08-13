@@ -12,11 +12,11 @@ The current release supports the following SWOT Science products:
 :caption: Documentation
 
 introduction
-installation
-usage
-configuration
-authentication
-command_reference
 architecture
+configuration
+command_reference
+installation
+authentication
+usage
 outputs
 contributing
