@@ -1,59 +1,61 @@
 # Usage
 
-This page provides a practical introduction to using **swot-reservoir-wse** to generate reservoir-specific Water Surface Elevation (WSE) time series from SWOT observations.
+This page provides a practical first-use workflow for **swot-reservoir-wse**.
 
-The package currently supports two independently selectable observation sources:
+It assumes that the package has already been installed. If not, begin with [Installation](installation.md).
 
-- **LakeSP**
-- **PIXC**
+The package supports two independently selectable SWOT observation sources:
 
-For every command and option, see the [Command Reference](command_reference.md).
+- **LakeSP** — reservoir observations derived from the SWOT Lake Single-Pass vector product.
+- **PIXC** — reservoir observations derived directly from the SWOT high-rate pixel-cloud product.
 
----
-
-# Basic Workflow
-
-A typical workflow consists of:
+A typical session consists of:
 
 ```text
-Install swot-reservoir-wse
-       │
-       ▼
-Configure authentication
-       │
-       ▼
+Authenticate
+     │
+     ▼
+Inspect configuration
+     │
+     ▼
 Choose LakeSP or PIXC
-       │
-       ▼
-Supply dam coordinates
-and observation dates
-       │
-       ▼
+     │
+     ▼
 Run extraction
-       │
-       ▼
-Receive CSV and,
-optionally, PNG output
+     │
+     ▼
+Inspect generated outputs
 ```
+
+For the internal processing performed by each source, see [Package Architecture](architecture.md).
 
 ---
 
-# Authentication
+## 1. Authenticate the Required Services
 
-Before the first extraction, configure the external services required by the package:
+Before the first extraction, configure access to the external services used by the package:
 
 ```bash
 swot-reservoir-wse auth
 ```
 
-The package uses:
+This configures the two services required by the processing pipeline:
 
-- **Google Earth Engine** for reservoir footprint generation; and
-- **NASA Earthdata** for SWOT product discovery and access.
+```text
+Google Earth Engine
+        │
+        └── JRC Global Surface Water
+            reservoir-footprint generation
 
-Existing valid authentication is reused when possible.
+NASA Earthdata
+        │
+        └── SWOT LakeSP and PIXC
+            product discovery and access
+```
 
-The services can also be managed separately:
+If valid authentication information already exists, it is reused where possible.
+
+The services can also be configured independently:
 
 ```bash
 swot-reservoir-wse auth --earth-engine-only
@@ -63,498 +65,271 @@ swot-reservoir-wse auth --earth-engine-only
 swot-reservoir-wse auth --earthdata-only
 ```
 
-Force reauthentication with:
-
-```bash
-swot-reservoir-wse auth --force
-```
-
-For credential removal, Project ID handling, and service-specific options, see [Authentication](authentication.md).
+For Project ID handling, credential storage, forced reauthentication, and credential removal, see [Authentication](authentication.md).
 
 ---
 
-# Generate a Reservoir WSE Time Series
+## 2. Inspect the Active Configuration
 
-The extraction command is:
-
-```bash
-swot-reservoir-wse extract
-```
-
-A processing run requires:
-
-- dam latitude;
-- dam longitude;
-- start date;
-- end date; and
-- SWOT observation source.
-
-The general form is:
+Before processing, the active runtime configuration can be inspected with:
 
 ```bash
-swot-reservoir-wse extract \
-    --lat <latitude> \
-    --lon <longitude> \
-    --start-date YYYY-MM-DD \
-    --end-date YYYY-MM-DD \
-    --source <source>
+swot-reservoir-wse config show
 ```
 
-The supported source values are:
+The default settings are suitable for a normal first run, so configuration changes are not required simply to begin processing.
+
+The configuration controls parameters including:
+
+```text
+reservoir-footprint generation
+LakeSP processing
+PIXC processing
+quality filtering
+science-cycle selection
+parallel workers
+persistent caching
+temporary storage
+output location
+plot generation
+```
+
+For the complete parameter reference, see [Configuration](configuration.md).
+
+---
+
+## 3. Choose an Observation Source
+
+Every extraction must explicitly select either:
 
 ```text
 lakesp
+```
+
+or:
+
+```text
 pixc
 ```
 
-The source must be selected explicitly.
+using the `--source` argument.
 
-There is no automatic source-selection or fallback mode.
-
----
-
-# LakeSP Example
-
-Generate a LakeSP WSE time series with:
-
-```bash
-swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
-```
-
-Here:
-
-```text
---lat 19.690
---lon 73.340
-```
-
-identify the supplied dam location.
-
-The coordinates are not treated as a predefined reservoir boundary.
-
-Instead, **swot-reservoir-wse** derives the corresponding reservoir footprint and uses that footprint to identify relevant SWOT observations.
-
----
-
-# What Happens During LakeSP Processing?
-
-For a LakeSP run, the package performs the following high-level workflow:
-
-```text
-Dam coordinates
-      │
-      ▼
-Reservoir footprint
-      │
-      ▼
-LakeSP metadata search
-      │
-      ▼
-Granule verification
-      │
-      ▼
-Reservoir observation association
-      │
-      ▼
-Quality screening
-      │
-      ▼
-Daily aggregation
-      │
-      ▼
-MAD filtering
-      │
-      ▼
-Final LakeSP WSE time series
-```
-
-The reservoir footprint is generated using the JRC Global Surface Water dataset through Google Earth Engine unless a cached footprint is available.
-
-Candidate LakeSP granules are discovered through NASA Earthdata.
-
-The package then identifies LakeSP observations intersecting the reservoir footprint and uses their `lake_id` values to isolate reservoir-associated observations.
-
-Partial observations are removed, and the remaining observations are filtered according to the configured LakeSP quality classes.
-
-By default:
-
-```text
-GOOD
-SUSPECT
-DEGRADED
-```
-
-are retained, while:
-
-```text
-BAD
-```
-
-is excluded.
-
-The retained observations are grouped by acquisition date, and their median WSE is used as the representative daily reservoir elevation.
-
-The daily time series then undergoes temporal MAD filtering.
-
----
-
-# PIXC Example
-
-Generate a PIXC WSE time series with:
-
-```bash
-swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
-```
-
-PIXC is processed independently of LakeSP.
-
-The package does not first attempt LakeSP and then fall back to PIXC.
-
----
-
-# What Happens During PIXC Processing?
-
-The PIXC workflow is:
-
-```text
-Dam coordinates
-      │
-      ▼
-Reservoir footprint
-      │
-      ▼
-PIXC metadata search
-      │
-      ▼
-CMR footprint verification
-      │
-      ▼
-PIXC granule download
-      │
-      ▼
-Pixel-cloud extraction
-      │
-      ▼
-Reservoir spatial intersection
-      │
-      ▼
-Water and quality filtering
-      │
-      ▼
-Pixel WSE calculation
-      │
-      ▼
-Daily aggregation
-      │
-      ▼
-MAD filtering
-      │
-      ▼
-Final PIXC WSE time series
-```
-
-Candidate PIXC granules are first identified through NASA Earthdata.
-
-Their NASA CMR geographic footprints are checked against the reservoir before the large PIXC NetCDF files are processed.
-
-For verified granules, the package reads the `pixel_cloud` data and applies an initial reservoir bounding-box filter followed by exact reservoir intersection.
-
-Accepted pixels are filtered using the configured PIXC classification and classification-quality criteria.
-
-For each accepted pixel:
-
-```text
-WSE = height - geoid
-```
-
-The accepted pixels are grouped by acquisition date, and the median pixel WSE becomes the representative daily reservoir WSE.
-
----
-
-# Choosing Between LakeSP and PIXC
-
-LakeSP and PIXC are different SWOT products and are processed using different pipelines.
-
-Choose LakeSP with:
+For example:
 
 ```bash
 --source lakesp
 ```
 
-Choose PIXC with:
+selects the LakeSP processing pipeline, while:
 
 ```bash
 --source pixc
 ```
 
-LakeSP provides vector observation records and associated quality information.
+selects the PIXC processing pipeline.
 
-PIXC operates at the pixel-cloud level and therefore processes substantially more individual observations.
+The two sources are processed independently.
 
-As a result, PIXC runs can require considerably more:
+There is no automatic source selection and no automatic fallback from one source to the other.
 
-- memory;
-- disk activity;
-- network transfer; and
-- processing time.
+LakeSP is generally the simpler source for reservoir-level WSE extraction because the product already contains vectorized lake observations.
 
-When processing PIXC on a machine with limited memory, reducing the worker count can help:
+PIXC operates on individual pixel-cloud measurements and can therefore require substantially greater download volume, memory, disk activity, and processing time.
 
-```bash
-swot-reservoir-wse config set max_workers 4
+---
+
+## 4. Run a LakeSP Extraction
+
+Suppose the target dam is located at:
+
+```text
+Latitude  : 19.690
+Longitude : 73.340
 ```
 
-or, if necessary:
+and the required observation period is:
+
+```text
+2026-01-20 to 2026-07-16
+```
+
+Run:
+
+```bash
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+```
+
+The supplied coordinates identify the dam associated with the target reservoir.
+
+They are **not** treated as the reservoir boundary itself.
+
+During processing, **swot-reservoir-wse** first obtains the reservoir footprint corresponding to the supplied location and then uses that footprint to identify relevant LakeSP observations.
+
+At a high level:
+
+```text
+Dam location
+     │
+     ▼
+Reservoir footprint
+     │
+     ▼
+LakeSP observations
+     │
+     ▼
+Reservoir WSE time series
+     │
+     ▼
+CSV + optional PNG
+```
+
+The complete scientific and computational processing sequence is documented in [Package Architecture](architecture.md).
+
+---
+
+## 5. Run a PIXC Extraction
+
+The same reservoir and observation period can be processed independently from PIXC:
+
+```bash
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
+```
+
+The initial reservoir-identification stage is shared with LakeSP, but the subsequent PIXC processing pipeline is different.
+
+At a high level:
+
+```text
+Dam location
+     │
+     ▼
+Reservoir footprint
+     │
+     ▼
+PIXC pixel-cloud observations
+     │
+     ▼
+Reservoir WSE time series
+     │
+     ▼
+CSV + optional PNG
+```
+
+PIXC products contain large collections of individual pixel measurements. Processing can therefore require considerably more resources than LakeSP.
+
+On a machine with limited memory, the maximum number of concurrent workers can be reduced before running PIXC:
 
 ```bash
 swot-reservoir-wse config set max_workers 2
 ```
 
----
-
-# Configuration
-
-Display the active configuration with:
-
-```bash
-swot-reservoir-wse config show
-```
-
-Change an individual value with:
-
-```bash
-swot-reservoir-wse config set <key> <value>
-```
+The appropriate value depends on the available hardware and the products being processed.
 
 ---
 
-## Change Worker Count
+## 6. Locate the Generated Outputs
 
-```bash
-swot-reservoir-wse config set max_workers 4
-```
-
-The worker count affects parallel processing for both LakeSP and PIXC.
-
----
-
-## Configure LakeSP Quality Classes
-
-The default retained LakeSP quality classes are:
+By default, successful extraction products are written to:
 
 ```text
-good
-suspect
-degraded
+outputs/
 ```
 
-Retain only `GOOD`:
+relative to the directory from which the package is being used.
 
-```bash
-swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good
-```
-
-Retain `GOOD` and `SUSPECT`:
-
-```bash
-swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect
-```
-
-Retain all supported classes:
-
-```bash
-swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect,degraded,bad
-```
-
----
-
-## Restrict LakeSP Science Cycles
-
-```bash
-swot-reservoir-wse config set sources.lakesp.science_cycles 045,046,047
-```
-
----
-
-## Restrict PIXC Science Cycles
-
-```bash
-swot-reservoir-wse config set sources.pixc.science_cycles 045,046,047
-```
-
----
-
-## Change LakeSP MAD Threshold
-
-```bash
-swot-reservoir-wse config set sources.lakesp.mad_threshold 2.5
-```
-
----
-
-## Change PIXC MAD Threshold
-
-```bash
-swot-reservoir-wse config set sources.pixc.mad_threshold 2.5
-```
-
-LakeSP and PIXC thresholds are independent.
-
-For every supported setting, see [Configuration](configuration.md).
-
----
-
-# Cache
-
-The package maintains persistent caches for:
-
-- generated reservoir polygons; and
-- downloaded LakeSP granules.
-
-Display the cache summary:
-
-```bash
-swot-reservoir-wse cache
-```
-
-Clear reservoir footprints:
-
-```bash
-swot-reservoir-wse cache --clear-polygons
-```
-
-Clear LakeSP granules:
-
-```bash
-swot-reservoir-wse cache --clear-lakesp
-```
-
-Clear both:
-
-```bash
-swot-reservoir-wse cache --clear-all
-```
-
-PIXC granules are currently processed in temporary working directories and are not retained in a persistent PIXC granule cache.
-
-Reservoir and LakeSP caching can be controlled independently:
-
-```bash
-swot-reservoir-wse config set polygon_cache_enabled false
-```
-
-```bash
-swot-reservoir-wse config set lakesp_cache_enabled false
-```
-
----
-
-# Outputs
-
-A successful extraction always produces a CSV time series.
-
-When:
-
-```text
-generate_plot = true
-```
-
-the package also produces a PNG visualization.
-
----
-
-## LakeSP Outputs
-
-Example filenames:
-
-```text
-19.69000_73.34000_lakesp_wse.csv
-19.69000_73.34000_lakesp_wse.png
-```
-
-The final LakeSP CSV contains:
-
-```text
-date
-wse_median
-quality_status
-```
-
-The plot uses quality-dependent markers for:
-
-```text
-GOOD
-SUSPECT
-DEGRADED
-BAD
-```
-
-and connects the observations with a grey line.
-
----
-
-## PIXC Outputs
-
-Example filenames:
-
-```text
-19.69000_73.34000_pixc_wse.csv
-19.69000_73.34000_pixc_wse.png
-```
-
-The PIXC CSV contains the daily median WSE together with additional statistics describing the accepted pixel population.
-
-For the complete output schemas and plotting behavior, see [Outputs](outputs.md).
-
----
-
-# Output Location
-
-The default output directory is:
-
-```text
-outputs
-```
-
-relative to the directory from which **swot-reservoir-wse** is being used.
-
-For example:
+For example, if processing is run from:
 
 ```text
 D:\reservoir-analysis
 ```
 
-produces outputs under:
+the default output location is:
 
 ```text
 D:\reservoir-analysis\outputs
 ```
 
-unless `output_dir` has been changed.
+A LakeSP run produces a CSV with a source-specific filename such as:
 
-Inspect the active location with:
-
-```bash
-swot-reservoir-wse config show
+```text
+19.69000_73.34000_lakesp_wse.csv
 ```
 
-Change it with:
+and, when plot generation is enabled:
+
+```text
+19.69000_73.34000_lakesp_wse.png
+```
+
+A PIXC run similarly produces:
+
+```text
+19.69000_73.34000_pixc_wse.csv
+```
+
+and optionally:
+
+```text
+19.69000_73.34000_pixc_wse.png
+```
+
+LakeSP and PIXC results are written separately. Running both sources for the same reservoir does not merge their observations into a single time series.
+
+For CSV fields and plotting behaviour, see [Outputs](outputs.md).
+
+---
+
+## 7. Change the Output Directory
+
+The active output location can be changed through the configuration system.
+
+For example:
 
 ```bash
 swot-reservoir-wse config set output_dir results
 ```
 
+Subsequent outputs will then be written under:
+
+```text
+results/
+```
+
+An absolute path can also be supplied.
+
+For example, in Windows PowerShell:
+
+```powershell
+swot-reservoir-wse config set output_dir D:\swot-output-test
+```
+
+The configured value can be confirmed with:
+
+```bash
+swot-reservoir-wse config show
+```
+
 ---
 
-# Disable Plot Generation
+## 8. Disable Plot Generation
 
-If only CSV output is required:
+CSV generation is always part of a successful extraction.
+
+If the PNG visualization is not required, disable it with:
 
 ```bash
 swot-reservoir-wse config set generate_plot false
 ```
 
-Re-enable plotting with:
+Run the extraction normally:
+
+```bash
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+```
+
+Only the CSV output will be generated.
+
+Plot generation can be restored with:
 
 ```bash
 swot-reservoir-wse config set generate_plot true
@@ -562,67 +337,196 @@ swot-reservoir-wse config set generate_plot true
 
 ---
 
-# Example LakeSP Workflow
+## 9. Reusing Cached Data
 
-A complete basic LakeSP session may look like:
+The package can reuse previously generated reservoir footprints and downloaded LakeSP products.
 
-```bash
-swot-reservoir-wse auth
-```
+Inspect the current persistent cache with:
 
 ```bash
-swot-reservoir-wse config show
+swot-reservoir-wse cache
 ```
+
+A typical workflow therefore does not require manually clearing cached data between runs.
+
+If the same dam location is processed again, the cached reservoir footprint can be reused when reservoir-polygon caching is enabled.
+
+Similarly, previously downloaded LakeSP products can be reused when LakeSP caching is enabled.
+
+PIXC products are currently processed through temporary workspaces and are not retained in a persistent PIXC granule cache.
+
+Cache contents should normally be cleared only when there is a specific reason to force regeneration or redownload.
+
+For example:
 
 ```bash
-swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+swot-reservoir-wse cache --clear-polygons
 ```
 
-The resulting files are written to the configured output directory.
+removes cached reservoir footprints, while:
+
+```bash
+swot-reservoir-wse cache --clear-lakesp
+```
+
+removes cached LakeSP products.
+
+To clear all persistent package caches:
+
+```bash
+swot-reservoir-wse cache --clear-all
+```
 
 ---
 
-# Example PIXC Workflow
+## 10. Example: Complete LakeSP Session
 
-For PIXC:
+For a first LakeSP extraction, the complete command sequence can be as simple as:
 
 ```bash
+# Authenticate Google Earth Engine and NASA Earthdata
 swot-reservoir-wse auth
+
+# Inspect the active configuration
+swot-reservoir-wse config show
+
+# Generate the LakeSP reservoir WSE time series
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+
+# Inspect the persistent cache after processing
+swot-reservoir-wse cache
 ```
 
-Optionally reduce parallel processing:
+With the default configuration, the resulting products are written under:
 
-```bash
-swot-reservoir-wse config set max_workers 4
+```text
+outputs/
 ```
 
-Then run:
+No additional configuration changes are required for a normal first LakeSP run.
+
+---
+
+## 11. Example: Complete PIXC Session
+
+A corresponding PIXC session is:
 
 ```bash
+# Authenticate Google Earth Engine and NASA Earthdata
+swot-reservoir-wse auth
+
+# Inspect the active configuration
+swot-reservoir-wse config show
+
+# Reduce concurrency if required by the available memory
+swot-reservoir-wse config set max_workers 2
+
+# Generate the PIXC reservoir WSE time series
 swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
 ```
 
-PIXC processing can take longer than LakeSP because the package downloads and processes individual pixel-cloud observations.
+The worker-count change is optional.
+
+PIXC processing may take substantially longer than LakeSP because the package downloads and processes pixel-cloud products rather than working only with vectorized lake observations.
 
 ---
 
-# Restoring Default Configuration
+## 12. Example: Run Both Sources
 
-If configuration has been changed during experimentation:
+LakeSP and PIXC can also be processed independently for the same reservoir and observation period.
+
+For example:
+
+```bash
+# LakeSP
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+
+# PIXC
+swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
+```
+
+The result is two independently derived reservoir WSE time series:
+
+```text
+outputs/
+│
+├── 19.69000_73.34000_lakesp_wse.csv
+├── 19.69000_73.34000_lakesp_wse.png
+├── 19.69000_73.34000_pixc_wse.csv
+└── 19.69000_73.34000_pixc_wse.png
+```
+
+The package does not automatically compare, combine, or reconcile the LakeSP and PIXC results.
+
+---
+
+## 13. Common Configuration Changes
+
+Most processing behaviour can be changed through:
+
+```bash
+swot-reservoir-wse config set <key> <value>
+```
+
+Some common examples are:
+
+```bash
+# Change parallel worker count
+swot-reservoir-wse config set max_workers 4
+
+# Retain only GOOD and SUSPECT LakeSP observations
+swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect
+
+# Restrict LakeSP processing to selected science cycles
+swot-reservoir-wse config set sources.lakesp.science_cycles 045,046,047
+
+# Restrict PIXC processing to selected science cycles
+swot-reservoir-wse config set sources.pixc.science_cycles 045,046,047
+
+# Change LakeSP temporal MAD threshold
+swot-reservoir-wse config set sources.lakesp.mad_threshold 2.5
+
+# Change PIXC temporal MAD threshold
+swot-reservoir-wse config set sources.pixc.mad_threshold 2.5
+
+# Change output directory
+swot-reservoir-wse config set output_dir results
+
+# Disable PNG generation
+swot-reservoir-wse config set generate_plot false
+```
+
+These settings can materially affect processing behaviour and, for scientific parameters such as quality selection and MAD thresholds, the resulting WSE time series.
+
+Their definitions and effects are documented in [Configuration](configuration.md).
+
+---
+
+## 14. Restore the Default Configuration
+
+If configuration values have been changed during testing or experimentation, restore the package defaults with:
 
 ```bash
 swot-reservoir-wse config reset
 ```
 
-Inspect the restored configuration:
+Then inspect the resulting configuration:
 
 ```bash
 swot-reservoir-wse config show
 ```
 
-Remember that resetting the configuration also clears the Earth Engine Project ID stored in `config.json`.
+The reset also restores:
 
-If needed, configure authentication again:
+```text
+earth_engine_project = null
+```
+
+because the Earth Engine Project ID is part of `config.json`.
+
+Google-managed Earth Engine OAuth credentials and NASA Earthdata credentials stored outside `config.json` are not removed by `config reset`.
+
+If necessary, configure the required authentication state again with:
 
 ```bash
 swot-reservoir-wse auth
@@ -630,12 +534,50 @@ swot-reservoir-wse auth
 
 ---
 
-# Where to Go Next
+## 15. Command Help
 
-For more detailed information:
+The CLI provides built-in help at every major command level.
 
-- [Authentication](authentication.md) explains Google Earth Engine and NASA Earthdata authentication.
-- [Configuration](configuration.md) documents every configurable parameter.
-- [Command Reference](command_reference.md) lists all CLI commands and options.
-- [Package Architecture](architecture.md) explains the LakeSP and PIXC processing pipelines.
-- [Outputs](outputs.md) describes the generated CSV and PNG products.
+Display the available commands:
+
+```bash
+swot-reservoir-wse --help
+```
+
+Extraction options:
+
+```bash
+swot-reservoir-wse extract --help
+```
+
+Authentication options:
+
+```bash
+swot-reservoir-wse auth --help
+```
+
+Configuration commands:
+
+```bash
+swot-reservoir-wse config --help
+```
+
+Cache commands:
+
+```bash
+swot-reservoir-wse cache --help
+```
+
+For the complete CLI reference, see [Command Reference](command_reference.md).
+
+---
+
+## Related Documentation
+
+After this first-use guide, the documentation is divided by purpose:
+
+- [Package Architecture](architecture.md) — how reservoir identification, LakeSP processing, and PIXC processing work internally.
+- [Authentication](authentication.md) — Google Earth Engine and NASA Earthdata authentication and credential handling.
+- [Configuration](configuration.md) — every configurable processing parameter and its effect.
+- [Command Reference](command_reference.md) — complete CLI syntax, options, and command behaviour.
+- [Outputs](outputs.md) — generated CSV fields and PNG visualizations.
