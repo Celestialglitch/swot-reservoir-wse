@@ -8,7 +8,7 @@ The current release supports the following SWOT Science products:
 - **SWOT Level-2 Water Mask Pixel Cloud Data Product, Version D**
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 1
 :caption: Documentation
 
 introduction
