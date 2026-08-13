@@ -11,13 +11,17 @@ The package requires:
 
 ---
 
-# 1. Create a NASA Earthdata Login Account
+## External Service Setup
+
+Before installing and running **swot-reservoir-wse**, create the accounts required to access Google Earth Engine and NASA Earthdata.
+
+### NASA Earthdata Login
 
 SWOT products are discovered and downloaded through NASA Earthdata.
 
 Create an account at:
 
-[https://urs.earthdata.nasa.gov/](https://urs.earthdata.nasa.gov/)
+https://urs.earthdata.nasa.gov/
 
 After creating the account:
 
@@ -25,23 +29,19 @@ After creating the account:
 2. complete any account-verification steps;
 3. accept any terms of use presented by Earthdata.
 
-The username and password will later be used by:
+The username and password will later be used when authenticating **swot-reservoir-wse**.
 
-```bash
-swot-reservoir-wse auth
-```
-
-You do not need to place Earthdata credentials inside the repository or `config.json`.
+You do not need to place Earthdata credentials inside the repository or config.json.
 
 **swot-reservoir-wse** stores validated Earthdata credentials in the user's standard netrc credential file.
 
 ---
 
-# 2. Register for Google Earth Engine
+### Google Earth Engine
 
 Register for Google Earth Engine at:
 
-[https://code.earthengine.google.com/](https://code.earthengine.google.com/)
+https://code.earthengine.google.com/
 
 Use the Google account that will also have access to the Google Cloud project used by **swot-reservoir-wse**.
 
@@ -51,44 +51,36 @@ Earth Engine access must be active before reservoir footprints can be generated.
 
 ---
 
-# 3. Create a Google Cloud Project
+### Google Cloud Project
 
 Open the Google Cloud Console:
 
-[https://console.cloud.google.com/](https://console.cloud.google.com/)
+https://console.cloud.google.com/
 
 Create a new project or select an existing project that will be used with Google Earth Engine.
 
 Locate and copy the:
 
-```text
-Project ID
-```
+    Project ID
 
 Do not confuse it with:
 
-```text
-Project name
-Project number
-```
+    Project name
+    Project number
 
 For example, if the console displays:
 
-```text
-Project name   : Reservoir Analysis
-Project ID     : reservoir-analysis-123
-Project number : 123456789
-```
+    Project name   : Reservoir Analysis
+    Project ID     : reservoir-analysis-123
+    Project number : 123456789
 
 the value required by **swot-reservoir-wse** is:
 
-```text
-reservoir-analysis-123
-```
+    reservoir-analysis-123
 
 ---
 
-# 4. Enable the Google Earth Engine API
+### Enable the Google Earth Engine API
 
 Inside the selected Google Cloud project:
 
@@ -102,11 +94,11 @@ The project cannot be used by the Earth Engine API until this step is complete.
 
 ---
 
-# 5. Register the Cloud Project for Earth Engine
+### Register the Cloud Project for Earth Engine
 
 Open the Earth Engine interface:
 
-[https://code.earthengine.google.com/](https://code.earthengine.google.com/)
+https://code.earthengine.google.com/
 
 Sign in using the Google account associated with the Cloud project.
 
@@ -118,81 +110,65 @@ The Earth Engine registration interface can change over time. Follow the options
 
 ---
 
-# 6. Clone the Repository
+## Install the Package
+
+### Clone the Repository
 
 Clone the project:
 
-```bash
-git clone https://github.com/Celestialglitch/swot-reservoir-wse.git
-```
+    git clone https://github.com/Celestialglitch/swot-reservoir-wse.git
 
 Enter the repository:
 
-```bash
-cd swot-reservoir-wse
-```
+    cd swot-reservoir-wse
 
 ---
 
-# 7. Create a Virtual Environment
+### Create a Virtual Environment
 
 Using a virtual environment is strongly recommended so that the package dependencies remain isolated from the system Python installation.
 
-## Windows
+#### Windows
 
 Create the environment:
 
-```bash
-python -m venv .venv
-```
+    python -m venv .venv
 
 Activate it:
 
-```bash
-.venv\Scripts\activate
-```
+    .venv\Scripts\activate
 
-## Linux / macOS
+#### Linux / macOS
 
 Create the environment:
 
-```bash
-python3 -m venv .venv
-```
+    python3 -m venv .venv
 
 Activate it:
 
-```bash
-source .venv/bin/activate
-```
+    source .venv/bin/activate
 
 After activation, the terminal normally displays the virtual-environment name.
 
 For example:
 
-```text
-(.venv)
-```
+    (.venv)
 
 ---
 
-# 8. Upgrade pip
+### Upgrade pip
 
 Upgrade the package installer:
 
-```bash
-python -m pip install --upgrade pip
-```
+    python -m pip install --upgrade pip
 
 ---
 
-# 9. Install swot-reservoir-wse
+### Install swot-reservoir-wse
 
 Install the package from the cloned repository:
 
-```bash
-python -m pip install .
-```
+    python -m pip install .
 
 The installation automatically installs the Python dependencies declared by the package, including the libraries required for:
 
@@ -206,90 +182,72 @@ The installation automatically installs the Python dependencies declared by the 
 
 ---
 
-# 10. Upgrade an Existing Local Installation
+### Upgrade an Existing Local Installation
 
 If **swot-reservoir-wse** has already been installed from the repository and the source code has since been updated, run:
 
-```bash
-python -m pip install . --upgrade
-```
+    python -m pip install . --upgrade
 
 For development work where changes should be immediately visible without reinstalling after every source-code modification, an editable installation can instead be used:
 
-```bash
-python -m pip install -e .
-```
+    python -m pip install -e .
 
 An editable installation is useful during development but is not required for normal package use.
 
 ---
 
-# 11. Verify the Installation
+## Verify the Installation
 
 Run:
 
-```bash
-swot-reservoir-wse --help
-```
+    swot-reservoir-wse --help
 
 A successful installation displays the available command groups, including:
 
-```text
-extract
-config
-cache
-auth
-```
+    extract
+    config
+    cache
+    auth
 
 Check the extraction command:
 
-```bash
-swot-reservoir-wse extract --help
-```
+    swot-reservoir-wse extract --help
 
 The command should show the required arguments:
 
-```text
---lat
---lon
---start-date
---end-date
---source
-```
+    --lat
+    --lon
+    --start-date
+    --end-date
+    --source
 
 The supported observation sources are:
 
-```text
-lakesp
-pixc
-```
+    lakesp
+    pixc
 
 ---
 
-# 12. Choose a Working Directory
+## Set Up a Working Directory
 
 **swot-reservoir-wse** uses the directory from which it is run as the runtime working directory.
 
 You may therefore create a separate directory for an analysis:
 
-```text
-reservoir-analysis/
-```
+    reservoir-analysis/
 
 and run **swot-reservoir-wse** from that directory.
 
 With the default configuration, the package may create:
 
-```text
-reservoir-analysis/
-├── config.json
-├── cache/
-│   ├── reservoir_polygons/
-│   └── lakesp_granules/
-├── downloads/
-│   └── temp/
-└── outputs/
-```
+    reservoir-analysis/
+    ├── config.json
+    ├── cache/
+    │   ├── reservoir_polygons/
+    │   └── lakesp_granules/
+    ├── downloads/
+    │   └── temp/
+    └── outputs/
 
 This allows different analyses to maintain separate runtime configuration and output files.
 
@@ -297,19 +255,15 @@ The Python package itself does not need to be located in the working directory a
 
 ---
 
-# 13. Authenticate the External Services
+## Initial Authentication
 
 From the directory in which you want to run the analysis:
 
-```bash
-swot-reservoir-wse auth
-```
+    swot-reservoir-wse auth
 
 If an Earth Engine Project ID has not yet been stored in that directory's configuration, the package prompts:
 
-```text
-Google Earth Engine project ID:
-```
+    Google Earth Engine project ID:
 
 Enter the Google Cloud Project ID configured for Earth Engine.
 
@@ -317,146 +271,112 @@ The package then checks Google Earth Engine authentication.
 
 For NASA Earthdata, existing credentials are reused when possible. Otherwise, the package asks for:
 
-```text
-Earthdata Login username:
-Earthdata password:
-```
+    Earthdata Login username:
+    Earthdata password:
 
 The password is entered without being echoed to the terminal.
 
 After successful authentication:
 
-- the Earth Engine Project ID is stored in the working-directory `config.json`;
+- the Earth Engine Project ID is stored in the working-directory config.json;
 - Google Earth Engine OAuth credentials remain managed by Google's authentication system;
 - NASA Earthdata credentials are stored in the user's netrc credential file.
 
-For complete authentication behaviour, see [Authentication](authentication.md).
+This section covers only the initial authentication required after installation. For reauthentication, credential removal, service-specific authentication, credential storage, and all authentication options, see [Authentication](authentication.md).
 
 ---
 
-# 14. Verify the Active Configuration
+## Verify the Active Configuration
 
 Run:
 
-```bash
-swot-reservoir-wse config show
-```
+    swot-reservoir-wse config show
 
 Verify that:
 
-```text
-earth_engine_project
-```
+    earth_engine_project
 
 contains the expected Google Cloud Project ID.
 
 The default runtime paths should normally resemble:
 
-```text
-cache
-outputs
-downloads/temp
-```
+    cache
+    outputs
+    downloads/temp
 
 These paths are relative to the active working directory unless absolute paths have been configured.
 
----
-
-# 15. Run a LakeSP Test
-
-A basic LakeSP extraction can be started with:
-
-```bash
-swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
-```
-
-A successful run performs reservoir-footprint generation, LakeSP discovery, observation extraction, quality filtering, daily aggregation, MAD filtering, and output generation.
+For explanations of all available configuration parameters, see [Configuration](configuration.md).
 
 ---
 
-# 16. Run a PIXC Test
+## Test the Installation
+
+After installation and authentication, you can perform a basic extraction to confirm that the package is working correctly.
+
+### LakeSP
+
+Run:
+
+    swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+
+### PIXC
 
 PIXC can be selected independently:
 
-```bash
-swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
-```
+    swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
 
 PIXC processing can require considerably more memory and processing time because high-resolution pixel-cloud data are downloaded and processed directly.
 
-If memory usage is excessive, reduce the number of parallel workers:
-
-```bash
-swot-reservoir-wse config set max_workers 4
-```
-
-or:
-
-```bash
-swot-reservoir-wse config set max_workers 2
-```
+For the normal processing workflow, source-specific behaviour, configuration examples, and output generation, see [Usage](usage.md).
 
 ---
 
-# Installation Troubleshooting
+## Troubleshooting
 
-## `swot-reservoir-wse` command not found
+### swot-reservoir-wse Command Not Found
 
 Confirm that the environment in which the package was installed is active.
 
 On Windows:
 
-```bash
-.venv\Scripts\activate
-```
+    .venv\Scripts\activate
 
 On Linux or macOS:
 
-```bash
-source .venv/bin/activate
-```
+    source .venv/bin/activate
 
 Then verify:
 
-```bash
-python -m pip show swot-reservoir-wse
-```
+    python -m pip show swot-reservoir-wse
 
 and retry:
 
-```bash
-swot-reservoir-wse --help
-```
+    swot-reservoir-wse --help
 
 ---
 
-## Earth Engine Project Is Not Configured
+### Earth Engine Project Is Not Configured
 
 If processing reports:
 
-```text
-Earth Engine project is not configured.
-```
+    Earth Engine project is not configured.
 
 run:
 
-```bash
-swot-reservoir-wse auth
-```
+    swot-reservoir-wse auth
 
 or:
 
-```bash
-swot-reservoir-wse auth --earth-engine-only
-```
+    swot-reservoir-wse auth --earth-engine-only
 
-Remember that the Earth Engine Project ID is stored in the `config.json` of the current working directory.
+Remember that the Earth Engine Project ID is stored in the config.json of the current working directory.
 
 If **swot-reservoir-wse** is executed from a different directory, that directory may have a different configuration.
 
 ---
 
-## Earth Engine Permission Error
+### Earth Engine Permission Error
 
 If Earth Engine reports that the caller does not have permission to use the selected project:
 
@@ -468,55 +388,43 @@ If Earth Engine reports that the caller does not have permission to use the sele
 
 Then retry:
 
-```bash
-swot-reservoir-wse auth --earth-engine-only
-```
+    swot-reservoir-wse auth --earth-engine-only
 
 If necessary:
 
-```bash
-swot-reservoir-wse auth --earth-engine-only --force
-```
+    swot-reservoir-wse auth --earth-engine-only --force
 
 ---
 
-## Earthdata Authentication Failure
+### Earthdata Authentication Failure
 
 Force a fresh Earthdata authentication:
 
-```bash
-swot-reservoir-wse auth --earthdata-only --force
-```
+    swot-reservoir-wse auth --earthdata-only --force
 
 To remove the stored Earthdata entry first:
 
-```bash
-swot-reservoir-wse auth --earthdata-only --remove
-```
+    swot-reservoir-wse auth --earthdata-only --remove
 
 Then authenticate again:
 
-```bash
-swot-reservoir-wse auth --earthdata-only
-```
+    swot-reservoir-wse auth --earthdata-only
 
 ---
 
-## PIXC Processing Uses Too Much Memory
+### PIXC Processing Uses Too Much Memory
 
 PIXC granules contain large pixel-cloud datasets.
 
 Reduce parallel processing:
 
-```bash
-swot-reservoir-wse config set max_workers 2
-```
+    swot-reservoir-wse config set max_workers 2
 
 A lower worker count reduces the number of PIXC granules being processed simultaneously.
 
 ---
 
-# Next Steps
+## Next Steps
 
 After installation:
 
@@ -524,4 +432,5 @@ After installation:
 - see [Authentication](authentication.md) for credential management;
 - see [Configuration](configuration.md) for every configurable parameter;
 - see [Command Reference](command_reference.md) for all CLI commands;
+- see [Package Architecture](architecture.md) for the LakeSP and PIXC processing design;
 - see [Outputs](outputs.md) for generated CSV and PNG products.
