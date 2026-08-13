@@ -36,16 +36,17 @@ swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --e
 At the highest level, the package performs three operations:
 
 ```text
-Dam Location
-     │
-     ▼
-Reservoir Footprint Generation
-     │
-     ▼
-Selected SWOT Source Processing
-     │
-     ▼
-Reservoir WSE Time Series Construction
+
+                       Dam Location
+                            │
+                            ▼
+              Reservoir Footprint Generation
+                            │
+                            ▼
+              Selected SWOT Source Processing
+                            │
+                            ▼
+           Reservoir WSE Time Series Construction
 ```
 
 The selected observation source determines the processing performed underneath it as shown below :
