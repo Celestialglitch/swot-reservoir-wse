@@ -9,8 +9,6 @@ The package requires:
 - Google Earth Engine access; and
 - a Google Cloud project configured for Earth Engine.
 
----
-
 ## External Service Setup
 
 Before installing and running **swot-reservoir-wse**, create the accounts required to access Google Earth Engine and NASA Earthdata.
@@ -35,8 +33,6 @@ You do not need to place Earthdata credentials inside the repository or config.j
 
 **swot-reservoir-wse** stores validated Earthdata credentials in the user's standard netrc credential file.
 
----
-
 ### Google Earth Engine
 
 Register for Google Earth Engine at:
@@ -48,8 +44,6 @@ Use the Google account that will also have access to the Google Cloud project us
 Complete the Earth Engine registration and any verification requested by Google.
 
 Earth Engine access must be active before reservoir footprints can be generated.
-
----
 
 ### Google Cloud Project
 
@@ -78,8 +72,6 @@ the value required by **swot-reservoir-wse** is:
 
     reservoir-analysis-123
 
----
-
 ### Enable the Google Earth Engine API
 
 Inside the selected Google Cloud project:
@@ -91,8 +83,6 @@ Inside the selected Google Cloud project:
 5. enable the API for the project.
 
 The project cannot be used by the Earth Engine API until this step is complete.
-
----
 
 ### Register the Cloud Project for Earth Engine
 
@@ -108,8 +98,6 @@ For non-commercial use, choose the appropriate non-commercial registration and q
 
 The Earth Engine registration interface can change over time. Follow the options shown by Google if the wording differs from the examples in this documentation.
 
----
-
 ## Install the Package
 
 ### Clone the Repository
@@ -121,8 +109,6 @@ Clone the project:
 Enter the repository:
 
     cd swot-reservoir-wse
-
----
 
 ### Create a Virtual Environment
 
@@ -154,15 +140,11 @@ For example:
 
     (.venv)
 
----
-
 ### Upgrade pip
 
 Upgrade the package installer:
 
     python -m pip install --upgrade pip
-
----
 
 ### Install swot-reservoir-wse
 
@@ -180,8 +162,6 @@ The installation automatically installs the Python dependencies declared by the 
 - numerical analysis; and
 - plot generation.
 
----
-
 ### Upgrade an Existing Local Installation
 
 If **swot-reservoir-wse** has already been installed from the repository and the source code has since been updated, run:
@@ -193,8 +173,6 @@ For development work where changes should be immediately visible without reinsta
     python -m pip install -e .
 
 An editable installation is useful during development but is not required for normal package use.
-
----
 
 ## Verify the Installation
 
@@ -226,8 +204,6 @@ The supported observation sources are:
     lakesp
     pixc
 
----
-
 ## Set Up a Working Directory
 
 **swot-reservoir-wse** uses the directory from which it is run as the runtime working directory.
@@ -252,8 +228,6 @@ With the default configuration, the package may create:
 This allows different analyses to maintain separate runtime configuration and output files.
 
 The Python package itself does not need to be located in the working directory after installation.
-
----
 
 ## Initial Authentication
 
@@ -284,8 +258,6 @@ After successful authentication:
 
 This section covers only the initial authentication required after installation. For reauthentication, credential removal, service-specific authentication, credential storage, and all authentication options, see [Authentication](authentication.md).
 
----
-
 ## Verify the Active Configuration
 
 Run:
@@ -308,8 +280,6 @@ These paths are relative to the active working directory unless absolute paths h
 
 For explanations of all available configuration parameters, see [Configuration](configuration.md).
 
----
-
 ## Test the Installation
 
 After installation and authentication, you can perform a basic extraction to confirm that the package is working correctly.
@@ -329,8 +299,6 @@ PIXC can be selected independently:
 PIXC processing can require considerably more memory and processing time because high-resolution pixel-cloud data are downloaded and processed directly.
 
 For the normal processing workflow, source-specific behaviour, configuration examples, and output generation, see [Usage](usage.md).
-
----
 
 ## Troubleshooting
 
@@ -354,8 +322,6 @@ and retry:
 
     swot-reservoir-wse --help
 
----
-
 ### Earth Engine Project Is Not Configured
 
 If processing reports:
@@ -373,8 +339,6 @@ or:
 Remember that the Earth Engine Project ID is stored in the config.json of the current working directory.
 
 If **swot-reservoir-wse** is executed from a different directory, that directory may have a different configuration.
-
----
 
 ### Earth Engine Permission Error
 
@@ -394,8 +358,6 @@ If necessary:
 
     swot-reservoir-wse auth --earth-engine-only --force
 
----
-
 ### Earthdata Authentication Failure
 
 Force a fresh Earthdata authentication:
@@ -410,8 +372,6 @@ Then authenticate again:
 
     swot-reservoir-wse auth --earthdata-only
 
----
-
 ### PIXC Processing Uses Too Much Memory
 
 PIXC granules contain large pixel-cloud datasets.
@@ -421,8 +381,6 @@ Reduce parallel processing:
     swot-reservoir-wse config set max_workers 2
 
 A lower worker count reduces the number of PIXC granules being processed simultaneously.
-
----
 
 ## Next Steps
 
