@@ -2,7 +2,7 @@
 
 This document describes how **swot-reservoir-wse** turns a dam location and observation period into a reservoir-specific Water Surface Elevation (WSE) time series from Surface Water and Ocean Topography (SWOT) observations.
 
-Unlike the README, which introduces the package from a user's perspective, this page describes the processing system itself: how information moves through the package, which operations are shared between observation sources, where the LakeSP and PIXC pipelines differ, and how individual SWOT observations are reduced to the final reservoir-level time series.
+This page describes the processing system that includes how information moves through the package, which operations are shared between observation sources, where the LakeSP and PIXC pipelines differ, and how individual SWOT observations are reduced to the final reservoir-level time series.
 
 The package currently supports two independent SWOT Level-2 Version D observation sources:
 
