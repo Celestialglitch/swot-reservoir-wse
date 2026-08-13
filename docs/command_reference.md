@@ -36,66 +36,33 @@ swot-reservoir-wse config reset --help
 
 ---
 
-# Typical Workflows
+## 1. Typical Command Sequence
 
 A normal processing run consists of three steps:
 
-1. authenticate the external services used by the package.
-2. inspect or modify the runtime configuration if necessary.
+1. authenticate the external services used by the package;
+2. inspect or modify the runtime configuration if necessary; and
 3. run `extract` with the required dam location, date range, and SWOT observation source.
 
 LakeSP and PIXC are independent observation sources. The source must be selected explicitly for each extraction.
 
-The examples below show complete command sequences for both sources.
+For a complete practical walkthrough of both processing workflows, see [Usage](usage.md).
 
----
+### LakeSP Example
 
-## LakeSP Example
-
-Suppose the dam location is:
-
-```text
-Latitude  : 19.690
-Longitude : 73.340
-```
-
-and the required observation period is:
-
-```text
-2026-01-20 to 2026-07-16
-```
-
-### 1. Authenticate
-
-From the directory in which the analysis will be run:
+Authenticate the required external services:
 
 ```bash
 swot-reservoir-wse auth
 ```
 
-If a Google Earth Engine Project ID has not yet been configured, the package prompts for one.
-
-If valid NASA Earthdata credentials are not already available, the package also requests the Earthdata Login username and password.
-
-Authentication normally needs to be configured only once unless the credentials, Google account, or Earth Engine project are changed.
-
-### 2. Inspect the active configuration
+Inspect the active configuration:
 
 ```bash
 swot-reservoir-wse config show
 ```
 
-The default LakeSP configuration can be used without making any changes.
-
-For example, to restrict accepted LakeSP observations to the `GOOD` and `SUSPECT` quality classes:
-
-```bash
-swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect
-```
-
-Configuration changes persist in the `config.json` associated with the current working directory.
-
-### 3. Run the extraction
+Run the extraction:
 
 ```bash
 swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
@@ -116,57 +83,9 @@ with filenames such as:
 
 The PNG product is generated only when plot generation is enabled.
 
-### 4. Inspect cached data
+### PIXC Example
 
-```bash
-swot-reservoir-wse cache
-```
-
-Reservoir footprints and downloaded LakeSP products can be reused in later runs when their respective caches are enabled.
-
----
-
-## PIXC Example
-
-The same reservoir and observation period can be processed independently using the SWOT PIXC product.
-
-### 1. Authenticate
-
-If authentication has already been configured and remains valid, this step normally does not need to be repeated.
-
-Otherwise:
-
-```bash
-swot-reservoir-wse auth
-```
-
-### 2. Inspect the active configuration
-
-```bash
-swot-reservoir-wse config show
-```
-
-PIXC processing operates directly on high-resolution pixel-cloud products and can require considerably more memory, disk I/O, and processing time than LakeSP processing.
-
-If necessary, reduce the number of concurrent workers:
-
-```bash
-swot-reservoir-wse config set max_workers 4
-```
-
-or, on systems with less available memory:
-
-```bash
-swot-reservoir-wse config set max_workers 2
-```
-
-Processing can also be restricted to selected SWOT science cycles:
-
-```bash
-swot-reservoir-wse config set sources.pixc.science_cycles 045,046,047
-```
-
-### 3. Run the extraction
+The same reservoir and observation period can be processed independently using the SWOT PIXC product:
 
 ```bash
 swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
@@ -183,11 +102,11 @@ Running the PIXC source does not invoke LakeSP, and running LakeSP does not invo
 
 ---
 
-# `extract`
+## 2. `extract`
 
 The `extract` command generates a reservoir-specific Water Surface Elevation (WSE) time series from the selected SWOT observation source.
 
-## Syntax
+### Syntax
 
 ```bash
 swot-reservoir-wse extract --lat <latitude> --lon <longitude> --start-date YYYY-MM-DD --end-date YYYY-MM-DD --source {lakesp,pixc}
@@ -199,7 +118,7 @@ On Windows PowerShell, the command can be entered on a single line:
 swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
 ```
 
-## Arguments
+### Arguments
 
 | Argument | Required | Description |
 | --- | :---: | --- |
@@ -227,7 +146,7 @@ The start date must not be later than the end date.
 
 The observation source is mandatory. There is no automatic source selection or fallback between LakeSP and PIXC.
 
-## LakeSP
+### LakeSP
 
 ```bash
 swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
@@ -235,9 +154,9 @@ swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --e
 
 For the LakeSP processing design, see [Package Architecture](architecture.md).
 
-For configurable LakeSP multi-stage parameters, see [Configuration](configuration.md).
+For configurable LakeSP parameters, see [Configuration](configuration.md).
 
-## PIXC
+### PIXC
 
 ```bash
 swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
@@ -245,18 +164,18 @@ swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --e
 
 For the PIXC processing design, see [Package Architecture](architecture.md).
 
-Because PIXC processing operates directly on pixel-cloud products, resource use can be substantially higher than for LakeSP. The `max_workers` setting can be reduced when necessary.
+PIXC processing operates directly on pixel-cloud products and may require a lower `max_workers` value on systems with limited memory.
 
 ---
 
-# `auth`
+## 3. `auth`
 
 The `auth` command manages authentication for the two external services used by the package:
 
 - Google Earth Engine, used during reservoir-footprint generation;
 - NASA Earthdata, used for SWOT product discovery and access.
 
-## Syntax
+### Syntax
 
 ```bash
 swot-reservoir-wse auth [options]
@@ -270,7 +189,7 @@ swot-reservoir-wse auth
 
 manages authentication for both services.
 
-## Options
+### Options
 
 | Option | Description |
 | --- | --- |
@@ -288,15 +207,15 @@ The following combinations are invalid:
 --earthdata-only + --project-id
 ```
 
-## Authenticate Both Services
+### Authenticate Both Services
 
 ```bash
 swot-reservoir-wse auth
 ```
 
-Existing credentials are reused when they are available and valid.
+Existing authentication information is reused when it is available and valid.
 
-## Google Earth Engine Only
+### Google Earth Engine Only
 
 ```bash
 swot-reservoir-wse auth --earth-engine-only
@@ -310,17 +229,15 @@ swot-reservoir-wse auth --earth-engine-only --project-id my-earth-engine-project
 
 If no Project ID is supplied and none is stored in the active configuration, the package prompts for one.
 
-## NASA Earthdata Only
+### NASA Earthdata Only
 
 ```bash
 swot-reservoir-wse auth --earthdata-only
 ```
 
-If valid Earthdata credentials are already available in the user's netrc file, they are reused.
+If valid Earthdata credentials are already available, they are reused. Otherwise, the package requests the Earthdata Login username and password.
 
-Otherwise, the package requests the Earthdata Login username and password.
-
-## Force Reauthentication
+### Force Reauthentication
 
 Reauthenticate both services:
 
@@ -352,7 +269,7 @@ or:
 swot-reservoir-wse auth --force --project-id another-earth-engine-project
 ```
 
-## Remove Authentication Information
+### Remove Authentication Information
 
 Remove authentication information managed directly by the package for both services:
 
@@ -376,15 +293,15 @@ Removing the Earth Engine configuration does not delete Google-managed OAuth cre
 
 Removing Earthdata authentication removes the `urs.earthdata.nasa.gov` entry managed by the package while preserving unrelated netrc entries.
 
-For authentication behaviour and credential storage, see [Authentication](authentication.md).
+For detailed authentication behaviour, credential storage, credential reuse, and service-specific setup, see [Authentication](authentication.md).
 
 ---
 
-# `config`
+## 4. `config`
 
 The `config` command displays, modifies, or restores the runtime configuration used by **swot-reservoir-wse**.
 
-## Syntax
+### Syntax
 
 ```bash
 swot-reservoir-wse config {show,set,reset}
@@ -406,9 +323,7 @@ config.example.json
 
 as a reference configuration.
 
----
-
-## `config show`
+### `config show`
 
 Display the complete active configuration:
 
@@ -423,13 +338,11 @@ sources.lakesp
 sources.pixc
 ```
 
----
-
-## `config set`
+### `config set`
 
 Modify an individual configuration value.
 
-### Syntax
+#### Syntax
 
 ```bash
 swot-reservoir-wse config set <key> <value>
@@ -443,11 +356,25 @@ For example:
 swot-reservoir-wse config set sources.lakesp.mad_threshold 2.5
 ```
 
+The following sections provide the supported configuration keys and their command-line forms. For detailed explanations of how each parameter affects processing, see [Configuration](configuration.md).
+
 ---
 
-# General Configuration
+## 5. General Configuration
 
-## `max_workers`
+### `max_workers`
+
+Default:
+
+```text
+max(1, CPU count - 1)
+```
+
+Valid range:
+
+```text
+>= 1
+```
 
 Set the maximum number of concurrent worker tasks:
 
@@ -455,21 +382,15 @@ Set the maximum number of concurrent worker tasks:
 swot-reservoir-wse config set max_workers 4
 ```
 
-The value must be at least:
-
-```text
-1
-```
-
-The default is determined from the host CPU count:
-
-```text
-max(1, CPU count - 1)
-```
-
 Reducing this value may be useful during PIXC processing on systems with limited memory.
 
-## `generate_plot`
+### `generate_plot`
+
+Default:
+
+```text
+true
+```
 
 Enable PNG output generation:
 
@@ -487,9 +408,15 @@ CSV output generation is unaffected.
 
 ---
 
-# Earth Engine Configuration
+## 6. Earth Engine Configuration
 
-## `earth_engine_project`
+### `earth_engine_project`
+
+Default:
+
+```text
+null
+```
 
 Set the Google Cloud Project ID used for Earth Engine:
 
@@ -513,9 +440,27 @@ swot-reservoir-wse auth --earth-engine-only
 
 ---
 
-# Reservoir Footprint Configuration
+## 7. Reservoir Footprint Configuration
 
-## `search_radius_m`
+### `search_radius_m`
+
+Default:
+
+```text
+50000
+```
+
+Unit:
+
+```text
+metres
+```
+
+Valid range:
+
+```text
+> 0
+```
 
 Set the reservoir search radius:
 
@@ -523,9 +468,32 @@ Set the reservoir search radius:
 swot-reservoir-wse config set search_radius_m 100000
 ```
 
-The value must be greater than `0`.
+For example:
 
-## `pekel_threshold`
+```text
+50000 metres = 50 km
+100000 metres = 100 km
+```
+
+### `pekel_threshold`
+
+Default:
+
+```text
+20
+```
+
+Unit:
+
+```text
+percent water occurrence
+```
+
+Valid range:
+
+```text
+0-100
+```
 
 Set the JRC Global Surface Water occurrence threshold used during reservoir-footprint generation:
 
@@ -533,19 +501,13 @@ Set the JRC Global Surface Water occurrence threshold used during reservoir-foot
 swot-reservoir-wse config set pekel_threshold 30
 ```
 
-Accepted values are between:
+### `working_crs`
+
+Default:
 
 ```text
-0
+auto
 ```
-
-and:
-
-```text
-100
-```
-
-## `working_crs`
 
 Use automatic projected CRS selection:
 
@@ -563,7 +525,7 @@ For the effect of these parameters on reservoir-footprint generation, see [Confi
 
 ---
 
-# LakeSP Configuration
+## 8. LakeSP Configuration
 
 LakeSP-specific settings are stored under:
 
@@ -571,7 +533,13 @@ LakeSP-specific settings are stored under:
 sources.lakesp
 ```
 
-## `sources.lakesp.collection`
+### `sources.lakesp.collection`
+
+Default:
+
+```text
+SWOT_L2_HR_LakeSP_Obs_D
+```
 
 Set the NASA Earthdata collection used by the LakeSP source:
 
@@ -581,7 +549,25 @@ swot-reservoir-wse config set sources.lakesp.collection SWOT_L2_HR_LakeSP_Obs_D
 
 Changing the collection identifier does not automatically make an incompatible LakeSP version or another SWOT product compatible with the package.
 
-## `sources.lakesp.search_buffer_degrees`
+### `sources.lakesp.search_buffer_degrees`
+
+Default:
+
+```text
+0.5
+```
+
+Unit:
+
+```text
+degrees
+```
+
+Valid range:
+
+```text
+>= 0
+```
 
 Set the geographic search buffer used during LakeSP product discovery:
 
@@ -589,9 +575,17 @@ Set the geographic search buffer used during LakeSP product discovery:
 swot-reservoir-wse config set sources.lakesp.search_buffer_degrees 0.75
 ```
 
-The value cannot be negative.
+The value represents an angular geographic buffer rather than a fixed distance in kilometres.
 
-## `sources.lakesp.science_cycles`
+For latitude, `0.5°` corresponds to approximately `55.5 km`. The east-west distance represented by `0.5°` of longitude varies with latitude.
+
+### `sources.lakesp.science_cycles`
+
+Default:
+
+```text
+001 through 052
+```
 
 Restrict LakeSP processing to selected SWOT science cycles:
 
@@ -617,7 +611,19 @@ is stored as:
 
 The list must contain at least one valid positive cycle number.
 
-## `sources.lakesp.mad_threshold`
+### `sources.lakesp.mad_threshold`
+
+Default:
+
+```text
+3.0
+```
+
+Valid range:
+
+```text
+> 0
+```
 
 Set the LakeSP temporal Median Absolute Deviation threshold:
 
@@ -625,23 +631,21 @@ Set the LakeSP temporal Median Absolute Deviation threshold:
 swot-reservoir-wse config set sources.lakesp.mad_threshold 2.5
 ```
 
-The value must be greater than `0`.
+### `sources.lakesp.accepted_quality_flags`
 
-## `sources.lakesp.accepted_quality_flags`
+Default:
 
-The supported LakeSP quality classes are:
+```text
+good,suspect,degraded
+```
+
+Supported values are:
 
 ```text
 good
 suspect
 degraded
 bad
-```
-
-The default accepted classes are:
-
-```text
-good,suspect,degraded
 ```
 
 Retain only `GOOD` observations:
@@ -678,7 +682,7 @@ For their representation in the generated time series, see [Outputs](outputs.md)
 
 ---
 
-# PIXC Configuration
+## 9. PIXC Configuration
 
 PIXC-specific settings are stored under:
 
@@ -686,7 +690,13 @@ PIXC-specific settings are stored under:
 sources.pixc
 ```
 
-## `sources.pixc.collection`
+### `sources.pixc.collection`
+
+Default:
+
+```text
+SWOT_L2_HR_PIXC_D
+```
 
 Set the NASA Earthdata collection used by the PIXC source:
 
@@ -696,7 +706,25 @@ swot-reservoir-wse config set sources.pixc.collection SWOT_L2_HR_PIXC_D
 
 Changing the collection identifier does not make an otherwise incompatible SWOT product compatible with the PIXC processing implementation.
 
-## `sources.pixc.search_buffer_degrees`
+### `sources.pixc.search_buffer_degrees`
+
+Default:
+
+```text
+0.5
+```
+
+Unit:
+
+```text
+degrees
+```
+
+Valid range:
+
+```text
+>= 0
+```
 
 Set the geographic search buffer used during PIXC granule discovery:
 
@@ -704,9 +732,17 @@ Set the geographic search buffer used during PIXC granule discovery:
 swot-reservoir-wse config set sources.pixc.search_buffer_degrees 0.75
 ```
 
-The value cannot be negative.
+As with the LakeSP search buffer, this is an angular geographic buffer rather than a fixed linear distance.
 
-## `sources.pixc.science_cycles`
+At the equator, `0.5°` corresponds to approximately `55.5 km` in either latitude or longitude. The longitudinal distance represented by the same angular value decreases with increasing latitude.
+
+### `sources.pixc.science_cycles`
+
+Default:
+
+```text
+001 through 052
+```
 
 Restrict PIXC processing to selected SWOT science cycles:
 
@@ -716,28 +752,44 @@ swot-reservoir-wse config set sources.pixc.science_cycles 045,046,047
 
 Cycle numbers use the same normalization rules as LakeSP science cycles.
 
-## `sources.pixc.mad_threshold`
+### `sources.pixc.mad_threshold`
 
-Set the PIXC temporal Median Absolute Deviation (MAD)  threshold:
+Default:
+
+```text
+3.0
+```
+
+Valid range:
+
+```text
+> 0
+```
+
+Set the PIXC temporal Median Absolute Deviation (MAD) threshold:
 
 ```bash
 swot-reservoir-wse config set sources.pixc.mad_threshold 2.5
 ```
 
-The value must be greater than `0`.
+### `sources.pixc.water_classification`
 
-## `sources.pixc.water_classification`
+Default:
+
+```text
+4
+```
+
+Valid range:
+
+```text
+>= 0
+```
 
 Set the PIXC classification value retained for quality screening:
 
 ```bash
 swot-reservoir-wse config set sources.pixc.water_classification 4
-```
-
-The default is:
-
-```text
-4
 ```
 
 Negative values are rejected.
@@ -746,9 +798,15 @@ For the scientific meaning of this parameter and its effect on pixel selection, 
 
 ---
 
-# Cache Configuration
+## 10. Cache and Temporary Storage Configuration
 
-## `polygon_cache_enabled`
+### `polygon_cache_enabled`
+
+Default:
+
+```text
+true
+```
 
 Enable persistent reservoir-footprint caching:
 
@@ -762,7 +820,13 @@ Disable it:
 swot-reservoir-wse config set polygon_cache_enabled false
 ```
 
-## `lakesp_cache_enabled`
+### `lakesp_cache_enabled`
+
+Default:
+
+```text
+true
+```
 
 Enable persistent LakeSP granule caching:
 
@@ -778,7 +842,13 @@ swot-reservoir-wse config set lakesp_cache_enabled false
 
 PIXC granules are currently processed through temporary working directories and are not retained in a persistent PIXC granule cache.
 
-## `cache_dir`
+### `cache_dir`
+
+Default:
+
+```text
+cache
+```
 
 Set the persistent cache directory:
 
@@ -796,7 +866,13 @@ swot-reservoir-wse config set cache_dir D:\SWOT\cache
 
 Relative paths are resolved from the current working directory.
 
-## `temp_download_dir`
+### `temp_download_dir`
+
+Default:
+
+```text
+downloads/temp
+```
 
 Set the directory used for temporary download and processing data:
 
@@ -810,11 +886,23 @@ An absolute path can also be supplied:
 swot-reservoir-wse config set temp_download_dir D:\SWOT\temp
 ```
 
+The directory is used by both source pipelines when temporary files are required.
+
+For LakeSP, it is used for temporary downloads and non-cached processing.
+
+For PIXC, downloaded granules and NetCDF processing workspaces are placed here because PIXC products are not currently retained in a persistent granule cache.
+
 ---
 
-# Output Configuration
+## 11. Output Configuration
 
-## `output_dir`
+### `output_dir`
+
+Default:
+
+```text
+outputs
+```
 
 Set the output directory:
 
@@ -862,9 +950,9 @@ For the complete output schemas, see [Outputs](outputs.md).
 
 ---
 
-# Accepted Configuration Value Forms
+## 12. Accepted Configuration Value Forms
 
-## Boolean Values
+### Boolean Values
 
 Boolean configuration values accept:
 
@@ -887,7 +975,7 @@ swot-reservoir-wse config set polygon_cache_enabled 0
 swot-reservoir-wse config set lakesp_cache_enabled on
 ```
 
-## List Values
+### List Values
 
 List-based configuration values can be supplied as comma-separated values.
 
@@ -905,7 +993,7 @@ swot-reservoir-wse config set sources.lakesp.accepted_quality_flags good,suspect
 
 JSON-style lists may also be supplied when correctly quoted for the user's shell.
 
-## Numeric Values
+### Numeric Values
 
 Examples include:
 
@@ -919,7 +1007,7 @@ swot-reservoir-wse config set sources.pixc.mad_threshold 3.0
 
 ---
 
-# `config reset`
+## 13. `config reset`
 
 Restore all configuration values to their package defaults:
 
@@ -960,11 +1048,11 @@ swot-reservoir-wse config show
 
 ---
 
-# `cache`
+## 14. `cache`
 
 The `cache` command inspects or clears persistent cache data.
 
-## Syntax
+### Syntax
 
 ```bash
 swot-reservoir-wse cache [option]
@@ -991,7 +1079,7 @@ The persistent cache currently contains reservoir footprints and LakeSP granules
 
 PIXC products are not included because downloaded PIXC granules are not currently retained in a persistent cache.
 
-## `--clear-polygons`
+### `--clear-polygons`
 
 Remove cached reservoir footprints:
 
@@ -1001,7 +1089,7 @@ swot-reservoir-wse cache --clear-polygons
 
 A required reservoir footprint will be generated again during a later extraction.
 
-## `--clear-lakesp`
+### `--clear-lakesp`
 
 Remove cached LakeSP granules:
 
@@ -1011,7 +1099,7 @@ swot-reservoir-wse cache --clear-lakesp
 
 Required LakeSP products will be downloaded again when necessary.
 
-## `--clear-all`
+### `--clear-all`
 
 Remove all persistent cache data currently managed by the package:
 
@@ -1040,45 +1128,45 @@ The cache-clearing options are mutually exclusive.
 
 ---
 
-# Configuration Key Summary
+## 15. Configuration Key Summary
 
-| Key | Default |
-| --- | --- |
-| `earth_engine_project` | `null` |
-| `search_radius_m` | `50000` |
-| `pekel_threshold` | `20` |
-| `working_crs` | `auto` |
-| `max_workers` | `max(1, CPU count - 1)` |
-| `generate_plot` | `true` |
-| `polygon_cache_enabled` | `true` |
-| `lakesp_cache_enabled` | `true` |
-| `cache_dir` | `cache` |
-| `output_dir` | `outputs` |
-| `temp_download_dir` | `downloads/temp` |
-| `sources.lakesp.collection` | `SWOT_L2_HR_LakeSP_Obs_D` |
-| `sources.lakesp.search_buffer_degrees` | `0.5` |
-| `sources.lakesp.science_cycles` | `001` through `052` |
-| `sources.lakesp.mad_threshold` | `3.0` |
-| `sources.lakesp.accepted_quality_flags` | `good,suspect,degraded` |
-| `sources.pixc.collection` | `SWOT_L2_HR_PIXC_D` |
-| `sources.pixc.search_buffer_degrees` | `0.5` |
-| `sources.pixc.science_cycles` | `001` through `052` |
-| `sources.pixc.mad_threshold` | `3.0` |
-| `sources.pixc.water_classification` | `4` |
+| Key | Default | Valid Value / Type |
+| --- | --- | --- |
+| `earth_engine_project` | `null` | Project ID or `null` |
+| `search_radius_m` | `50000` | Number `> 0`, metres |
+| `pekel_threshold` | `20` | Number from `0` to `100` |
+| `working_crs` | `auto` | `auto` or supported CRS |
+| `max_workers` | `max(1, CPU count - 1)` | Integer `>= 1` |
+| `generate_plot` | `true` | Boolean |
+| `polygon_cache_enabled` | `true` | Boolean |
+| `lakesp_cache_enabled` | `true` | Boolean |
+| `cache_dir` | `cache` | Filesystem path |
+| `output_dir` | `outputs` | Filesystem path |
+| `temp_download_dir` | `downloads/temp` | Filesystem path |
+| `sources.lakesp.collection` | `SWOT_L2_HR_LakeSP_Obs_D` | Collection identifier |
+| `sources.lakesp.search_buffer_degrees` | `0.5` | Number `>= 0`, degrees |
+| `sources.lakesp.science_cycles` | `001` through `052` | Positive cycle identifiers |
+| `sources.lakesp.mad_threshold` | `3.0` | Number `> 0` |
+| `sources.lakesp.accepted_quality_flags` | `good,suspect,degraded` | One or more supported quality classes |
+| `sources.pixc.collection` | `SWOT_L2_HR_PIXC_D` | Collection identifier |
+| `sources.pixc.search_buffer_degrees` | `0.5` | Number `>= 0`, degrees |
+| `sources.pixc.science_cycles` | `001` through `052` | Positive cycle identifiers |
+| `sources.pixc.mad_threshold` | `3.0` | Number `> 0` |
+| `sources.pixc.water_classification` | `4` | Integer `>= 0` |
 
 ---
 
-# Related Documentation
+## Related Documentation
 
 This page is intended as the reference for **command syntax, arguments, options, and configuration keys**.
 
 For a guided installation and initial setup, see [Installation](installation.md).
 
-For a practical first extraction, see [Usage](usage.md).
+For a practical first extraction and complete LakeSP and PIXC workflows, see [Usage](usage.md).
 
 For authentication behaviour and credential storage, see [Authentication](authentication.md).
 
-For detailed explanations of configuration parameters, see [Configuration](configuration.md).
+For detailed explanations of configuration parameters and their effects on processing, see [Configuration](configuration.md).
 
 For the LakeSP and PIXC processing architecture, see [Package Architecture](architecture.md).
 
