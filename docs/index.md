@@ -19,4 +19,3 @@ installation
 authentication
 usage
 outputs
-contributing
