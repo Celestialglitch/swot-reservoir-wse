@@ -4,8 +4,8 @@ This page describes how to install **swot-reservoir-wse** and prepare the extern
 
 The package requires:
 
-- Python 3.10 or later;
-- NASA Earthdata Login;
+- Python 3.10 or later
+- NASA Earthdata Login
 - Google Earth Engine access; and
 - a Google Cloud project configured for Earth Engine.
 
@@ -23,9 +23,9 @@ https://urs.earthdata.nasa.gov/
 
 After creating the account:
 
-1. sign in through the Earthdata website;
-2. complete any account-verification steps;
-3. accept any terms of use presented by Earthdata.
+1. Sign in through the Earthdata website
+2. Complete any account-verification steps
+3. Accept any terms of use presented by Earthdata.
 
 The username and password will later be used when authenticating **swot-reservoir-wse**.
 
@@ -57,11 +57,6 @@ Locate and copy the:
 
     Project ID
 
-Do not confuse it with:
-
-    Project name
-    Project number
-
 For example, if the console displays:
 
     Project name   : Reservoir Analysis
@@ -76,11 +71,11 @@ the value required by **swot-reservoir-wse** is:
 
 Inside the selected Google Cloud project:
 
-1. open **APIs & Services**;
-2. open the **API Library**;
-3. search for **Google Earth Engine API**;
-4. open the API page;
-5. enable the API for the project.
+1. Open **APIs & Services**
+2. Open the **API Library**
+3. Search for **Google Earth Engine API**
+4. Open the API page
+5. Enable the API for the project.
 
 The project cannot be used by the Earth Engine API until this step is complete.
 
@@ -154,12 +149,12 @@ Install the package from the cloned repository:
 
 The installation automatically installs the Python dependencies declared by the package, including the libraries required for:
 
-- NASA Earthdata access;
-- Google Earth Engine;
-- geospatial processing;
-- LakeSP processing;
-- PIXC NetCDF processing;
-- numerical analysis; and
+- NASA Earthdata access
+- Google Earth Engine
+- geospatial processing
+- LakeSP processing
+- PIXC NetCDF processing
+- numerical analysis and
 - plot generation.
 
 ### Upgrade an Existing Local Installation
@@ -252,8 +247,8 @@ The password is entered without being echoed to the terminal.
 
 After successful authentication:
 
-- the Earth Engine Project ID is stored in the working-directory config.json;
-- Google Earth Engine OAuth credentials remain managed by Google's authentication system;
+- The Earth Engine Project ID is stored in the working-directory config.json
+- Google Earth Engine OAuth credentials remain managed by Google's authentication system
 - NASA Earthdata credentials are stored in the user's netrc credential file.
 
 This section covers only the initial authentication required after installation. For reauthentication, credential removal, service-specific authentication, credential storage, and all authentication options, see [Authentication](authentication.md).
@@ -280,25 +275,19 @@ These paths are relative to the active working directory unless absolute paths h
 
 For explanations of all available configuration parameters, see [Configuration](configuration.md).
 
-## Test the Installation
+### Verify the Installation
 
-After installation and authentication, you can perform a basic extraction to confirm that the package is working correctly.
+After installation, verify that the command-line interface is available:
 
-### LakeSP
+    swot-reservoir-wse --help
 
-Run:
+Then confirm that the package can load its runtime configuration:
 
-    swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
+    swot-reservoir-wse config show
 
-### PIXC
+A successful configuration display confirms that the installed package is accessible and that the configuration system can be initialized from the current working directory.
 
-PIXC can be selected independently:
-
-    swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
-
-PIXC processing can require considerably more memory and processing time because high-resolution pixel-cloud data are downloaded and processed directly.
-
-For the normal processing workflow, source-specific behaviour, configuration examples, and output generation, see [Usage](usage.md).
+For instructions regarding normal processing workflow, see [Usage](usage.md).
 
 ## Troubleshooting
 
@@ -386,9 +375,9 @@ A lower worker count reduces the number of PIXC granules being processed simulta
 
 After installation:
 
-- see [Usage](usage.md) for the normal processing workflow;
-- see [Authentication](authentication.md) for credential management;
-- see [Configuration](configuration.md) for every configurable parameter;
-- see [Command Reference](command_reference.md) for all CLI commands;
-- see [Package Architecture](architecture.md) for the LakeSP and PIXC processing design;
-- see [Outputs](outputs.md) for generated CSV and PNG products.
+- see [Usage](usage.md) for the normal processing workflow
+- see [Authentication](authentication.md) for credential management
+- see [Configuration](configuration.md) for every configurable parameter
+- see [Command Reference](command_reference.md) for all CLI commands
+- see [Package Architecture](architecture.md) for the LakeSP and PIXC processing design
+- see [Outputs](outputs.md) for info about generated CSV and PNG products
