@@ -35,13 +35,13 @@ The complete setup procedure is available in the [Installation Guide](https://sw
 
 ## About **swot-reservoir-wse**
 
-In order to obtain a reservoir WSE time series from SWOT, there exist several steps between downloading the SWOT products and obtaining measurements that belong to a particular reservoir.
+In order to obtain a reservoir WSE time series from SWOT mission, there exist multiple steps between downloading the SWOT products and obtaining measurements that belong to a particular reservoir.
 
-**swot-reservoir-wse** brings these steps into a single workflow. Starting only from the supplied dam coordinates, it derives the reservoir boundary using [JRC Global Surface Water](https://global-surface-water.appspot.com/), selects the appropriate SWOT product ( [LakeSP](https://podaac.jpl.nasa.gov/dataset/SWOT_L2_HR_LakeSP_D) or [PIXC](https://podaac.jpl.nasa.gov/dataset/SWOT_L2_HR_PIXC_D)) as source, searches [NASA Earthdata](https://www.earthdata.nasa.gov/) for SWOT observations covering the requested period, identifies measurements belonging to the reservoir, removes unsuitable observations, combines measurements acquired on the same date, and filters temporal outliers before producing the final WSE time series.
+**swot-reservoir-wse** brings these steps into a single workflow. Starting from user-supplied dam coordinates, it derives the reservoir boundary using [JRC Global Surface Water](https://global-surface-water.appspot.com/), searches [NASA Earthdata](https://www.earthdata.nasa.gov/) for observations from the selected [LakeSP](https://podaac.jpl.nasa.gov/dataset/SWOT_L2_HR_LakeSP_D) or [PIXC](https://podaac.jpl.nasa.gov/dataset/SWOT_L2_HR_PIXC_D) product, identifies measurements belonging to the reservoir, performs source-specific quality processing, combines observations acquired on the same date, and filters temporal outliers before producing the final WSE time series.
 
-For **LakeSP**, the package works with SWOT's vectorized lake observations and identifies the observations associated with the target reservoir. It uses the available product quality information to screen observations before daily aggregation and temporal filtering. For **PIXC**, it works directly with the pixel-cloud product, spatially selects measurements falling within the reservoir boundary, applies pixel-level water classification and quality screening, calculates WSE relative to the geoid, and combines the accepted measurements into reservoir-level WSE observations. The two approaches remain independent and can therefore be run separately for the same reservoir.
+LakeSP and PIXC are implemented as independent processing workflows. LakeSP works with SWOT's vectorized lake observations, while PIXC works directly with the underlying pixel-cloud measurements to derive reservoir-level WSE. The same reservoir can therefore be processed independently using either source.
 
-The processing can be configured for different SWOT science cycles, LakeSP quality classes, PIXC water classification, product-search regions, reservoir-identification parameters, temporal filtering thresholds, and computational resources. Product discovery and granule processing can use parallel workers where supported, while the worker count can be increased or decreased based on source product. Reservoir boundaries and downloaded LakeSP products can also be cached locally for reuse, avoiding repeated reservoir-footprint generation and unnecessary downloads. Temporary processing data, persistent caches, and final outputs can be directed to configurable filesystem locations, and each successful extraction produces a reservoir WSE time series with optional plot generation.
+The workflow is configurable for SWOT science cycles, source-specific quality criteria, spatial search and reservoir-identification parameters, temporal filtering, parallel processing, caching, runtime storage, and output generation. Reservoir footprints and downloaded LakeSP products can be reused through persistent caching, and successful processing produces a reservoir WSE time series with optional visualization.
 
 Detailed descriptions of the processing methods, configuration parameters, authentication, command-line interface, and generated products are available in the [documentation](https://swot-reservoir-wse.readthedocs.io/).
 
@@ -51,7 +51,7 @@ The complete documentation is available at:
 
 [https://swot-reservoir-wse.readthedocs.io/](https://swot-reservoir-wse.readthedocs.io/)
 
-It includes installation and authentication instructions, LakeSP and PIXC usage, configuration options, command reference, processing architecture, and descriptions of the generated outputs.
+It includes installation and authentication instructions, package architecture, LakeSP and PIXC usage, command reference, configuration options, and descriptions of the generated outputs.
 
 ## Contributing
 
