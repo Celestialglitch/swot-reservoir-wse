@@ -107,7 +107,7 @@ Enter the repository:
 
 ### Create a Virtual Environment
 
-Using a virtual environment is strongly recommended so that the package dependencies remain isolated from the system Python installation.
+Using a virtual environment is recommended so that the package dependencies remain isolated from the system Python installation.
 
 #### Windows
 
