@@ -1,114 +1,67 @@
 # swot-reservoir-wse
 
-swot-reservoir-wse is a Python package for generating reservoir-specific Water Surface Elevation (WSE) time series from NASA Surface Water and Ocean Topography (SWOT) observations.
+***A source-configurable and easy-to-use Python package to make SWOT-based reservoir water-level monitoring accessible to the global water community***
 
-Given a dam location, observation period, and SWOT data source, the package derives the corresponding reservoir footprint, discovers relevant SWOT observations, performs source-specific spatial and quality processing, and produces a reservoir WSE time series.
+**swot-reservoir-wse** provides a simple command-line interface for deriving reservoir Water Surface Elevation (WSE) time series from observations of the **[Surface Water and Ocean Topography (SWOT)](https://science.nasa.gov/mission/swot/)** mission. Starting only with the location of a dam, the package identifies the corresponding reservoir and handles the processing required to turn the available SWOT observations into a reservoir-specific record of water surface elevation over time.
 
-Supported SWOT Level-2 High Rate products:
+**swot-reservoir-wse** currently supports two independently selectable SWOT Level 2 products that represent surface-water observations at different stages of processing.
 
-- Lake Single Pass (LakeSP) Observation Vector Product, Version D
-- Water Mask Pixel Cloud (PIXC) Product, Version D
+The [SWOT Level 2 Lake Single-Pass Vector Data Product, Version D (SWOT_L2_HR_LakeSP_D)](https://podaac.jpl.nasa.gov/dataset/SWOT_L2_HR_LakeSP_D) provides feature-level observations of lakes and other water bodies derived from SWOT measurements. For this source, **swot-reservoir-wse** searches the available LakeSP products, spatially identifies the observed lake features associated with the target reservoir, and extracts their reported WSE and quality information. Partial and unacceptable observations are screened according to the active configuration, multiple retained measurements from the same acquisition date are reduced to a representative daily WSE, and temporal outliers are removed before the final reservoir time series is produced.
 
-Full documentation: https://swot-reservoir-wse.readthedocs.io/
+The [SWOT Level 2 Water Mask Pixel Cloud Data Product, Version D (SWOT_L2_HR_PIXC_D)](https://podaac.jpl.nasa.gov/dataset/SWOT_L2_HR_PIXC_D), in contrast, provides the underlying high-resolution geolocated water detections as an unstructured pixel cloud. Each detected pixel carries quantities such as its geographic position, ellipsoidal height, surface classification, and associated quality information. For this source, **swot-reservoir-wse** works directly with the measurements falling inside the target reservoir. It spatially isolates the reservoir pixels, removes pixels that do not satisfy the required water-classification and quality conditions, converts the retained pixel heights from ellipsoidal height to WSE relative to the geoid, and combines the resulting measurements into a representative reservoir WSE for each acquisition date. The resulting time series is then subjected to temporal outlier screening.
 
----
+The package therefore provides two independent routes to the same reservoir-level quantity: **LakeSP uses SWOT's processed lake-feature observations, while PIXC derives reservoir WSE directly from the underlying surface-water pixel measurements.**
 
-## Installation
+## Installing swot-reservoir-wse
 
-swot-reservoir-wse requires Python 3.10 or later, NASA Earthdata access, Google Earth Engine access, and a Google Cloud project configured for Earth Engine.
-
-Clone and install the package:
+Clone the repository:
 
     git clone https://github.com/Celestialglitch/swot-reservoir-wse.git
     cd swot-reservoir-wse
+
+Create a virtual environment and install the package.
+
+On Windows:
+
+    python -m venv .venv
+    .venv\Scripts\activate
     python -m pip install .
 
-For environment setup and external-service configuration, see the Installation Guide:
+On Linux or macOS:
 
-https://swot-reservoir-wse.readthedocs.io/en/latest/installation.html
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python -m pip install .
 
----
+The package uses **NASA Earthdata** to access SWOT observations and **Google Earth Engine** to identify reservoir boundaries from user supplied dam location.
 
-## Authentication
+The complete setup procedure is available in the [Installation Guide](https://swot-reservoir-wse.readthedocs.io/en/latest/installation.html).
 
-Configure Google Earth Engine and NASA Earthdata access:
 
-    swot-reservoir-wse auth
+## About **swot-reservoir-wse**
 
-Authentication can also be managed independently for either service.
+In order to obtain a reservoir WSE time series from SWOT, there exist several steps between downloading the SWOT products and obtaining measurements that belong to a particular reservoir.
 
-See the Authentication documentation for account setup, credential storage, reauthentication, and removal:
+**swot-reservoir-wse** brings these steps into a single workflow. Starting only from the supplied dam coordinates, it derives the reservoir boundary using [JRC Global Surface Water](https://global-surface-water.appspot.com/), selects the appropriate SWOT product (LakeSP or PIXC) as source, searches [NASA Earthdata](https://www.earthdata.nasa.gov/) for SWOT observations covering the requested period, identifies measurements belonging to the reservoir, removes unsuitable observations, combines measurements acquired on the same date, and filters temporal outliers before producing the final WSE time series.
 
-https://swot-reservoir-wse.readthedocs.io/en/latest/authentication.html
+For **LakeSP**, the package works with SWOT's vectorized lake observations and identifies the observations associated with the target reservoir. It uses the available product quality information to screen observations before daily aggregation and temporal filtering. For **PIXC**, it works directly with the pixel-cloud product, spatially selects measurements falling within the reservoir boundary, applies pixel-level water classification and quality screening, calculates WSE relative to the geoid, and combines the accepted measurements into reservoir-level WSE observations. The two approaches remain independent and can therefore be run separately for the same reservoir.
 
----
+The processing can be configured for different SWOT science cycles, LakeSP quality classes, PIXC water classification, product-search regions, reservoir-identification parameters, temporal filtering thresholds, and computational resources. Product discovery and granule processing can use parallel workers where supported, while the worker count can be increased or decreased based on source product. Reservoir boundaries and downloaded LakeSP products can also be cached locally for reuse, avoiding repeated reservoir-footprint generation and unnecessary downloads. Temporary processing data, persistent caches, and final outputs can be directed to configurable filesystem locations, and each successful extraction produces a reservoir WSE time series with optional plot generation.
 
-## Usage
-
-Run an extraction by providing the dam coordinates, observation period, and SWOT source.
-
-LakeSP:
-
-    swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp
-
-PIXC:
-
-    swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc
-
-LakeSP and PIXC are independent processing sources and must be selected explicitly.
-
-For the complete workflow, see:
-
-https://swot-reservoir-wse.readthedocs.io/en/latest/usage.html
-
----
-
-## Outputs
-
-Successful processing produces a source-specific CSV time series and, when plotting is enabled, a PNG visualization.
-
-Example:
-
-    outputs/
-    ├── 19.69000_73.34000_lakesp_wse.csv
-    └── 19.69000_73.34000_lakesp_wse.png
-
-PIXC outputs use the corresponding pixc filename identifier.
-
-See the Outputs documentation for CSV schemas, quality information, and plot details:
-
-https://swot-reservoir-wse.readthedocs.io/en/latest/outputs.html
-
----
+Detailed descriptions of the processing methods, configuration parameters, authentication, command-line interface, and generated products are available in the [documentation](https://swot-reservoir-wse.readthedocs.io/).
 
 ## Documentation
 
-Complete documentation is available at:
+The complete documentation is available at:
 
-https://swot-reservoir-wse.readthedocs.io/
+[https://swot-reservoir-wse.readthedocs.io/](https://swot-reservoir-wse.readthedocs.io/)
 
-It includes:
-
-- Installation
-- Usage
-- Configuration
-- Authentication
-- Command Reference
-- Package Architecture
-- Outputs
-
----
+It includes installation and authentication instructions, LakeSP and PIXC usage, configuration options, command reference, processing architecture, and descriptions of the generated outputs.
 
 ## Contributing
 
-Contributions, bug reports, and documentation improvements are welcome.
-
-See CONTRIBUTING.md for development and contribution guidelines.
-
----
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development and contribution guidelines.
 
 ## License
 
-swot-reservoir-wse is distributed under the MIT License.
-
-See LICENSE for the complete license text.
+This package is distributed under the MIT License. See [LICENSE](LICENSE) for details.
