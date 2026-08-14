@@ -157,7 +157,7 @@ The installation automatically installs the Python dependencies declared by the 
 - numerical analysis and
 - plot generation.
 
-### Upgrade an Existing Local Installation
+### Upgrade an Existing Local Installation (For developers)
 
 If **swot-reservoir-wse** has already been installed from the repository and the source code has since been updated, run:
 
@@ -277,17 +277,17 @@ For explanations of all available configuration parameters, see [Configuration](
 
 ### Verify the Installation
 
-After installation, verify that the command-line interface is available:
+After installation and authentication, a basic extraction can be performed for both LakeSP and PIXC independently to confirm that the package is working correctly.
 
-    swot-reservoir-wse --help
+### LakeSP : 
+    swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source lakesp 
 
-Then confirm that the package can load its runtime configuration:
 
-    swot-reservoir-wse config show
+### PIXC : 
+    swot-reservoir-wse extract --lat 19.690 --lon 73.340 --start-date 2026-01-20 --end-date 2026-07-16 --source pixc 
 
-A successful configuration display confirms that the installed package is accessible and that the configuration system can be initialized from the current working directory.
+For the normal processing workflow, source-specific behaviour, configuration examples, and output generation, see [Usage](usage.md).
 
-For instructions regarding normal processing workflow, see [Usage](usage.md).
 
 ## Troubleshooting
 
