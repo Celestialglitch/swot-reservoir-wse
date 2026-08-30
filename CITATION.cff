@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+
+title: "swot-reservoir-wse"
+type: software
+version: "0.3.0"
+date-released: "2026-08-30"
+
+authors:
+  - family-names: "Dasgupta"
+    given-names: "Ongkar"
+    orcid: "https://orcid.org/0009-0003-0818-3999"
+
+  - family-names: "Das"
+    given-names: "Pritam"
+    orcid: "https://orcid.org/0000-0003-4795-4736"
+
+doi: "10.5281/zenodo.22176957"
+
+repository-code: "https://github.com/Celestialglitch/swot-reservoir-wse"
+url: "https://swot-reservoir-wse.readthedocs.io/"
+
+keywords:
+  - "SWOT"
+  - "water surface elevation"
+  - "reservoir monitoring"
+  - "satellite hydrology"
+  - "remote sensing"
+  - "geospatial analysis"
+  - "LakeSP"
+  - "PIXC"
+
+license: "MIT"
