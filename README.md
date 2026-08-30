@@ -3,11 +3,8 @@
 ***A source-configurable and easy-to-use Python package to make SWOT-based reservoir water-level monitoring accessible to the global water community***
 
 [![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/Celestialglitch/swot-reservoir-wse/releases/tag/v0.3.0)
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22176957.svg)](https://doi.org/10.5281/zenodo.22176957)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
 [![Documentation](https://readthedocs.org/projects/swot-reservoir-wse/badge/?version=latest)](https://swot-reservoir-wse.readthedocs.io/)
 
 The **swot-reservoir-wse** package provides a simple command-line interface for deriving reservoir Water Surface Elevation (WSE) time series from observations of the **[Surface Water and Ocean Topography (SWOT)](https://science.nasa.gov/mission/swot/)** mission. Starting only with the location of a dam, the package identifies the corresponding reservoir and handles the processing required to turn the available SWOT observations into a reservoir-specific record of water surface elevation over time.
