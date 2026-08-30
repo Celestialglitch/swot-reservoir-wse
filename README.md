@@ -2,6 +2,7 @@
 
 ***A source-configurable and easy-to-use Python package to make SWOT-based reservoir water-level monitoring accessible to the global water community***
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22176957.svg)](https://doi.org/10.5281/zenodo.22176957)
 
 The **swot-reservoir-wse** package provides a simple command-line interface for deriving reservoir Water Surface Elevation (WSE) time series from observations of the **[Surface Water and Ocean Topography (SWOT)](https://science.nasa.gov/mission/swot/)** mission. Starting only with the location of a dam, the package identifies the corresponding reservoir and handles the processing required to turn the available SWOT observations into a reservoir-specific record of water surface elevation over time.
 
@@ -52,6 +53,15 @@ The complete documentation is available at:
 [https://swot-reservoir-wse.readthedocs.io/](https://swot-reservoir-wse.readthedocs.io/)
 
 It includes installation and authentication instructions, package architecture, LakeSP and PIXC usage, command reference, configuration options, and descriptions of the generated outputs.
+
+## Citation
+
+If you use **swot-reservoir-wse** in research or other academic work, please cite the software as:
+
+> Dasgupta, O., & Das, P. (2026). *swot-reservoir-wse* (Version 0.3.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.22176957
+
+Citation metadata is also available in [CITATION.cff](CITATION.cff).
+
 
 ## Contributing
 
