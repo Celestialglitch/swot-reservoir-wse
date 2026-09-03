@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/swot-reservoir-wse-banner.png" alt="swot-reservoir-wse" width="900">
+  <img src="./assets/swot-reservoir-wse-banner.png" alt="swot-reservoir-wse" width="900">
 </p>
 
 <p align="center">
